@@ -725,32 +725,128 @@ async function renderMain(){
 }
 
 // ── VISTA MENSUAL ─────────────────────────────────────────────────────
+// qSel = quincena activa en vista mensual para agregar registros (1 o 2)
+let mQSel = 1;
+
 async function renderMonthly(){
   const m=CP.m, y=CY;
   document.getElementById('content').innerHTML=`<div style="padding:28px;text-align:center;color:var(--text3)"><div class="spinner" style="width:22px;height:22px;border-color:rgba(30,107,69,.2);border-top-color:var(--accent);margin:0 auto 8px"></div>Cargando mes…</div>`;
+
   const [dQ1,dQ2]=await Promise.all([getPeriodo(y,m,1),getPeriodo(y,m,2)]);
-  const items=[...(dQ1.items||[]),...(dQ2.items||[])];
-  const extra=(dQ1.extraIncome||[]).reduce((a,i)=>a+i.amount,0)+(dQ2.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
-  const totalIn=(dQ1.income+dQ1.transferIn)+(dQ2.income+dQ2.transferIn)+extra;
-  const totalOut=items.reduce((a,i)=>a+i.amount,0);
+
+  // Totales consolidados del mes
+  const allItems=[...(dQ1.items||[]).map(i=>({...i,_q:1})),...(dQ2.items||[]).map(i=>({...i,_q:2}))];
+  const allExtra=[...(dQ1.extraIncome||[]).map(i=>({...i,_q:1})),...(dQ2.extraIncome||[]).map(i=>({...i,_q:2}))];
+  const extraTotal=allExtra.reduce((a,i)=>a+i.amount,0);
+  const totalIn=(dQ1.income+dQ1.transferIn)+(dQ2.income+dQ2.transferIn)+extraTotal;
+  const totalOut=allItems.reduce((a,i)=>a+i.amount,0);
   const bal=totalIn-totalOut;
   const pct=totalIn>0?Math.round(totalOut/totalIn*100):0;
 
+  const pdQ1=payDate(y,m,1), pdQ2=payDate(y,m,2);
+  const today=new Date(); today.setHours(0,0,0,0);
+
   destroyCharts();
   document.getElementById('content').innerHTML=`
-    <div style="padding:10px 0 6px;font-size:16px;font-weight:800;color:var(--text)">${MN[m]} ${y} — Vista Mensual</div>
-    <div class="cards" style="margin-top:8px">
-      <div class="card c-green"><div class="clbl">Total ingresos</div><div class="cval">${fmtCOP(totalIn,'amt-green')}</div></div>
-      <div class="card c-red"><div class="clbl">Total gastos</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${items.length} movimientos</div></div>
+
+    <!-- Resumen mensual -->
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">📅 ${MN[m]} ${y} — Vista Mensual</div>
+
+    <div class="cards">
+      <div class="card c-green"><div class="clbl">Ingresos mes</div><div class="cval">${fmtCOP(totalIn,'amt-green')}</div><div class="csub">Q1 + Q2${extraTotal>0?' + extra':''}</div></div>
+      <div class="card c-red"><div class="clbl">Gastos mes</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${allItems.length} movimientos</div></div>
       <div class="card ${bal>=0?'c-green':'c-red'}"><div class="clbl">Saldo mes</div><div class="cval">${fmtCOP(bal,bal>=0?'amt-green':'amt-red')}</div></div>
+      <div class="card c-blue"><div class="clbl">Q1 gastos</div><div class="cval">${fmtCOP((dQ1.items||[]).reduce((a,i)=>a+i.amount,0),'amt-blue')}</div><div class="csub">Pago ${fmtD(pdQ1)}</div></div>
+      <div class="card c-blue"><div class="clbl">Q2 gastos</div><div class="cval">${fmtCOP((dQ2.items||[]).reduce((a,i)=>a+i.amount,0),'amt-blue')}</div><div class="csub">Pago ${fmtD(pdQ2)}</div></div>
       <div class="card ${pct>BUDGET_ALERT?'c-red':pct>BUDGET_WARN?'c-orange':'c-blue'}">
         <div class="clbl">% Gastado</div>
         <div class="cval ${pct>BUDGET_ALERT?'red':pct>BUDGET_WARN?'orange':'blue'}">${pct}%</div>
         <div class="pbar"><div class="pfill" style="width:${Math.min(100,pct)}%;background:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}"></div></div>
       </div>
     </div>
+
+    <!-- Selector de quincena activa para edición -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">📊 Distribución mensual</span></div>
+      <div class="sec-hdr">
+        <span class="sec-title">✏️ Registrar en quincena</span>
+        <div style="display:flex;background:var(--surface2);border-radius:7px;padding:3px;gap:2px;border:1px solid var(--border)">
+          <button class="mode-btn ${mQSel===1?'active':''}" onclick="window._setMQ(1)">Q1 — hasta ${fmtD(pdQ1)}</button>
+          <button class="mode-btn ${mQSel===2?'active':''}" onclick="window._setMQ(2)">Q2 — hasta ${fmtD(pdQ2)}</button>
+        </div>
+      </div>
+      <div class="sec-body" style="padding-bottom:6px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Los registros se guardarán en <strong style="color:var(--accent)">Q${mQSel}</strong> de ${MN[m]}</div>
+
+        <!-- Ingreso base -->
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">💵 Ingreso base Q${mQSel}</div>
+          <div class="form">
+            <div class="fg grow"><label>Ingreso base (COP)</label><input type="number" id="ii" value="${mQSel===1?dQ1.income:dQ2.income}" min="0" inputmode="numeric" placeholder="0"></div>
+            <button class="btn btn-p" onclick="window._setIncome()">Guardar</button>
+          </div>
+          ${((mQSel===1?dQ1:dQ2).transferIn>0)?`<div class="income-display" style="margin-top:8px">
+            <div class="income-row"><span style="font-weight:700;color:var(--info)">+ Sobrante anterior:</span>&nbsp;${fmtCOP((mQSel===1?dQ1:dQ2).transferIn,'amt-blue')}</div>
+            <div class="income-row" style="margin-left:auto"><span style="font-weight:700">= Total:</span>&nbsp;${fmtCOP((mQSel===1?dQ1.income+dQ1.transferIn:dQ2.income+dQ2.transferIn)+(mQSel===1?(dQ1.extraIncome||[]).reduce((a,i)=>a+i.amount,0):(dQ2.extraIncome||[]).reduce((a,i)=>a+i.amount,0)),'amt-blue')}</div>
+          </div>`:''}
+        </div>
+
+        <!-- Ingresos extra -->
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">➕ Ingresos adicionales Q${mQSel}</div>
+          <div class="form" style="margin-bottom:8px">
+            <div class="fg grow"><label>Descripción</label><input type="text" id="ei-desc" placeholder="Ej: Horas extra, Freelance…"></div>
+            <div class="fg wsm"><label>Valor (COP)</label><input type="number" id="ei-amt" min="0" inputmode="numeric" placeholder="0"></div>
+            <button class="btn btn-p" style="background:var(--warning);align-self:flex-end" onclick="window._addExtra()">+ Agregar</button>
+          </div>
+          <div id="extra-list"></div>
+        </div>
+
+        <!-- Agregar gasto -->
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">🛒 Agregar gasto en Q${mQSel}</div>
+          <div class="form">
+            <div class="fg" style="min-width:90px;max-width:110px"><label>Referencia</label><input type="text" id="iref" placeholder="**** 1234" maxlength="20"></div>
+            <div class="fg grow"><label>Descripción</label><input type="text" id="idesc" placeholder="Ej: Arriendo, Mercado…"></div>
+            <div class="fg wsm"><label>Valor (COP)</label><input type="number" id="iamt" min="0" inputmode="numeric" placeholder="0"></div>
+            <div class="fg"><label>Categoría</label><select id="icat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+            <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
+            <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
+              <div class="tog-row"><label class="tog"><input type="checkbox" id="irec"><span class="sldr"></span></label>Recurrente</div>
+            </div>
+            <button class="btn btn-p" onclick="window._addItem()" style="align-self:flex-end">Agregar</button>
+          </div>
+        </div>
+
+        <!-- Recurrentes -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">🔁 Recurrentes → Q${mQSel}</div>
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-t bsm" onclick="window._showRec()">Seleccionar y aplicar →</button>
+            <span style="font-size:11px;color:var(--text3)">Se aplicarán en Q${mQSel}</span>
+          </div>
+          <div style="margin-top:10px" id="rec-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Movimientos consolidados -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">📋 Todos los movimientos — ${MN[m]}</span>
+        <span style="font-size:10px;color:var(--text3)">${allItems.length} items · ${fmtCOP(totalOut,'amt-red')}</span>
+      </div>
+      <!-- Sub-tabs Q1 / Q2 / Todos -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border)">
+        <button id="mv-tab-all"  onclick="window._mvTab('all')"  style="flex:1;padding:8px;font-size:12px;font-weight:700;border:none;border-bottom:3px solid var(--accent);background:none;color:var(--accent);cursor:pointer">Todos (${allItems.length})</button>
+        <button id="mv-tab-q1"   onclick="window._mvTab('q1')"   style="flex:1;padding:8px;font-size:12px;font-weight:600;border:none;border-bottom:3px solid transparent;background:none;color:var(--text3);cursor:pointer">Q1 (${(dQ1.items||[]).length})</button>
+        <button id="mv-tab-q2"   onclick="window._mvTab('q2')"   style="flex:1;padding:8px;font-size:12px;font-weight:600;border:none;border-bottom:3px solid transparent;background:none;color:var(--text3);cursor:pointer">Q2 (${(dQ2.items||[]).length})</button>
+      </div>
+      <div class="tbl-wrap" id="items-list"></div>
+    </div>
+
+    <!-- Dona mensual -->
+    <div class="sec">
+      <div class="sec-hdr"><span class="sec-title">📊 Distribución del mes</span></div>
       <div class="sec-body">
         <div style="display:grid;grid-template-columns:minmax(0,180px) 1fr;gap:14px;align-items:center">
           <div class="chart-wrap" style="height:180px"><canvas id="cpie"></canvas></div>
@@ -758,38 +854,69 @@ async function renderMonthly(){
         </div>
       </div>
     </div>
+
+    <!-- Barras año -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">📋 Todos los movimientos del mes</span></div>
-      <div class="tbl-wrap" id="items-list"></div>
+      <div class="sec-hdr"><span class="sec-title">📈 Evolución ${y}</span></div>
+      <div class="sec-body"><div class="chart-wrap" style="height:200px"><canvas id="cbar"></canvas></div></div>
     </div>`;
 
-  renderItems(items,true);
-  renderPie(items);
+  // Guardar referencia de items para filtrado
+  window._mAllItems = allItems;
+  window._mDQ = {dQ1, dQ2};
+
+  renderExtraList(mQSel===1?dQ1:dQ2);
+  renderRecList();
+  window._mvTab('all');
+  renderPie(allItems);
+  renderBar(y);
 }
+
+window._setMQ=q=>{mQSel=q;renderMonthly();};
+
+window._mvTab=(tab)=>{
+  ['all','q1','q2'].forEach(t=>{
+    const btn=document.getElementById(`mv-tab-${t}`);
+    if(btn){btn.style.borderBottomColor=t===tab?'var(--accent)':'transparent';btn.style.color=t===tab?'var(--accent)':'var(--text3)';btn.style.fontWeight=t===tab?'700':'600';}
+  });
+  const all=window._mAllItems||[];
+  const filtered=tab==='q1'?all.filter(i=>i._q===1):tab==='q2'?all.filter(i=>i._q===2):all;
+  renderItems(filtered, false);
+};
 
 // ── CRUD ──────────────────────────────────────────────────────────────
 window._setIncome=async()=>{
-  const{m,q}=CP;const y=CY;const d=await getPeriodo(y,m,q);
+  const{m}=CP;const y=CY;
+  const q=viewMode==='m'?mQSel:CP.q;
+  const d=await getPeriodo(y,m,q);
   d.income=parseFloat(document.getElementById('ii').value)||0;
-  await savePeriodo(y,m,q,d);renderMain();toast('✓ Ingreso guardado');
+  await savePeriodo(y,m,q,d);
+  viewMode==='m'?renderMonthly():renderMain();
+  toast('✓ Ingreso guardado');
 };
 
 window._addExtra=async()=>{
   const desc=document.getElementById('ei-desc').value.trim();
   const amount=parseFloat(document.getElementById('ei-amt').value)||0;
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
-  const{m,q}=CP;const y=CY;const d=await getPeriodo(y,m,q);
+  const{m}=CP;const y=CY;
+  const q=viewMode==='m'?mQSel:CP.q;
+  const d=await getPeriodo(y,m,q);
   d.extraIncome=d.extraIncome||[];
   d.extraIncome.push({id:Date.now(),desc,amount,date:new Date().toISOString().split('T')[0]});
   await savePeriodo(y,m,q,d);
   document.getElementById('ei-desc').value='';document.getElementById('ei-amt').value='';
-  renderMain();toast('✓ Ingreso extra agregado');
+  viewMode==='m'?renderMonthly():renderMain();
+  toast('✓ Ingreso extra agregado');
 };
 
-window._delExtra=async(id)=>{
-  const{m,q}=CP;const y=CY;const d=await getPeriodo(y,m,q);
+window._delExtra=async(id,q_override)=>{
+  const{m}=CP;const y=CY;
+  const q=q_override||(viewMode==='m'?mQSel:CP.q);
+  const d=await getPeriodo(y,m,q);
   d.extraIncome=(d.extraIncome||[]).filter(i=>i.id!==id);
-  await savePeriodo(y,m,q,d);renderMain();
+  await savePeriodo(y,m,q,d);
+  viewMode==='m'?renderMonthly():renderMain();
 };
 
 function renderExtraList(data){
@@ -813,32 +940,39 @@ window._addItem=async()=>{
   const date=document.getElementById('idate').value;
   const rec=document.getElementById('irec').checked;
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
-  const{m,q}=CP;const y=CY;const d=await getPeriodo(y,m,q);
+  const{m}=CP;const y=CY;
+  const q=viewMode==='m'?mQSel:CP.q;
+  const d=await getPeriodo(y,m,q);
   d.items=d.items||[];
   d.items.push({id:Date.now(),ref,desc,amount,cat,date,recurring:rec});
   await savePeriodo(y,m,q,d);
   if(rec){const lista=await getRec();if(!lista.find(r=>r.desc===desc&&r.cat===cat)){lista.push({id:Date.now()+1,desc,amount,cat,ref,history:[]});await saveRec(lista);}}
   document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';document.getElementById('irec').checked=false;
-  renderMain();toast('✓ Gasto guardado');
+  viewMode==='m'?renderMonthly():renderMain();
+  toast('✓ Gasto guardado en Q'+q);
 };
 
-window._delItem=async(id)=>{
-  const{m,q}=CP;const y=CY;const d=await getPeriodo(y,m,q);
-  d.items=(d.items||[]).filter(i=>i.id!==id);await savePeriodo(y,m,q,d);renderMain();
+window._delItem=async(id,q_override)=>{
+  const{m}=CP;const y=CY;
+  const q=q_override||(viewMode==='m'?mQSel:CP.q);
+  const d=await getPeriodo(y,m,q);
+  d.items=(d.items||[]).filter(i=>i.id!==id);
+  await savePeriodo(y,m,q,d);
+  viewMode==='m'?renderMonthly():renderMain();
 };
 
 function renderItems(items,readonly=false){
   const el=document.getElementById('items-list');if(!el)return;
   if(!items.length){el.innerHTML='<div class="empty">Sin movimientos</div>';return;}
   const s=[...items].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  el.innerHTML=`<table><thead><tr><th>Ref</th><th>Fecha</th><th>Descripción</th><th>Categoría</th><th style="text-align:right">Valor</th>${readonly?'':'<th></th>'}</tr></thead><tbody>
+  el.innerHTML=`<table><thead><tr><th>Ref</th><th>Fecha</th><th>Descripción</th><th>Categoría</th><th style="text-align:right">Valor</th>${readonly?'':`<th>Q</th><th></th>`}</tr></thead><tbody>
   ${s.map(i=>`<tr>
     <td style="color:var(--text3);font-size:10px;white-space:nowrap">${i.ref||'—'}</td>
     <td style="color:var(--text3);white-space:nowrap;font-size:11px">${i.date||'-'}</td>
     <td><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}</td>
     <td><span class="cc" style="background:${CCLR[CATS.indexOf(i.cat)]||'#999'}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
-    ${readonly?'':`<td><button class="btn btn-d bsm" onclick="window._delItem(${i.id})">✕</button></td>`}
+    ${readonly?'':`<td style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td><button class="btn btn-d bsm" onclick="window._delItem(${i.id}${i._q?','+i._q:''})">✕</button></td>`}
   </tr>`).join('')}</tbody></table>`;
 }
 
@@ -911,7 +1045,8 @@ window.hideHist=()=>document.getElementById('hist-modal').style.display='none';
 window._showRec=async()=>{
   const lista=await getRec();
   if(!lista.length){alert('No hay recurrentes configurados.');return;}
-  document.getElementById('rec-period-label').textContent=`${MN[CP.m]} Q${CP.q}`;
+  const q=viewMode==='m'?mQSel:CP.q;
+  document.getElementById('rec-period-label').textContent=`${MN[CP.m]} Q${q}`;
   const grid=document.getElementById('rec-grid');
   grid.innerHTML=lista.map(r=>`
     <label class="rec-item selected" id="ri-${r.id}">
@@ -941,7 +1076,9 @@ window.selAll=v=>{
 };
 window.hideRec=()=>document.getElementById('rec-modal').style.display='none';
 window.applySelected=async()=>{
-  const{m,q}=CP;const y=CY;const d=await getPeriodo(y,m,q);d.items=d.items||[];
+  const{m}=CP;const y=CY;
+  const q=viewMode==='m'?mQSel:CP.q;
+  const d=await getPeriodo(y,m,q);d.items=d.items||[];
   const today=new Date().toISOString().split('T')[0];let added=0;
   document.querySelectorAll('#rec-grid input:checked').forEach(cb=>{
     const desc=decodeURIComponent(cb.dataset.desc),cat=cb.dataset.cat,amount=parseFloat(cb.dataset.amt)||0,ref=cb.dataset.ref||'';
@@ -949,29 +1086,57 @@ window.applySelected=async()=>{
       d.items.push({id:Date.now()+Math.random(),ref,desc,amount,cat,date:today,recurring:true});added++;
     }
   });
-  await savePeriodo(y,m,q,d);window.hideRec();renderMain();
-  if(added>0)toast(`✓ ${added} gasto${added!==1?'s':''} aplicado${added!==1?'s':''}`);
+  await savePeriodo(y,m,q,d);window.hideRec();
+  viewMode==='m'?renderMonthly():renderMain();
+  if(added>0)toast(`✓ ${added} gasto${added!==1?'s':''} aplicado${added!==1?'s':''} en Q${q}`);
 };
 
 // ── GRÁFICOS ──────────────────────────────────────────────────────────
-function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}});charts={};}
+function destroyCharts(){
+  // pie se destruye dentro de renderPie con reemplazo de canvas
+  if(charts.bar){try{charts.bar.destroy();}catch(e){} charts.bar=null;}
+  charts={};
+}
 function destroyDashCharts(){Object.values(dashCharts).forEach(c=>{try{c.destroy()}catch(e){}});dashCharts={};}
 
 function renderPie(items){
-  const t={};CATS.forEach(c=>t[c]=0);items.forEach(i=>t[i.cat]=(t[i.cat]||0)+i.amount);
-  const labels=CATS.filter(c=>t[c]>0),vals=labels.map(c=>t[c]),colors=labels.map(c=>CCLR[CATS.indexOf(c)]);
+  // Acumular por categoría ignorando propiedades internas como _q
+  const t={};
+  CATS.forEach(c=>t[c]=0);
+  items.forEach(i=>{ if(i.cat && i.amount) t[i.cat]=(t[i.cat]||0)+i.amount; });
+
+  const labels=CATS.filter(c=>t[c]>0);
+  const vals=labels.map(c=>t[c]);
+  const colors=labels.map(c=>CCLR[CATS.indexOf(c)]);
   const total=vals.reduce((a,b)=>a+b,0);
+
   const leg=document.getElementById('cleg');
-  if(!labels.length){if(leg)leg.innerHTML='<div class="empty">Sin datos</div>';return;}
+  if(!labels.length){if(leg)leg.innerHTML='<div class="empty">Sin datos de gastos</div>';return;}
+
+  // Leyenda con porcentaje Y valor
   if(leg)leg.innerHTML=labels.map((l,i)=>`
-    <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
+    <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
       <span style="width:9px;height:9px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span>
-      <span style="flex:1;font-size:11px;color:var(--text2)">${l}</span>
-      <span style="font-size:11px;font-weight:700;color:var(--text)">${Math.round(vals[i]/total*100)}%</span>
+      <span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l}</span>
+      <span style="font-size:11px;font-weight:800;color:var(--text);flex-shrink:0">${Math.round(vals[i]/total*100)}%</span>
+      <span style="font-size:10px;color:var(--text3);flex-shrink:0;min-width:65px;text-align:right">${fmtPlain(vals[i])}</span>
     </div>`).join('');
-  const ctx=document.getElementById('cpie');if(!ctx)return;
-  charts.pie=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:1,borderColor:'rgba(255,255,255,.1)'}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtPlain(c.raw)} (${Math.round(c.raw/total*100)}%)`}}}}});
+
+  // Destruir chart anterior de forma segura y limpiar canvas
+  const wrap=document.getElementById('cpie');if(!wrap)return;
+  if(charts.pie){try{charts.pie.destroy();}catch(e){}charts.pie=null;}
+  const parent=wrap.parentNode;
+  const newCanvas=document.createElement('canvas');
+  newCanvas.id='cpie';
+  parent.replaceChild(newCanvas,wrap);
+
+  charts.pie=new Chart(newCanvas,{
+    type:'doughnut',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2,borderColor:'rgba(255,255,255,.15)',hoverBorderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtPlain(c.raw)} (${Math.round(c.raw/total*100)}%)`}}}}
+  });
 }
 
 async function renderBar(y){
@@ -1036,33 +1201,34 @@ window.renderDash=async()=>{
 
     ${pct>=BUDGET_ALERT?`<div class="budget-alert" style="margin-bottom:10px;background:var(--danger-light);border-color:var(--danger);color:var(--danger);border-left-width:4px;border-left-style:solid;padding:10px 14px;border-radius:6px;font-weight:600">🚨 Mes con ${pct}% del presupuesto consumido</div>`:''}
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <div class="sec" style="margin:0">
-        <div class="sec-hdr"><span class="sec-title" style="font-size:12px">🍩 Distribución total</span></div>
-        <div class="sec-body">
-          <div class="chart-wrap" style="height:200px"><canvas id="dash-pie"></canvas></div>
-        </div>
-      </div>
-      <div class="sec" style="margin:0">
-        <div class="sec-hdr"><span class="sec-title" style="font-size:12px">🏆 Top categorías</span></div>
-        <div class="sec-body" style="overflow-y:auto;max-height:220px">
-          ${catLabels.slice(0,8).map((l,i)=>`
-            <div style="margin-bottom:8px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-                <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${catColors[i]};display:inline-block"></span>${l}</span>
-                <span style="font-size:11px;font-weight:700;color:var(--text)">${Math.round(catVals[i]/total*100)}%</span>
-              </div>
-              <div style="background:var(--surface2);border-radius:3px;height:5px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${catColors[i]};width:${Math.round(catVals[i]/total*100)}%"></div></div>
-              <div style="font-size:10px;color:var(--text3);text-align:right;margin-top:1px">${fmtPlain(catVals[i])}</div>
-            </div>`).join('')}
+    <div class="sec">
+      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">🍩 Distribución total por categoría</span><span style="font-size:10px;color:var(--text3)">${catLabels.length} categorías con gasto</span></div>
+      <div class="sec-body">
+        <div style="display:grid;grid-template-columns:minmax(0,190px) 1fr;gap:14px;align-items:flex-start">
+          <div class="chart-wrap" style="height:190px"><canvas id="dash-pie"></canvas></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${catLabels.map((l,i)=>`
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;gap:6px">
+                  <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                    <span style="width:9px;height:9px;border-radius:2px;background:${catColors[i]};display:inline-block;flex-shrink:0"></span>${l}
+                  </span>
+                  <span style="font-size:11px;font-weight:800;color:var(--text);flex-shrink:0">${Math.round(catVals[i]/total*100)}%</span>
+                  <span style="font-size:10px;color:var(--text3);flex-shrink:0;min-width:70px;text-align:right">${fmtPlain(catVals[i])}</span>
+                </div>
+                <div style="background:var(--surface2);border-radius:3px;height:5px;overflow:hidden">
+                  <div style="height:100%;border-radius:3px;background:${catColors[i]};width:${Math.round(catVals[i]/total*100)}%;transition:width .4s"></div>
+                </div>
+              </div>`).join('')}
+          </div>
         </div>
       </div>
     </div>
 
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📊 Gastos por categoría</span></div>
+      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📊 Comparativa por categoría</span></div>
       <div class="sec-body">
-        <div class="chart-wrap" style="height:${Math.max(200,catLabels.length*32+60)}px"><canvas id="dash-bar"></canvas></div>
+        <div class="chart-wrap" style="height:${Math.max(200,catLabels.length*34+60)}px"><canvas id="dash-bar"></canvas></div>
       </div>
     </div>
 
@@ -1168,4 +1334,3 @@ window.toast=toast;
 </script>
 </body>
 </html>
-
