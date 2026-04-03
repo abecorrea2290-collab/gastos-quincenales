@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1e6b45">
-<title>Control de Gastos v1.1</title>
+<title>Control de Gastos v1.1.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -255,7 +255,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="h1">💰 Gastos <span class="ver-badge">v1.1</span></div>
+    <div class="h1">💰 Gastos <span class="ver-badge">v1.1.2</span></div>
     <div class="hdr-r">
       <div class="user-chip"><div class="user-initials" id="user-initials">?</div><span id="user-name">...</span></div>
       <button class="btn btn-dash bsm" onclick="showDash()">📊</button>
@@ -298,9 +298,9 @@ input:checked+.sldr:before{transform:translateX(16px)}
 <!-- DASHBOARD -->
 <div id="dash-screen">
   <div class="dash-header">
-    <div style="font-size:15px;font-weight:800;color:var(--purple)">📊 Resumen Mensual</div>
+    <div style="font-size:15px;font-weight:800;color:var(--purple)">📊 Resumen Anual</div>
     <div style="display:flex;gap:6px;align-items:center">
-      <select id="dash-month" onchange="renderDash()" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;background:var(--bg);color:var(--text)"></select>
+      <select id="dash-month" onchange="renderDash()" style="border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;background:var(--bg);color:var(--text);font-weight:700"></select>
       <button class="btn btn-g bsm" onclick="hideDash()">✕ Cerrar</button>
     </div>
   </div>
@@ -410,6 +410,25 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  {ver:'1.1.2',date:'Abril 2025',changes:[
+    'Dashboard rediseñado como resumen anual completo (antes era mensual)',
+    'Selector de año en el dashboard (hasta 4 años atrás)',
+    'Gráfico de barras mensual: ingresos vs gastos los 12 meses',
+    'Gráfico de saldo mensual con colores verde/rojo por resultado',
+    'Dona y barras horizontales con TODAS las categorías del año',
+    'Tabla resumen con los 12 meses, totales y % consumido',
+    'Indicador de mejor mes y mes más ajustado del año',
+    'Corrección: gráfico de dona mostraba solo 1 categoría por quincena',
+    'Corrección: canvas reemplazado en cada render para evitar corrupción de Chart.js',
+    'La leyenda de la dona ahora muestra porcentaje y valor COP',
+  ]},
+  {ver:'1.1.1',date:'Abril 2025',changes:[
+    'Vista mensual con todas las herramientas de registro (igual a quincenal)',
+    'Toggle Q1/Q2 en vista mensual para elegir dónde guardar cada registro',
+    'Sub-pestañas Todos/Q1/Q2 en la tabla de movimientos mensual',
+    'Dashboard: todas las categorías visibles sin límite de 8',
+    'Barras de categorías proporcionales al total en el dashboard',
+  ]},
   {ver:'1.1.0',date:'Abril 2025',changes:[
     'Optimización completa para dispositivos móviles',
     'Dashboard de resumen mensual con gráficos (dona + barras)',
@@ -1159,65 +1178,163 @@ async function renderBar(y){
         y:{ticks:{callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v)},grid:{color:'rgba(128,128,128,.1)'}}}}});
 }
 
-// ── DASHBOARD MENSUAL ─────────────────────────────────────────────────
+// ── DASHBOARD ANUAL ───────────────────────────────────────────────────
 window.showDash=async()=>{
   document.getElementById('dash-screen').style.display='block';
+  // Selector de año independiente del principal
   const sel=document.getElementById('dash-month');
-  sel.innerHTML=MN.map((mn,i)=>`<option value="${i}" ${i===CP.m?'selected':''}>${mn} ${CY}</option>`).join('');
+  sel.innerHTML='';
+  for(let yr=CY;yr>=CY-3;yr--){
+    const opt=document.createElement('option');
+    opt.value=yr; opt.textContent='Año '+yr;
+    if(yr===CY) opt.selected=true;
+    sel.appendChild(opt);
+  }
   await renderDash();
 };
 window.hideDash=()=>{destroyDashCharts();document.getElementById('dash-screen').style.display='none';};
 
 window.renderDash=async()=>{
-  const m=parseInt(document.getElementById('dash-month').value);
-  const y=CY;
-  document.getElementById('dash-body').innerHTML=`<div style="padding:24px;text-align:center;color:var(--text3)"><div class="spinner" style="width:22px;height:22px;border-color:rgba(90,47,160,.2);border-top-color:var(--purple);margin:0 auto 8px"></div>Generando resumen…</div>`;
-  const[dQ1,dQ2]=await Promise.all([getPeriodo(y,m,1),getPeriodo(y,m,2)]);
-  const items=[...(dQ1.items||[]),...(dQ2.items||[])];
-  const extra=(dQ1.extraIncome||[]).reduce((a,i)=>a+i.amount,0)+(dQ2.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
-  const totalIn=(dQ1.income+dQ1.transferIn)+(dQ2.income+dQ2.transferIn)+extra;
-  const totalOut=items.reduce((a,i)=>a+i.amount,0);
+  const y=parseInt(document.getElementById('dash-month').value);
+  const body=document.getElementById('dash-body');
+  body.innerHTML=`<div style="padding:32px;text-align:center;color:var(--text3)">
+    <div class="spinner" style="width:24px;height:24px;border-color:rgba(90,47,160,.2);border-top-color:var(--purple);margin:0 auto 10px"></div>
+    Cargando ${y}… (24 quincenas)
+  </div>`;
+
+  // Leer las 24 quincenas del año en paralelo
+  const promises=[];
+  for(let mi=0;mi<12;mi++) for(const q of[1,2]) promises.push(getPeriodo(y,mi,q).then(d=>({mi,q,d})));
+  const results=await Promise.all(promises);
+
+  // Acumular datos anuales
+  let totalIn=0, totalOut=0, totalItems=0, totalExtra=0;
+  const catTotals={};  CATS.forEach(c=>catTotals[c]=0);
+  const monthInc=new Array(12).fill(0);   // ingresos por mes
+  const monthExp=new Array(12).fill(0);   // gastos por mes
+  const monthSaldo=new Array(12).fill(0); // saldo por mes
+  const qInc=[], qExp=[], qLabels=[];     // por quincena (24)
+  const mesBest={mes:-1,saldo:-Infinity};
+  const mesWorst={mes:-1,saldo:Infinity};
+
+  results.forEach(({mi,q,d})=>{
+    const items=d.items||[];
+    const extra=(d.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
+    const inc=(d.income||0)+(d.transferIn||0)+extra;
+    const exp=items.reduce((a,i)=>a+i.amount,0);
+    items.forEach(i=>{ if(i.cat&&i.amount) catTotals[i.cat]=(catTotals[i.cat]||0)+i.amount; });
+    totalIn+=inc; totalOut+=exp; totalItems+=items.length; totalExtra+=extra;
+    monthInc[mi]+=inc; monthExp[mi]+=exp;
+    qLabels.push(MN[mi].slice(0,3)+' Q'+q);
+    qInc.push(inc); qExp.push(exp);
+  });
+
+  // Saldo por mes y mejor/peor mes
+  MN.forEach((_,mi)=>{
+    monthSaldo[mi]=monthInc[mi]-monthExp[mi];
+    if(monthSaldo[mi]>mesBest.saldo){mesBest.saldo=monthSaldo[mi];mesBest.mes=mi;}
+    if(monthSaldo[mi]<mesWorst.saldo&&monthInc[mi]>0){mesWorst.saldo=monthSaldo[mi];mesWorst.mes=mi;}
+  });
+
   const bal=totalIn-totalOut;
   const pct=totalIn>0?Math.round(totalOut/totalIn*100):0;
+  const promedioMes=totalOut/12;
 
-  const t={};CATS.forEach(c=>t[c]=0);items.forEach(i=>t[i.cat]=(t[i.cat]||0)+i.amount);
-  const catLabels=CATS.filter(c=>t[c]>0).sort((a,b)=>t[b]-t[a]);
-  const catVals=catLabels.map(c=>t[c]);
+  // Categorías con gasto, ordenadas de mayor a menor
+  const catLabels=CATS.filter(c=>catTotals[c]>0).sort((a,b)=>catTotals[b]-catTotals[a]);
+  const catVals=catLabels.map(c=>catTotals[c]);
   const catColors=catLabels.map(c=>CCLR[CATS.indexOf(c)]);
-  const total=catVals.reduce((a,b)=>a+b,0);
+  const catTotal=catVals.reduce((a,b)=>a+b,0);
 
   destroyDashCharts();
-  document.getElementById('dash-body').innerHTML=`
-    <div class="dash-cards">
-      <div class="card c-green"><div class="clbl">Ingresos totales</div><div class="cval">${fmtCOP(totalIn,'amt-green')}</div></div>
-      <div class="card c-red"><div class="clbl">Gastos totales</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${items.length} movimientos</div></div>
-      <div class="card ${bal>=0?'c-green':'c-red'}"><div class="clbl">Saldo del mes</div><div class="cval">${fmtCOP(bal,bal>=0?'amt-green':'amt-red')}</div></div>
-      <div class="card ${pct>BUDGET_ALERT?'c-red':pct>BUDGET_WARN?'c-orange':'c-blue'}">
-        <div class="clbl">% Gastado</div>
-        <div class="cval ${pct>BUDGET_ALERT?'red':pct>BUDGET_WARN?'orange':'blue'}">${pct}%</div>
-        <div class="pbar"><div class="pfill" style="width:${Math.min(100,pct)}%;background:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}"></div></div>
+  body.innerHTML=`
+
+    <!-- KPIs anuales -->
+    <div class="dash-cards" style="grid-template-columns:repeat(2,1fr)">
+      <div class="card c-green">
+        <div class="clbl">Total ingresos ${y}</div>
+        <div class="cval">${fmtCOP(totalIn,'amt-green')}</div>
+        <div class="csub">Incl. ${fmtPlain(totalExtra)} extras</div>
+      </div>
+      <div class="card c-red">
+        <div class="clbl">Total gastos ${y}</div>
+        <div class="cval">${fmtCOP(totalOut,'amt-red')}</div>
+        <div class="csub">${totalItems} movimientos</div>
+      </div>
+      <div class="card ${bal>=0?'c-green':'c-red'}">
+        <div class="clbl">Saldo neto ${y}</div>
+        <div class="cval">${fmtCOP(bal,bal>=0?'amt-green':'amt-red')}</div>
+        <div class="csub">${bal>=0?'Superávit anual':'Déficit anual'}</div>
+      </div>
+      <div class="card c-orange">
+        <div class="clbl">Promedio mensual</div>
+        <div class="cval">${fmtCOP(Math.round(promedioMes),'amt-orange')}</div>
+        <div class="csub">Gasto promedio/mes</div>
       </div>
     </div>
 
-    ${pct>=BUDGET_ALERT?`<div class="budget-alert" style="margin-bottom:10px;background:var(--danger-light);border-color:var(--danger);color:var(--danger);border-left-width:4px;border-left-style:solid;padding:10px 14px;border-radius:6px;font-weight:600">🚨 Mes con ${pct}% del presupuesto consumido</div>`:''}
+    <!-- % anual -->
+    <div class="card" style="margin-bottom:10px;--card-accent:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="clbl">% del ingreso anual consumido en gastos</span>
+        <span style="font-size:16px;font-weight:800;color:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}">${pct}%</span>
+      </div>
+      <div class="pbar" style="height:8px"><div class="pfill" style="width:${Math.min(100,pct)}%;background:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}"></div></div>
+    </div>
 
+    ${pct>=BUDGET_ALERT?`<div style="background:var(--danger-light);border-left:4px solid var(--danger);padding:10px 14px;border-radius:6px;font-size:12px;font-weight:600;color:var(--danger);margin-bottom:10px">🚨 Año ${y}: consumiste el ${pct}% de tus ingresos</div>`:''}
+
+    <!-- Mejor y peor mes -->
+    ${mesBest.mes>=0&&mesWorst.mes>=0?`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:10px;text-align:center">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);font-weight:700;margin-bottom:3px">🏆 Mejor mes</div>
+        <div style="font-size:14px;font-weight:800;color:var(--accent)">${MN[mesBest.mes]}</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:2px">${fmtPlain(mesBest.saldo)} de saldo</div>
+      </div>
+      <div style="background:var(--danger-light);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:10px;text-align:center">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--danger);font-weight:700;margin-bottom:3px">⚠️ Mes más ajustado</div>
+        <div style="font-size:14px;font-weight:800;color:var(--danger)">${MN[mesWorst.mes]}</div>
+        <div style="font-size:11px;color:var(--danger);margin-top:2px">${fmtPlain(mesWorst.saldo)} de saldo</div>
+      </div>
+    </div>`:''}
+
+    <!-- Gráfico de barras mensual: ingresos vs gastos -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">🍩 Distribución total por categoría</span><span style="font-size:10px;color:var(--text3)">${catLabels.length} categorías con gasto</span></div>
+      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📈 Ingresos vs Gastos por mes — ${y}</span></div>
       <div class="sec-body">
-        <div style="display:grid;grid-template-columns:minmax(0,190px) 1fr;gap:14px;align-items:flex-start">
-          <div class="chart-wrap" style="height:190px"><canvas id="dash-pie"></canvas></div>
-          <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="chart-wrap" style="height:220px"><canvas id="dash-bar-mes"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Gráfico de línea: saldo mensual -->
+    <div class="sec">
+      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📉 Saldo mensual — ${y}</span></div>
+      <div class="sec-body">
+        <div class="chart-wrap" style="height:160px"><canvas id="dash-line-saldo"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Dona + leyenda categorías -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title" style="font-size:12px">🍩 Distribución anual por categoría</span>
+        <span style="font-size:10px;color:var(--text3)">${catLabels.length} categorías</span>
+      </div>
+      <div class="sec-body">
+        <div style="display:grid;grid-template-columns:minmax(0,180px) 1fr;gap:14px;align-items:flex-start">
+          <div class="chart-wrap" style="height:180px"><canvas id="dash-pie"></canvas></div>
+          <div style="display:flex;flex-direction:column;gap:5px">
             ${catLabels.map((l,i)=>`
               <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;gap:6px">
-                  <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                    <span style="width:9px;height:9px;border-radius:2px;background:${catColors[i]};display:inline-block;flex-shrink:0"></span>${l}
-                  </span>
-                  <span style="font-size:11px;font-weight:800;color:var(--text);flex-shrink:0">${Math.round(catVals[i]/total*100)}%</span>
-                  <span style="font-size:10px;color:var(--text3);flex-shrink:0;min-width:70px;text-align:right">${fmtPlain(catVals[i])}</span>
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
+                  <span style="width:9px;height:9px;border-radius:2px;background:${catColors[i]};flex-shrink:0"></span>
+                  <span style="flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l}</span>
+                  <span style="font-size:11px;font-weight:800;color:var(--text);flex-shrink:0">${Math.round(catVals[i]/catTotal*100)}%</span>
+                  <span style="font-size:10px;color:var(--text3);min-width:68px;text-align:right">${fmtPlain(catVals[i])}</span>
                 </div>
-                <div style="background:var(--surface2);border-radius:3px;height:5px;overflow:hidden">
-                  <div style="height:100%;border-radius:3px;background:${catColors[i]};width:${Math.round(catVals[i]/total*100)}%;transition:width .4s"></div>
+                <div style="background:var(--surface2);border-radius:3px;height:4px;overflow:hidden">
+                  <div style="height:100%;border-radius:3px;background:${catColors[i]};width:${Math.round(catVals[i]/catTotal*100)}%"></div>
                 </div>
               </div>`).join('')}
           </div>
@@ -1225,47 +1342,99 @@ window.renderDash=async()=>{
       </div>
     </div>
 
+    <!-- Barras horizontales por categoría -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📊 Comparativa por categoría</span></div>
+      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📊 Gasto total por categoría — ${y}</span></div>
       <div class="sec-body">
-        <div class="chart-wrap" style="height:${Math.max(200,catLabels.length*34+60)}px"><canvas id="dash-bar"></canvas></div>
+        <div class="chart-wrap" style="height:${Math.max(200,catLabels.length*32+60)}px"><canvas id="dash-bar-cat"></canvas></div>
       </div>
     </div>
 
+    <!-- Resumen por mes tabla -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📋 Q1 vs Q2</span></div>
-      <div class="sec-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Quincena 1</div>
-            <div style="font-size:13px;font-weight:800;color:var(--danger)">${fmtCOP((dQ1.items||[]).reduce((a,i)=>a+i.amount,0),'amt-red')}</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">${(dQ1.items||[]).length} gastos</div>
-          </div>
-          <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Quincena 2</div>
-            <div style="font-size:13px;font-weight:800;color:var(--danger)">${fmtCOP((dQ2.items||[]).reduce((a,i)=>a+i.amount,0),'amt-red')}</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">${(dQ2.items||[]).length} gastos</div>
-          </div>
-        </div>
+      <div class="sec-hdr"><span class="sec-title" style="font-size:12px">📋 Resumen por mes</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Mes</th><th style="text-align:right">Ingresos</th><th style="text-align:right">Gastos</th><th style="text-align:right">Saldo</th><th style="text-align:right">%</th></tr></thead>
+          <tbody>
+          ${MN.map((mn,mi)=>{
+            const inc=monthInc[mi], exp=monthExp[mi], sal=monthSaldo[mi];
+            const p=inc>0?Math.round(exp/inc*100):0;
+            if(inc===0&&exp===0) return '';
+            return `<tr>
+              <td style="font-weight:600">${mn}</td>
+              <td class="amt-cell">${fmtCOP(inc,'amt-green')}</td>
+              <td class="amt-cell">${fmtCOP(exp,'amt-red')}</td>
+              <td class="amt-cell">${fmtCOP(sal,sal>=0?'amt-green':'amt-red')}</td>
+              <td style="text-align:right;font-size:11px;font-weight:700;color:${p>BUDGET_ALERT?'var(--danger)':p>BUDGET_WARN?'var(--warning)':'var(--info)'}">${p}%</td>
+            </tr>`;
+          }).join('')}
+          <tr style="border-top:2px solid var(--border)">
+            <td style="font-weight:800">TOTAL ${y}</td>
+            <td class="amt-cell"><strong>${fmtCOP(totalIn,'amt-green')}</strong></td>
+            <td class="amt-cell"><strong>${fmtCOP(totalOut,'amt-red')}</strong></td>
+            <td class="amt-cell"><strong>${fmtCOP(bal,bal>=0?'amt-green':'amt-red')}</strong></td>
+            <td style="text-align:right;font-weight:800;color:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}">${pct}%</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
     </div>`;
 
-  // Gráfico dona dashboard
-  const ctxPie=document.getElementById('dash-pie');
-  if(ctxPie&&catLabels.length){
-    dashCharts.pie=new Chart(ctxPie,{type:'doughnut',data:{labels:catLabels,datasets:[{data:catVals,backgroundColor:catColors,borderWidth:1,borderColor:'rgba(255,255,255,.1)'}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtPlain(c.raw)} (${Math.round(c.raw/total*100)}%)`}}}}});
+  // ── GRÁFICO 1: Barras mensuales ingresos vs gastos ──
+  const ctxMes=document.getElementById('dash-bar-mes');
+  if(ctxMes){
+    dashCharts.barMes=new Chart(ctxMes,{type:'bar',
+      data:{labels:MN.map(m=>m.slice(0,3)),datasets:[
+        {label:'Ingresos',data:monthInc,backgroundColor:'rgba(30,107,69,.75)',borderRadius:4,borderSkipped:false},
+        {label:'Gastos',data:monthExp,backgroundColor:'rgba(184,15,26,.75)',borderRadius:4,borderSkipped:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,position:'top',labels:{font:{size:10},padding:10,boxWidth:8,usePointStyle:true}},
+          tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtPlain(c.raw)}`}}},
+        scales:{x:{ticks:{font:{size:10}},grid:{display:false}},
+          y:{ticks:{callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v),font:{size:9}},
+            grid:{color:'rgba(128,128,128,.1)'}}}}});
   }
 
-  // Gráfico barras horizontales por categoría
-  const ctxBar=document.getElementById('dash-bar');
-  if(ctxBar&&catLabels.length){
-    dashCharts.bar=new Chart(ctxBar,{type:'bar',
-      data:{labels:catLabels,datasets:[{label:'Gasto',data:catVals,backgroundColor:catColors,borderRadius:4,borderSkipped:false}]},
-      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmtPlain(c.raw)}`}}},
-        scales:{x:{ticks:{callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v),font:{size:9}},grid:{color:'rgba(128,128,128,.1)'}},
-          y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+  // ── GRÁFICO 2: Línea saldo mensual ──
+  const ctxSaldo=document.getElementById('dash-line-saldo');
+  if(ctxSaldo){
+    const saldoColors=monthSaldo.map(s=>s>=0?'rgba(30,107,69,.8)':'rgba(184,15,26,.8)');
+    dashCharts.lineSaldo=new Chart(ctxSaldo,{type:'bar',
+      data:{labels:MN.map(m=>m.slice(0,3)),datasets:[
+        {label:'Saldo',data:monthSaldo,backgroundColor:saldoColors,borderRadius:4,borderSkipped:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Saldo: ${fmtPlain(c.raw)}`}}},
+        scales:{x:{ticks:{font:{size:10}},grid:{display:false}},
+          y:{ticks:{callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v),font:{size:9}},
+            grid:{color:'rgba(128,128,128,.1)'},
+            afterDataLimits(scale){const m=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-m*1.1;scale.max=m*1.1;}}}}});
+  }
+
+  // ── GRÁFICO 3: Dona distribución anual ──
+  if(catLabels.length){
+    const ctxPie=document.getElementById('dash-pie');
+    if(ctxPie){
+      dashCharts.pie=new Chart(ctxPie,{type:'doughnut',
+        data:{labels:catLabels,datasets:[{data:catVals,backgroundColor:catColors,borderWidth:2,borderColor:'rgba(255,255,255,.15)',hoverBorderWidth:3}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtPlain(c.raw)} (${Math.round(c.raw/catTotal*100)}%)`}}}}});
+    }
+  }
+
+  // ── GRÁFICO 4: Barras horizontales por categoría ──
+  if(catLabels.length){
+    const ctxCat=document.getElementById('dash-bar-cat');
+    if(ctxCat){
+      dashCharts.barCat=new Chart(ctxCat,{type:'bar',
+        data:{labels:catLabels,datasets:[{label:'Gasto anual',data:catVals,backgroundColor:catColors,borderRadius:4,borderSkipped:false}]},
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmtPlain(c.raw)} (${Math.round(c.raw/catTotal*100)}%)`}}},
+          scales:{x:{ticks:{callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v),font:{size:9}},grid:{color:'rgba(128,128,128,.1)'}},
+            y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+    }
   }
 };
 
@@ -1321,7 +1490,7 @@ window.exportExcel=async()=>{
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gRows),'Gastos');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(iRows),'Ingresos');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rRows),'Recurrentes');
-  XLSX.writeFile(wb,`GastosQuincenales_v1.1_${CY}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(wb,`GastosQuincenales_v1.1.2_${CY}_${new Date().toISOString().split('T')[0]}.xlsx`);
   toast('✅ Excel exportado');
 };
 
