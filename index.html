@@ -648,18 +648,30 @@ window.loginGoogle=async()=>{
   try{
     const provider=new GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
-    await signInWithRedirect(auth,provider);
+    // Intentar popup primero, redirect como fallback
+    try{
+      await signInWithPopup(auth,provider);
+    }catch(popupErr){
+      if(['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(popupErr.code)){
+        await signInWithRedirect(auth,provider);
+      } else { throw popupErr; }
+    }
   }catch(e){
-    toast('Error al iniciar: '+e.message,'err');
+    if(e.code!=='auth/cancelled-popup-request')
+      toast('Error al iniciar: '+e.message,'err');
   }
 };
 window.logout=async()=>{cache={};clearTimeout(sessionTimer);await signOut(auth);};
 
-// Capturar resultado de redirect si viene de signInWithRedirect
-getRedirectResult(auth).catch(()=>{});
+// Capturar resultado si viene de redirect
+getRedirectResult(auth).then(result=>{
+  if(result?.user) console.log('Login por redirect OK:', result.user.email);
+}).catch(()=>{});
 
-onAuthStateChanged(auth,user=>{
-  if(user && validateSession(user)){
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    // Recargar usuario para obtener estado actualizado de emailVerified
+    try{ await user.reload(); }catch(e){}
     currentUser=user;
     startSessionTimer();
     document.getElementById('login-screen').style.display='none';
@@ -674,7 +686,6 @@ onAuthStateChanged(auth,user=>{
     clearTimeout(sessionTimer);
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app-screen').style.display='none';
-    if(user && !validateSession(user)) signOut(auth);
   }
 });
 
