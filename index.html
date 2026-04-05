@@ -7,6 +7,11 @@
 <meta name="theme-color" content="#1e6b45">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gastos">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
 <title>Control de Gastos v1.1.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -703,20 +708,18 @@ function initApp(){
   setSyncStatus('ok','Conectado');
 }
 
-// Determina la quincena activa: la que tiene su fecha de pago más próxima
-// (la última que ya venció o la que viene primero)
+// Determina la quincena activa según la fecha actual:
+// Q1: del 1 al 15 de cada mes
+// Q2: del 16 al último día de cada mes
+// Si hoy es 16 de abril → Abr Q2
+// Si hoy es 1 de mayo → May Q1
 function getActivePeriod(){
-  const now=new Date(); now.setHours(0,0,0,0);
-  const y=now.getFullYear();
-  // Buscar en los próximos 24 períodos cuál es el más cercano
-  for(let mi=0;mi<12;mi++){
-    for(const q of [1,2]){
-      const pd=payDate(y,mi,q);
-      if(pd>=now) return {y,m:mi,q};
-    }
-  }
-  // Si ya pasaron todas (diciembre Q2), mostrar diciembre Q2
-  return {y,m:11,q:2};
+  const now = new Date();
+  const y   = now.getFullYear();
+  const m   = now.getMonth();
+  const d   = now.getDate();
+  const q   = d <= 15 ? 1 : 2;
+  return { y, m, q };
 }
 
 // ── VISTA ACTIVA ──────────────────────────────────────────────────────
