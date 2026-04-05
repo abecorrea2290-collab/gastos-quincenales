@@ -14,7 +14,6 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
 <title>Control de Gastos v1.1.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#f4f2ed;--surface:#fff;--surface2:#edeae2;--border:#ddd9ce;
@@ -134,7 +133,6 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .btn-w{background:var(--warning-light);color:var(--warning);border:1.5px solid var(--warning)}.btn-w:hover{background:var(--warning);color:#fff}
 .btn-g{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border)}.btn-g:hover{color:var(--text)}
 .btn-t{background:var(--teal-light);color:var(--teal);border:1.5px solid var(--teal)}.btn-t:hover{background:var(--teal);color:#fff}
-.btn-excel{background:#1d6f42;color:#fff}.btn-excel:hover{background:#155232}
 .btn-dash{background:var(--purple-light);color:var(--purple);border:1.5px solid var(--purple);font-weight:800}.btn-dash:hover{background:var(--purple);color:#fff}
 .bsm{padding:5px 10px;font-size:11px;min-height:32px}
 
@@ -243,6 +241,12 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .tabs{display:flex;overflow-x:auto;background:var(--surface);border-bottom:2px solid var(--border);padding:0 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;background:none;border:none;border-bottom:3px solid transparent;padding:7px 10px 6px;cursor:pointer;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;margin-bottom:-2px;line-height:1.3;text-align:center;min-width:60px;min-height:42px}
+.tab.past{color:var(--info);opacity:.75}
+.tab.past .tab-date{color:var(--info)}
+.tab.future{color:var(--text3);opacity:.45}
+.tab.future .tab-date{color:var(--text3)}
+.tab.active-period{color:var(--accent);font-weight:700;border-bottom:3px solid var(--accent-light)}
+.tab.active-period .tab-date{color:var(--accent)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:800}
 .tab-name{display:block;font-size:11px}.tab-date{display:block;font-size:9px;color:var(--text3);margin-top:1px}
 .tab.active .tab-date{color:var(--accent)}
@@ -290,7 +294,6 @@ input:checked+.sldr:before{transform:translateX(16px)}
     <div class="h1">💰 Gastos <span class="ver-badge">v1.1.3</span></div>
     <div class="hdr-r">
       <div class="user-chip"><div class="user-initials" id="user-initials">?</div><span id="user-name">...</span></div>
-      <button class="btn btn-excel bsm" onclick="exportExcel()" title="Exportar Excel">📤</button>
       <button class="btn btn-g bsm" onclick="showChangelog()" title="Notas de versión">📋</button>
       <button class="btn btn-g bsm" onclick="showClean()" title="Limpiar datos">🗑</button>
       <button class="btn btn-g bsm" onclick="logout()" title="Cerrar sesión">↩</button>
@@ -513,77 +516,66 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
-  {ver:'1.1.3',date:'Abril 2025',changes:[
+  {ver:'1.1.4',date:'Abril 2026',changes:[
+    'Tabs con colores por estado: 🔵 pasada · 🟢 en curso · ⬜ futura',
+    'Quincena activa corregida: activa la última cuya fecha de pago ya venció (días 1-15 → Q2 mes anterior, días 16-31 → Q1 mes actual)',
+    'Año mínimo 2026 — no se puede navegar a años anteriores',
+    'Dashboard selector de años desde 2026 en adelante',
+    'Logo GQ en favicon y pantalla de inicio del celular',
+    'Exportación a Excel eliminada (datos seguros en Firebase)',
+    'App Check y reCAPTCHA removidos — incompatibles con GitHub Pages',
+    'Login restaurado a popup con fallback a redirect',
+    'CSP removido — incompatible con Firebase SDK en GitHub Pages',
+    'Sesión expira automáticamente tras 8 horas de inactividad',
+  ]},
+  {ver:'1.1.3',date:'Abril 2026',changes:[
     'Dashboard convertido en pestaña principal (Quincenal / Mensual / Resumen)',
-    'Quincena activa automática según fecha de pago más próxima',
-    'Si hoy es 16 de abril muestra Abr Q2, si es 1 de mayo muestra May Q1, etc.',
-    'Optimización mobile: botones táctiles más grandes, navegación inferior tipo app',
-    'Ícono + etiqueta en tabs de vista para mejor usabilidad en celular',
+    'Navegación con ícono + etiqueta optimizada para mobile',
     'Año visible junto a navegación ← → en la misma barra',
     'Botón 📊 del header eliminado, ahora es pestaña nativa',
-    'CSP ampliado para Firestore WebSocket y reCAPTCHA Enterprise',
-    'Login cambiado a signInWithRedirect (más compatible con todos los navegadores)',
   ]},
-  {ver:'1.1.2',date:'Abril 2025',changes:[
-    'Dashboard rediseñado como resumen anual completo (antes era mensual)',
-    'Selector de año en el dashboard (hasta 4 años atrás)',
-    'Gráfico de barras mensual: ingresos vs gastos los 12 meses',
-    'Gráfico de saldo mensual con colores verde/rojo por resultado',
-    'Dona y barras horizontales con TODAS las categorías del año',
-    'Tabla resumen con los 12 meses, totales y % consumido',
-    'Indicador de mejor mes y mes más ajustado del año',
-    'Corrección: gráfico de dona mostraba solo 1 categoría por quincena',
-    'Corrección: canvas reemplazado en cada render para evitar corrupción de Chart.js',
-    'La leyenda de la dona ahora muestra porcentaje y valor COP',
-    '🔒 Seguridad: Content Security Policy (CSP) aplicado en todas las páginas',
-    '🔒 Seguridad: Firebase App Check integrado para bloquear accesos no autorizados',
-    '🔒 Seguridad: validación de sesión con verificación de email obligatoria',
-    '🔒 Seguridad: cierre automático de sesión tras 8 horas de inactividad',
-    '🔒 Seguridad: sanitización de todos los inputs para evitar inyección HTML',
-    '🔒 Seguridad: rate limiting local — máximo 30 escrituras por minuto',
-    '🔒 Seguridad: validación de monto máximo $ 100.000.000 por gasto',
-    '🔒 Seguridad: cabeceras X-Frame-Options y X-Content-Type-Options',
+  {ver:'1.1.2',date:'Abril 2026',changes:[
+    'Dashboard rediseñado como resumen anual completo',
+    'Gráfico barras: ingresos vs gastos los 12 meses',
+    'Gráfico saldo mensual con colores verde/rojo',
+    'Dona con TODAS las categorías del año y leyenda con % y valor COP',
+    'Tabla resumen 12 meses con totales y % consumido',
+    'Indicador mejor mes y mes más ajustado del año',
+    '🔒 Seguridad: cierre automático de sesión tras 8 horas',
+    '🔒 Seguridad: sanitización de inputs contra inyección HTML',
+    '🔒 Seguridad: rate limiting 30 escrituras por minuto',
+    '🔒 Seguridad: API Key restringida al dominio de GitHub Pages',
+    '🔒 Seguridad: reglas Firestore con email verificado obligatorio',
   ]},
-  {ver:'1.1.1',date:'Abril 2025',changes:[
-    'Vista mensual con todas las herramientas de registro (igual a quincenal)',
-    'Toggle Q1/Q2 en vista mensual para elegir dónde guardar cada registro',
-    'Sub-pestañas Todos/Q1/Q2 en la tabla de movimientos mensual',
-    'Dashboard: todas las categorías visibles sin límite de 8',
-    'Barras de categorías proporcionales al total en el dashboard',
+  {ver:'1.1.1',date:'Abril 2026',changes:[
+    'Vista mensual con todas las herramientas de registro igual a quincenal',
+    'Toggle Q1/Q2 para registrar en vista mensual',
+    'Sub-pestañas Todos/Q1/Q2 en tabla de movimientos mensuales',
+    'Dashboard: todas las categorías visibles sin límite',
   ]},
-  {ver:'1.1.0',date:'Abril 2025',changes:[
+  {ver:'1.1.0',date:'Abril 2026',changes:[
     'Optimización completa para dispositivos móviles',
-    'Dashboard de resumen mensual con gráficos (dona + barras)',
-    'Vista mensual y quincenal intercambiable',
-    'Alertas automáticas de presupuesto (amarillo >80%, rojo >95%)',
-    'Sección de ingresos adicionales',
-    'Nuevas categorías: Peajes, Gasolina, Mantenimiento del carro, Seguros, Comidas fuera de casa, Domicilios, Medicamentos, Viajes, Suscripciones, Préstamos, Tarjetas de crédito, Mercado',
+    'Alertas de presupuesto: amarillo >80%, rojo >95%',
+    'Sección de ingresos adicionales por quincena',
     'Campo de referencia (número de tarjeta/crédito) en gastos',
-    'Edición de monto en gastos recurrentes con historial de cambios',
-    'Panel de notas de versión y control de cambios',
-    'Botón 📊 para acceder al dashboard mensual',
+    'Edición de monto en recurrentes con historial de cambios',
+    'Nuevas categorías: Peajes, Gasolina, Mantenimiento del carro, Seguros, Comidas fuera de casa, Domicilios, Medicamentos, Viajes, Suscripciones, Préstamos, Tarjetas de crédito, Mercado',
   ]},
-  {ver:'1.0.3',date:'Marzo 2025',changes:[
-    'Selección individual de recurrentes al aplicar',
-    'Formato COP con símbolo $ y separador de miles',
-    'Diseño mejorado con acento de color por sección',
-  ]},
-  {ver:'1.0.2',date:'Marzo 2025',changes:[
+  {ver:'1.0.3',date:'Marzo 2026',changes:[
+    'Selección individual de recurrentes al aplicar por quincena',
+    'Formato COP con símbolo $ y separador de miles punto colombiano',
     'Fechas de pago inteligentes con festivos colombianos',
-    'Saldo encadenado entre quincenas',
-    'Exportación a Excel',
-    'Botón de limpieza con tres niveles',
+    'Saldo sobrante encadenado automáticamente entre quincenas',
   ]},
-  {ver:'1.0.0',date:'Febrero 2025',changes:[
-    'Versión inicial con Firebase Firestore y Auth Google',
+  {ver:'1.0.0',date:'Febrero 2026',changes:[
+    'Versión inicial con Firebase Firestore y autenticación Google',
     '24 quincenas por año con gráficos de distribución y evolución',
     'Gastos recurrentes con aplicación automática',
-    'Modo oscuro automático',
+    'Modo oscuro automático según sistema operativo',
   ]},
-];
-
 // ── ESTADO ────────────────────────────────────────────────────────────
-let CY=new Date().getFullYear(), CP=null, charts={}, dashCharts={};
+const MIN_YEAR = 2026;
+let CY=Math.max(new Date().getFullYear(), MIN_YEAR), CP=null, charts={}, dashCharts={};
 let currentUser=null, cache={}, viewMode='q';
 let editRecId=null;
 
@@ -708,18 +700,26 @@ function initApp(){
   setSyncStatus('ok','Conectado');
 }
 
-// Determina la quincena activa según la fecha actual:
-// Q1: del 1 al 15 de cada mes
-// Q2: del 16 al último día de cada mes
-// Si hoy es 16 de abril → Abr Q2
-// Si hoy es 1 de mayo → May Q1
+// Quincena activa según día del mes:
+// Días 1-15  → Q2 del mes anterior (aún registrando gastos de esa quincena)
+// Días 16-30/31 → Q1 del mes actual (ya se pagó el 15)
+// Ejemplo: 5 de abril → activa Mar Q2
+//          20 de abril → activa Abr Q1
 function getActivePeriod(){
   const now = new Date();
-  const y   = now.getFullYear();
-  const m   = now.getMonth();
   const d   = now.getDate();
-  const q   = d <= 15 ? 1 : 2;
-  return { y, m, q };
+  const m   = now.getMonth();
+  const y   = now.getFullYear();
+  let result;
+  if(d <= 15){
+    if(m === 0) result = {y: y-1, m: 11, q: 2};
+    else        result = {y, m: m-1, q: 2};
+  } else {
+    result = {y, m, q: 1};
+  }
+  // Nunca mostrar un año anterior a MIN_YEAR
+  if(result.y < MIN_YEAR) result = {y: MIN_YEAR, m: 0, q: 1};
+  return result;
 }
 
 // ── VISTA ACTIVA ──────────────────────────────────────────────────────
@@ -744,7 +744,12 @@ window.setViewTab=tab=>{
 };
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────────────
-window.changeYear=delta=>{CY+=delta;renderTabs();};
+window.changeYear=delta=>{
+  const next=CY+delta;
+  if(next < MIN_YEAR) return;
+  CY=next;
+  renderTabs();
+};
 function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
 async function prevBalance(y,m,q){
   const p=prevQ(y,m,q);const d=await getPeriodo(p.y,p.m,p.q);
@@ -755,19 +760,33 @@ async function prevBalance(y,m,q){
 function renderTabs(){
   document.getElementById('yd').textContent=CY;
   const el=document.getElementById('tabs');el.innerHTML='';
+  const now=new Date();now.setHours(0,0,0,0);
+  const active=getActivePeriod();
+
   if(viewMode==='q'){
     MN.forEach((mn,mi)=>[1,2].forEach(q=>{
       const pd=payDate(CY,mi,q);
+      const isActive=mi===CP.m&&q===CP.q;
+      const isActualActive=CY===active.y&&mi===active.m&&q===active.q;
+
+      // Estado del tab según fecha de pago
+      let state='future';
+      if(pd<now) state='past';           // ya se pagó → azul
+      if(isActualActive) state='active-period'; // quincena en curso → verde
+
       const btn=document.createElement('button');
-      btn.className='tab'+(mi===CP.m&&q===CP.q?' active':'');
+      // clase CSS: active (seleccionada) tiene prioridad visual
+      btn.className='tab'+(isActive?' active':state==='past'?' past':state==='active-period'?' active-period':' future');
       btn.innerHTML=`<span class="tab-name">${mn.slice(0,3)} Q${q}</span><span class="tab-date">Pago ${fmtD(pd)}</span>`;
       btn.onclick=()=>{CP={m:mi,q};renderTabs();};
       el.appendChild(btn);
     }));
   }else{
     MN.forEach((mn,mi)=>{
+      const pdQ2=payDate(CY,mi,2);
+      let state=pdQ2<now?'past':CY===active.y&&mi===active.m?'active-period':'future';
       const btn=document.createElement('button');
-      btn.className='tab'+(mi===CP.m?' active':'');
+      btn.className='tab'+(mi===CP.m?' active':state==='past'?' past':state==='active-period'?' active-period':' future');
       btn.innerHTML=`<span class="tab-name">${mn}</span><span class="tab-date">${CY}</span>`;
       btn.onclick=()=>{CP={m:mi,q:1};renderTabs();};
       el.appendChild(btn);
@@ -1363,7 +1382,7 @@ async function renderBar(y){
 async function initDashPanel(){
   const sel=document.getElementById('dash-month');
   sel.innerHTML='';
-  for(let yr=CY;yr>=CY-3;yr--){
+  for(let yr=CY;yr>=MIN_YEAR;yr--){
     const opt=document.createElement('option');
     opt.value=yr;opt.textContent='Año '+yr;
     if(yr===CY)opt.selected=true;
@@ -1653,28 +1672,6 @@ window.cleanAll=async()=>{
 };
 
 // ── EXPORTAR ──────────────────────────────────────────────────────────
-window.exportExcel=async()=>{
-  toast('⏳ Generando Excel…');
-  const wb=XLSX.utils.book_new();
-  const gRows=[['ID','Año','Mes','Quincena','Referencia','Fecha','Descripción','Categoría','Valor (COP)','Recurrente']];
-  const iRows=[['Año','Mes','Quincena','Ingreso Base','Sobrante','Extra','Total Disponible']];
-  for(const[mi,mn]of MN.entries())for(const q of[1,2]){
-    const d=await getPeriodo(CY,mi,q);
-    if(!d.income&&!(d.items||[]).length)continue;
-    const ex=(d.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
-    iRows.push([CY,mn,`Q${q}`,d.income||0,d.transferIn||0,ex,(d.income||0)+(d.transferIn||0)+ex]);
-    (d.items||[]).forEach(it=>gRows.push([it.id,CY,mn,`Q${q}`,it.ref||'',it.date||'',it.desc,it.cat,it.amount,it.recurring?'Sí':'No']));
-  }
-  const rec=await getRec();
-  const rRows=[['ID','Descripción','Categoría','Monto Actual','Referencia','Último cambio'],
-    ...rec.map(r=>[r.id,r.desc,r.cat,r.amount,r.ref||'',(r.history||[]).length?new Date((r.history||[]).slice(-1)[0].date).toLocaleDateString('es-CO'):'—'])];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gRows),'Gastos');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(iRows),'Ingresos');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rRows),'Recurrentes');
-  XLSX.writeFile(wb,`GastosQuincenales_v1.1.2_${CY}_${new Date().toISOString().split('T')[0]}.xlsx`);
-  toast('✅ Excel exportado');
-};
-
 // ── TOAST ─────────────────────────────────────────────────────────────
 function toast(msg,type=''){
   const t=document.createElement('div');t.className='toast'+(type?' '+type:'');t.textContent=msg;
