@@ -14,22 +14,27 @@
     https://apis.google.com
     https://www.google.com
     https://recaptcha.google.com
-    https://www.recaptcha.net;
+    https://www.recaptcha.net
+    https://*.firebaseio.com;
   style-src 'self' 'unsafe-inline'
     https://fonts.googleapis.com
     https://www.gstatic.com;
   connect-src 'self'
-    https://*.firebaseio.com
     https://*.googleapis.com
+    https://*.firebaseio.com
     https://*.firestore.googleapis.com
     https://firestore.googleapis.com
     https://identitytoolkit.googleapis.com
     https://securetoken.googleapis.com
-    https://www.googleapis.com
+    https://firebase.googleapis.com
+    https://firebaseinstallations.googleapis.com
+    https://recaptchaenterprise.googleapis.com
     https://recaptcha.google.com
     https://www.google.com
     https://gastos-personales-cc2ce.firebaseapp.com
-    wss://*.firebaseio.com;
+    wss://*.firebaseio.com
+    wss://s-usc1c-nss-2099.firebaseio.com
+    wss://s-usc1b-nss-2099.firebaseio.com;
   frame-src 'self'
     https://accounts.google.com
     https://gastos-personales-cc2ce.firebaseapp.com
@@ -37,13 +42,11 @@
     https://recaptcha.google.com
     https://www.recaptcha.net;
   img-src 'self' data: https: blob:;
-  font-src 'self' data:
-    https://fonts.gstatic.com;
+  font-src 'self' data: https://fonts.gstatic.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self' https://accounts.google.com;
 ">
-<!-- ── Seguridad: evita clickjacking ── -->
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Control de Gastos v1.1.2</title>
