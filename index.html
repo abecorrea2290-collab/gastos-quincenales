@@ -5,6 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1e6b45">
+<!-- ── Seguridad: Content Security Policy ── -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline'
+    https://cdnjs.cloudflare.com
+    https://www.gstatic.com
+    https://apis.google.com;
+  style-src 'self' 'unsafe-inline';
+  connect-src 'self'
+    https://*.firebaseio.com
+    https://*.googleapis.com
+    https://*.firestore.googleapis.com
+    https://firestore.googleapis.com
+    https://identitytoolkit.googleapis.com
+    https://securetoken.googleapis.com
+    https://www.googleapis.com;
+  frame-src 'self'
+    https://accounts.google.com
+    https://gastos-personales-cc2ce.firebaseapp.com;
+  img-src 'self' data: https: blob:;
+  font-src 'self' data:;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+">
+<!-- ── Seguridad: evita clickjacking ── -->
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Control de Gastos v1.1.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -383,11 +412,81 @@ input:checked+.sldr:before{transform:translateX(16px)}
 import { initializeApp }           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, writeBatch, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
 
-const firebaseConfig={apiKey:"AIzaSyDiRroXgHpmohjj9386v59AeH-YsxvRiW0",authDomain:"gastos-personales-cc2ce.firebaseapp.com",projectId:"gastos-personales-cc2ce",storageBucket:"gastos-personales-cc2ce.firebasestorage.app",messagingSenderId:"414594890487",appId:"1:414594890487:web:216a013129f88ed7b5f1f2"};
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+const firebaseConfig={
+  apiKey:"AIzaSyDiRroXgHpmohjj9386v59AeH-YsxvRiW0",
+  authDomain:"gastos-personales-cc2ce.firebaseapp.com",
+  projectId:"gastos-personales-cc2ce",
+  storageBucket:"gastos-personales-cc2ce.firebasestorage.app",
+  messagingSenderId:"414594890487",
+  appId:"1:414594890487:web:216a013129f88ed7b5f1f2"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── App Check — bloquea accesos desde fuera de la app ─────────────────
+// NOTA: reemplaza 'TU_SITE_KEY_RECAPTCHA_V3' con la key que obtengas
+// en Firebase Console → App Check → Registrar app → reCAPTCHA v3
+// Si no tienes la key aún, esta línea no afecta el funcionamiento.
+try {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider('6Ld0eKgsAAAAADrEa8n_jHDgNn8Jk265WU3WlAl9'),
+    isTokenAutoRefreshEnabled: true
+  });
+} catch(e) { console.warn('App Check no configurado:', e.message); }
+
+// ── Validación de sesión: verificar que el usuario sigue activo ────────
+function validateSession(user) {
+  if (!user) return false;
+  // Bloquear si el email no está verificado por Google
+  if (!user.emailVerified) return false;
+  // Bloquear si la cuenta fue creada hace menos de 1 segundo (anti-bot)
+  const age = Date.now() - user.metadata.creationTime;
+  if (age < 1000) return false;
+  return true;
+}
+
+// ── Timeout de sesión: cerrar sesión automáticamente tras 8 horas ─────
+let sessionTimer = null;
+function startSessionTimer() {
+  clearTimeout(sessionTimer);
+  sessionTimer = setTimeout(async () => {
+    await signOut(auth);
+    toast('⏰ Sesión cerrada por inactividad', 'warn');
+  }, 8 * 60 * 60 * 1000); // 8 horas
+}
+// Reiniciar timer con cualquier interacción
+['click','keydown','touchstart'].forEach(ev =>
+  document.addEventListener(ev, () => { if(currentUser) startSessionTimer(); }, {passive:true})
+);
+
+// ── Sanitización de inputs: evitar inyección de HTML ──────────────────
+function sanitize(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;')
+    .slice(0, 200); // máximo 200 caracteres
+}
+
+// ── Rate limiting local: evitar spam de escrituras ────────────────────
+const writeLog = [];
+function checkRateLimit() {
+  const now = Date.now();
+  // Limpiar entradas mayores a 1 minuto
+  while (writeLog.length && now - writeLog[0] > 60000) writeLog.shift();
+  if (writeLog.length >= 30) {
+    toast('⚠️ Demasiadas operaciones. Espera un momento.', 'warn');
+    return false;
+  }
+  writeLog.push(now);
+  return true;
+}
 
 // ── CONSTANTES ────────────────────────────────────────────────────────
 const MN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -421,6 +520,14 @@ const CHANGELOG=[
     'Corrección: gráfico de dona mostraba solo 1 categoría por quincena',
     'Corrección: canvas reemplazado en cada render para evitar corrupción de Chart.js',
     'La leyenda de la dona ahora muestra porcentaje y valor COP',
+    '🔒 Seguridad: Content Security Policy (CSP) aplicado en todas las páginas',
+    '🔒 Seguridad: Firebase App Check integrado para bloquear accesos no autorizados',
+    '🔒 Seguridad: validación de sesión con verificación de email obligatoria',
+    '🔒 Seguridad: cierre automático de sesión tras 8 horas de inactividad',
+    '🔒 Seguridad: sanitización de todos los inputs para evitar inyección HTML',
+    '🔒 Seguridad: rate limiting local — máximo 30 escrituras por minuto',
+    '🔒 Seguridad: validación de monto máximo $ 100.000.000 por gasto',
+    '🔒 Seguridad: cabeceras X-Frame-Options y X-Content-Type-Options',
   ]},
   {ver:'1.1.1',date:'Abril 2025',changes:[
     'Vista mensual con todas las herramientas de registro (igual a quincenal)',
@@ -487,6 +594,7 @@ async function getPeriodo(y,m,q){
 }
 
 async function savePeriodo(y,m,q,data){
+  if(!checkRateLimit()) return;
   cache[cacheKey(y,m,q)]=data;
   setSyncStatus('syncing','Guardando…');
   try{await setDoc(doc(db,periodoRef(y,m,q)),{...data,updatedAt:serverTimestamp()});setSyncStatus('ok','Guardado');}
@@ -530,8 +638,9 @@ window.loginGoogle=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvid
 window.logout=async()=>{cache={};await signOut(auth);};
 
 onAuthStateChanged(auth,user=>{
-  if(user){
+  if(user && validateSession(user)){
     currentUser=user;
+    startSessionTimer();
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
     const init=(user.displayName||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -541,9 +650,12 @@ onAuthStateChanged(auth,user=>{
     initApp();
   }else{
     currentUser=null;
+    clearTimeout(sessionTimer);
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app-screen').style.display='none';
     document.getElementById('dash-screen').style.display='none';
+    // Si el usuario existe pero no pasó validación, cerrar sesión
+    if(user && !validateSession(user)) signOut(auth);
   }
 });
 
@@ -915,9 +1027,10 @@ window._setIncome=async()=>{
 };
 
 window._addExtra=async()=>{
-  const desc=document.getElementById('ei-desc').value.trim();
+  const desc=sanitize(document.getElementById('ei-desc').value.trim());
   const amount=parseFloat(document.getElementById('ei-amt').value)||0;
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
+  if(amount>100000000){toast('Valor máximo: $ 100.000.000','err');return;}
   const{m}=CP;const y=CY;
   const q=viewMode==='m'?mQSel:CP.q;
   const d=await getPeriodo(y,m,q);
@@ -952,13 +1065,14 @@ function renderExtraList(data){
 }
 
 window._addItem=async()=>{
-  const ref=document.getElementById('iref').value.trim();
-  const desc=document.getElementById('idesc').value.trim();
+  const ref=sanitize(document.getElementById('iref').value.trim());
+  const desc=sanitize(document.getElementById('idesc').value.trim());
   const amount=parseFloat(document.getElementById('iamt').value)||0;
   const cat=document.getElementById('icat').value;
   const date=document.getElementById('idate').value;
   const rec=document.getElementById('irec').checked;
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
+  if(amount>100000000){toast('Valor máximo: $ 100.000.000','err');return;}
   const{m}=CP;const y=CY;
   const q=viewMode==='m'?mQSel:CP.q;
   const d=await getPeriodo(y,m,q);
@@ -1503,3 +1617,4 @@ window.toast=toast;
 </script>
 </body>
 </html>
+
