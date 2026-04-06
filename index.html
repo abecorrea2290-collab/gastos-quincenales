@@ -8,11 +8,13 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Gastos">
+<meta name="apple-mobile-web-app-title" content="Gastos GQ">
+<link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
-<title>Control de Gastos v1.1.3</title>
+<title>Control de Gastos v1.1.4</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{
@@ -224,14 +226,25 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* MAIN NAV (vista + año) */
-.main-nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px 0 0}
-.view-tabs{display:flex;flex:1}
-.view-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:9px 4px;border:none;background:none;border-bottom:3px solid transparent;cursor:pointer;color:var(--text3);font-weight:600;transition:all .15s;margin-bottom:-1px}
-.view-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:800}
-.view-tab:hover:not(.active){background:var(--surface2);color:var(--text2)}
-.vtab-icon{font-size:16px;line-height:1}
-.vtab-label{font-size:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+/* MAIN NAV */
+.main-nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:nowrap}
+
+/* Toggle Quincenal/Mensual */
+.view-toggle-wrap{display:flex;align-items:center;gap:8px;flex:1}
+.vtog-label{font-size:12px;font-weight:700;color:var(--text3);transition:color .2s;white-space:nowrap}
+.vtog-label.active{color:var(--accent)}
+.vtog{position:relative;width:44px;height:24px;flex-shrink:0;cursor:pointer}
+.vtog input{opacity:0;width:0;height:0}
+.vtog-sldr{position:absolute;inset:0;background:var(--accent);border-radius:24px;transition:.25s;cursor:pointer}
+.vtog-sldr:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.vtog input:checked+.vtog-sldr:before{transform:translateX(20px)}
+
+/* Botón Resumen */
+.view-tab-dash{display:flex;align-items:center;gap:4px;background:none;border:1.5px solid var(--border);border-radius:20px;padding:5px 11px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;transition:all .15s;flex-shrink:0}
+.view-tab-dash:hover{color:var(--purple);border-color:var(--purple)}
+.view-tab-dash.active{background:var(--purple-light);color:var(--purple);border-color:var(--purple)}
+
+/* Ynav inline */
 .ynav-inline{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .ynav-inline button{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--text);font-size:13px;font-weight:700;min-height:30px}
 .ynav-inline button:active{background:var(--surface2)}
@@ -309,24 +322,22 @@ input:checked+.sldr:before{transform:translateX(16px)}
   <!-- Alerta presupuesto -->
   <div id="budget-alert" style="display:none"></div>
 
-  <!-- NAV PRINCIPAL: vista + año -->
+  <!-- NAV PRINCIPAL: toggle vista + año + resumen -->
   <div class="main-nav">
-    <!-- Tabs de vista -->
-    <div class="view-tabs">
-      <button class="view-tab active" id="vtab-q" onclick="setViewTab('q')">
-        <span class="vtab-icon">📅</span>
-        <span class="vtab-label">Quincenal</span>
-      </button>
-      <button class="view-tab" id="vtab-m" onclick="setViewTab('m')">
-        <span class="vtab-icon">📆</span>
-        <span class="vtab-label">Mensual</span>
-      </button>
-      <button class="view-tab" id="vtab-d" onclick="setViewTab('d')">
-        <span class="vtab-icon">📊</span>
-        <span class="vtab-label">Resumen</span>
-      </button>
+    <!-- Toggle Quincenal / Mensual -->
+    <div class="view-toggle-wrap">
+      <span class="vtog-label" id="vtog-left">Quincenal</span>
+      <label class="vtog">
+        <input type="checkbox" id="vtog-input" onchange="toggleViewMode(this.checked)">
+        <span class="vtog-sldr"></span>
+      </label>
+      <span class="vtog-label" id="vtog-right">Mensual</span>
     </div>
-    <!-- Navegación año (solo en quincenal y mensual) -->
+    <!-- Botón Resumen -->
+    <button class="view-tab-dash" id="vtab-d" onclick="setViewTab('d')">
+      <span>📊</span><span>Resumen</span>
+    </button>
+    <!-- Navegación año -->
     <div class="ynav-inline" id="ynav-inline">
       <button onclick="changeYear(-1)">&#8592;</button>
       <span id="yd"></span>
@@ -692,6 +703,13 @@ function initApp(){
   CP=getActivePeriod();
   CY=CP.y;
   viewMode='q';
+  // Inicializar toggle en Quincenal
+  const input=document.getElementById('vtog-input');
+  if(input) input.checked=false;
+  const lLeft=document.getElementById('vtog-left');
+  const lRight=document.getElementById('vtog-right');
+  if(lLeft) lLeft.classList.add('active');
+  if(lRight) lRight.classList.remove('active');
   // Inicializar visibilidad de paneles
   document.getElementById('content').style.display='block';
   document.getElementById('dash-panel').style.display='none';
@@ -724,21 +742,43 @@ function getActivePeriod(){
 }
 
 // ── VISTA ACTIVA ──────────────────────────────────────────────────────
+window.toggleViewMode=checked=>{
+  // checked=false → Quincenal, checked=true → Mensual
+  setViewTab(checked?'m':'q');
+};
+
 window.setViewTab=tab=>{
-  viewMode=tab==='d'?'d':tab;
-  ['q','m','d'].forEach(t=>{
-    const b=document.getElementById(`vtab-${t}`);
-    if(b) b.classList.toggle('active',t===tab);
-  });
-  const showYnav=tab!=='d';
-  document.getElementById('ynav-inline').style.display=showYnav?'flex':'none';
-  document.getElementById('tabs').style.display=tab==='d'?'none':'flex';
+  const isDash=tab==='d';
+  viewMode=isDash?viewMode:tab; // mantener viewMode anterior si es dashboard
+
+  // Actualizar toggle
+  const input=document.getElementById('vtog-input');
+  if(input && !isDash) input.checked=(tab==='m');
+
+  // Labels del toggle
+  const lLeft=document.getElementById('vtog-left');
+  const lRight=document.getElementById('vtog-right');
+  if(lLeft&&lRight&&!isDash){
+    lLeft.classList.toggle('active',tab==='q');
+    lRight.classList.toggle('active',tab==='m');
+  }
+
+  // Botón resumen
+  const btnD=document.getElementById('vtab-d');
+  if(btnD) btnD.classList.toggle('active',isDash);
+
+  // Mostrar/ocultar paneles
+  const showData=!isDash;
+  document.getElementById('ynav-inline').style.display=showData?'flex':'none';
+  document.getElementById('tabs').style.display=showData?'flex':'none';
   document.getElementById('budget-warn-bar').style.display='none';
-  document.getElementById('content').style.display=tab==='d'?'none':'block';
-  document.getElementById('dash-panel').style.display=tab==='d'?'block':'none';
-  if(tab==='d'){
+  document.getElementById('content').style.display=showData?'block':'none';
+  document.getElementById('dash-panel').style.display=isDash?'block':'none';
+
+  if(isDash){
+    viewMode=viewMode||'q';
     initDashPanel();
-  } else {
+  }else{
     viewMode=tab;
     renderTabs();
   }
@@ -1679,6 +1719,36 @@ function toast(msg,type=''){
   document.body.appendChild(t);setTimeout(()=>t.remove(),2800);
 }
 window.toast=toast;
+
+// ── PWA: Registrar Service Worker ─────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/gastos-quincenales/sw.js')
+      .then(()=>console.log('SW registrado'))
+      .catch(()=>{});
+  });
+}
+
+// ── PWA: Prompt de instalación ────────────────────────────────────────
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  // Mostrar botón de instalar si no está instalada
+  const btn=document.createElement('button');
+  btn.className='btn btn-p bsm';
+  btn.style.cssText='position:fixed;bottom:80px;right:16px;z-index:800;box-shadow:0 4px 16px rgba(30,107,69,.4);border-radius:24px;padding:10px 18px;font-size:13px';
+  btn.innerHTML='📲 Instalar app';
+  btn.onclick=async()=>{
+    deferredPrompt.prompt();
+    const{outcome}=await deferredPrompt.userChoice;
+    if(outcome==='accepted') toast('✅ App instalada correctamente');
+    btn.remove(); deferredPrompt=null;
+  };
+  document.body.appendChild(btn);
+  // Auto-ocultar después de 10 segundos
+  setTimeout(()=>btn.remove(), 10000);
+});
 </script>
 </body>
 </html>
