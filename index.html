@@ -357,7 +357,10 @@ input:checked+.sldr:before{transform:translateX(16px)}
     <div class="main" style="max-width:960px;margin:0 auto;padding:12px 12px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
         <span style="font-size:14px;font-weight:800;color:var(--purple)">📊 Resumen Anual</span>
-        <select id="dash-month" onchange="renderDash()" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;background:var(--bg);color:var(--text);font-weight:700"></select>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select id="dash-month" onchange="renderDash()" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;background:var(--bg);color:var(--text);font-weight:700"></select>
+          <button class="btn btn-g bsm" onclick="setViewTab('q')" style="border-radius:20px">✕ Cerrar</button>
+        </div>
       </div>
     </div>
     <div class="main" id="dash-body" style="padding-top:0"></div>
@@ -743,43 +746,52 @@ function getActivePeriod(){
 
 // ── VISTA ACTIVA ──────────────────────────────────────────────────────
 window.toggleViewMode=checked=>{
-  // checked=false → Quincenal, checked=true → Mensual
   setViewTab(checked?'m':'q');
 };
 
 window.setViewTab=tab=>{
   const isDash=tab==='d';
-  viewMode=isDash?viewMode:tab; // mantener viewMode anterior si es dashboard
 
-  // Actualizar toggle
+  // Si ya estamos en dashboard y se toca de nuevo → volver a quincenal
+  if(isDash && viewMode==='d'){
+    setViewTab('q');
+    return;
+  }
+
+  const prevMode=viewMode==='d'?'q':viewMode;
+  viewMode=isDash?'d':tab;
+
+  // Actualizar toggle (solo visible fuera del dashboard)
   const input=document.getElementById('vtog-input');
   if(input && !isDash) input.checked=(tab==='m');
 
   // Labels del toggle
   const lLeft=document.getElementById('vtog-left');
   const lRight=document.getElementById('vtog-right');
-  if(lLeft&&lRight&&!isDash){
-    lLeft.classList.toggle('active',tab==='q');
-    lRight.classList.toggle('active',tab==='m');
+  if(lLeft&&lRight){
+    lLeft.classList.toggle('active',!isDash&&tab==='q');
+    lRight.classList.toggle('active',!isDash&&tab==='m');
   }
 
-  // Botón resumen
+  // Botón resumen — muestra ✕ cuando está activo para indicar que tocarlo cierra
   const btnD=document.getElementById('vtab-d');
-  if(btnD) btnD.classList.toggle('active',isDash);
+  if(btnD){
+    btnD.classList.toggle('active',isDash);
+    btnD.innerHTML=isDash
+      ? '<span>✕</span><span>Cerrar</span>'
+      : '<span>📊</span><span>Resumen</span>';
+  }
 
   // Mostrar/ocultar paneles
-  const showData=!isDash;
-  document.getElementById('ynav-inline').style.display=showData?'flex':'none';
-  document.getElementById('tabs').style.display=showData?'flex':'none';
+  document.getElementById('ynav-inline').style.display=isDash?'none':'flex';
+  document.getElementById('tabs').style.display=isDash?'none':'flex';
   document.getElementById('budget-warn-bar').style.display='none';
-  document.getElementById('content').style.display=showData?'block':'none';
+  document.getElementById('content').style.display=isDash?'none':'block';
   document.getElementById('dash-panel').style.display=isDash?'block':'none';
 
   if(isDash){
-    viewMode=viewMode||'q';
     initDashPanel();
   }else{
-    viewMode=tab;
     renderTabs();
   }
 };
