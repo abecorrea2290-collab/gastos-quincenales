@@ -2,8 +2,8 @@
   "name": "Control de Gastos Quincenales",
   "short_name": "Gastos GQ",
   "description": "Control de gastos quincenales con Firebase - Colombia",
-  "start_url": "/gastos-quincenales/",
-  "scope": "/gastos-quincenales/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1e6b45",
@@ -24,13 +24,12 @@
     }
   ],
   "categories": ["finance", "productivity"],
-  "screenshots": [],
   "shortcuts": [
     {
       "name": "Quincena actual",
       "short_name": "Actual",
       "description": "Ir a la quincena activa",
-      "url": "/gastos-quincenales/"
+      "url": "/"
     }
   ]
 }
