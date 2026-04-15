@@ -596,52 +596,6 @@ const CHANGELOG=[
     'Modo oscuro automático según sistema operativo',
   ]},
 ];
-  {ver:'1.1.3',date:'Abril 2026',changes:[
-    'Dashboard convertido en pestaña principal (Quincenal / Mensual / Resumen)',
-    'Navegación con ícono + etiqueta optimizada para mobile',
-    'Año visible junto a navegación ← → en la misma barra',
-    'Botón 📊 del header eliminado, ahora es pestaña nativa',
-  ]},
-  {ver:'1.1.2',date:'Abril 2026',changes:[
-    'Dashboard rediseñado como resumen anual completo',
-    'Gráfico barras: ingresos vs gastos los 12 meses',
-    'Gráfico saldo mensual con colores verde/rojo',
-    'Dona con TODAS las categorías del año y leyenda con % y valor COP',
-    'Tabla resumen 12 meses con totales y % consumido',
-    'Indicador mejor mes y mes más ajustado del año',
-    '🔒 Seguridad: cierre automático de sesión tras 8 horas',
-    '🔒 Seguridad: sanitización de inputs contra inyección HTML',
-    '🔒 Seguridad: rate limiting 30 escrituras por minuto',
-    '🔒 Seguridad: API Key restringida al dominio de GitHub Pages',
-    '🔒 Seguridad: reglas Firestore con email verificado obligatorio',
-  ]},
-  {ver:'1.1.1',date:'Abril 2026',changes:[
-    'Vista mensual con todas las herramientas de registro igual a quincenal',
-    'Toggle Q1/Q2 para registrar en vista mensual',
-    'Sub-pestañas Todos/Q1/Q2 en tabla de movimientos mensuales',
-    'Dashboard: todas las categorías visibles sin límite',
-  ]},
-  {ver:'1.1.0',date:'Abril 2026',changes:[
-    'Optimización completa para dispositivos móviles',
-    'Alertas de presupuesto: amarillo >80%, rojo >95%',
-    'Sección de ingresos adicionales por quincena',
-    'Campo de referencia (número de tarjeta/crédito) en gastos',
-    'Edición de monto en recurrentes con historial de cambios',
-    'Nuevas categorías: Peajes, Gasolina, Mantenimiento del carro, Seguros, Comidas fuera de casa, Domicilios, Medicamentos, Viajes, Suscripciones, Préstamos, Tarjetas de crédito, Mercado',
-  ]},
-  {ver:'1.0.3',date:'Marzo 2026',changes:[
-    'Selección individual de recurrentes al aplicar por quincena',
-    'Formato COP con símbolo $ y separador de miles punto colombiano',
-    'Fechas de pago inteligentes con festivos colombianos',
-    'Saldo sobrante encadenado automáticamente entre quincenas',
-  ]},
-  {ver:'1.0.0',date:'Febrero 2026',changes:[
-    'Versión inicial con Firebase Firestore y autenticación Google',
-    '24 quincenas por año con gráficos de distribución y evolución',
-    'Gastos recurrentes con aplicación automática',
-    'Modo oscuro automático según sistema operativo',
-  ]},
-];
 // ── ESTADO ────────────────────────────────────────────────────────────
 const MIN_YEAR = 2026;
 let CY=Math.max(new Date().getFullYear(), MIN_YEAR), CP=null, charts={}, dashCharts={};
