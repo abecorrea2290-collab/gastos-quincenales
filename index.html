@@ -711,9 +711,10 @@ onAuthStateChanged(auth,async user=>{
   }
 });
 
-function initApp(){
+async function initApp(){
   setSyncStatus('syncing','Cargando…');
-  CP=getActivePeriod();
+  // Usar versión async para detectar correctamente la quincena activa
+  CP=await getActivePeriodFromDB();
   CY=CP.y;
   viewMode='q';
   const input=document.getElementById('vtog-input');
@@ -726,7 +727,6 @@ function initApp(){
   document.getElementById('dash-panel').style.display='none';
   document.getElementById('tabs').style.display='flex';
   document.getElementById('ynav-inline').style.display='flex';
-  // Limpiar transferIn de quincenas sin ingreso (datos históricos incorrectos)
   limpiarSobrantesHuerfanos(CY);
   renderTabs();
   setSyncStatus('ok','Conectado');
@@ -752,26 +752,30 @@ async function limpiarSobrantesHuerfanos(y){
   if(limpiados>0) toast(`🧹 ${limpiados} sobrante${limpiados!==1?'s':''} huérfano${limpiados!==1?'s':''} eliminado${limpiados!==1?'s':''}`);
 }
 
-// Quincena activa según día del mes:
-// Días 1-15  → Q2 del mes anterior (aún registrando gastos de esa quincena)
-// Días 16-30/31 → Q1 del mes actual (ya se pagó el 15)
-// Ejemplo: 5 de abril → activa Mar Q2
-//          20 de abril → activa Abr Q1
+// Quincena base según día del mes (sin Firebase)
 function getActivePeriod(){
-  const now = new Date();
-  const d   = now.getDate();
-  const m   = now.getMonth();
-  const y   = now.getFullYear();
+  const now=new Date();
+  const d=now.getDate(), m=now.getMonth(), y=now.getFullYear();
   let result;
-  if(d <= 15){
-    if(m === 0) result = {y: y-1, m: 11, q: 2};
-    else        result = {y, m: m-1, q: 2};
-  } else {
-    result = {y, m, q: 1};
-  }
-  // Nunca mostrar un año anterior a MIN_YEAR
-  if(result.y < MIN_YEAR) result = {y: MIN_YEAR, m: 0, q: 1};
+  if(d<=15){ if(m===0) result={y:y-1,m:11,q:2}; else result={y,m:m-1,q:2}; }
+  else { result={y,m,q:1}; }
+  if(result.y<MIN_YEAR) result={y:MIN_YEAR,m:0,q:1};
   return result;
+}
+
+// Versión async: verifica si la quincena calculada ya tiene ingreso en Firebase
+// Si tiene ingreso → está abierta → es la activa
+// Si no tiene ingreso → la activa es la quincena anterior (la que está en curso)
+async function getActivePeriodFromDB(){
+  const base=getActivePeriod();
+  try{
+    const d=await getPeriodo(base.y,base.m,base.q);
+    if(d.income&&d.income>0) return base; // ya se abrió → es la activa
+  }catch(e){}
+  // No tiene ingreso → la activa es la anterior
+  const prev=prevQ(base.y,base.m,base.q);
+  if(prev.y<MIN_YEAR) return base;
+  return prev;
 }
 
 // ── VISTA ACTIVA ──────────────────────────────────────────────────────
