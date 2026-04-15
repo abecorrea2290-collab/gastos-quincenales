@@ -805,7 +805,11 @@ window.changeYear=delta=>{
 };
 function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
 async function prevBalance(y,m,q){
-  const p=prevQ(y,m,q);const d=await getPeriodo(p.y,p.m,p.q);
+  const p=prevQ(y,m,q);
+  const d=await getPeriodo(p.y,p.m,p.q);
+  // Solo transferir sobrante si la quincena anterior fue "abierta"
+  // (tiene ingreso registrado), lo que significa que ya se cerró
+  if(!d.income || d.income===0) return 0;
   const tIn=d.income+d.transferIn+(d.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
   return Math.max(0,tIn-(d.items||[]).reduce((a,i)=>a+i.amount,0));
 }
@@ -854,12 +858,8 @@ async function renderMain(){
   const{m,q}=CP;const y=CY;
   document.getElementById('content').innerHTML=`<div style="padding:28px;text-align:center;color:var(--text3)"><div class="spinner" style="width:22px;height:22px;border-color:rgba(30,107,69,.2);border-top-color:var(--accent);margin:0 auto 8px"></div>Cargando…</div>`;
   const data=await getPeriodo(y,m,q);
-  const pb=await prevBalance(y,m,q);
-  if(data.transferIn!==pb){
-    const p=prevQ(y,m,q);data.transferIn=pb;
-    data.transferLabel=`Sobrante ${MN[p.m]} Q${p.q}${p.y!==y?' '+p.y:''}`;
-    await savePeriodo(y,m,q,data);
-  }
+  // El sobrante solo se transfiere al registrar el ingreso (_setIncome)
+  // No se recalcula automáticamente en cada render
   const items=data.items||[];
   const extra=(data.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
   const totalIn=data.income+data.transferIn+extra;
@@ -1159,10 +1159,24 @@ window._setIncome=async()=>{
   const{m}=CP;const y=CY;
   const q=viewMode==='m'?mQSel:CP.q;
   const d=await getPeriodo(y,m,q);
-  d.income=parseFloat(document.getElementById('ii').value)||0;
+  const nuevoIngreso=parseFloat(document.getElementById('ii').value)||0;
+  const esPrimerIngreso=d.income===0&&nuevoIngreso>0;
+  d.income=nuevoIngreso;
+
+  // Al registrar ingreso por primera vez → cerrar quincena anterior
+  // y transferir el sobrante
+  if(esPrimerIngreso){
+    const pb=await prevBalance(y,m,q);
+    if(pb>0){
+      const p=prevQ(y,m,q);
+      d.transferIn=pb;
+      d.transferLabel=`Sobrante ${MN[p.m]} Q${p.q}${p.y!==y?' '+p.y:''}`;
+    }
+  }
+
   await savePeriodo(y,m,q,d);
   viewMode==='m'?renderMonthly():renderMain();
-  toast('✓ Ingreso guardado');
+  toast('✓ Ingreso guardado'+(esPrimerIngreso&&d.transferIn>0?` · Sobrante ${fmtPlain(d.transferIn)} transferido`:''));
 };
 
 window._addExtra=async()=>{
