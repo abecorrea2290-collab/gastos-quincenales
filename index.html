@@ -424,7 +424,9 @@ input:checked+.sldr:before{transform:translateX(16px)}
       <button class="btn btn-w" onclick="cleanPeriod()">Solo esta quincena</button>
       <button class="btn btn-w" onclick="cleanYear()">Todo el año <span id="cyl"></span></button>
       <button class="btn btn-d" onclick="cleanAll()">⚠ Limpiar TODO</button>
+      <button class="btn btn-t" onclick="fixSobrantes()">🧹 Corregir sobrantes huérfanos</button>
     </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:8px">Corregir sobrantes elimina transferencias en quincenas sin ingreso registrado</div>
     <div class="modal-btns"><button class="btn btn-g" onclick="hideClean()">Cancelar</button></div>
   </div>
 </div>
@@ -1748,6 +1750,33 @@ window.hideChangelog=()=>document.getElementById('changelog-modal').style.displa
 // ── LIMPIEZA ──────────────────────────────────────────────────────────
 window.showClean=()=>{document.getElementById('cyl').textContent=CY;document.getElementById('clean-modal').style.display='flex';};
 window.hideClean=()=>document.getElementById('clean-modal').style.display='none';
+
+window.fixSobrantes=async()=>{
+  if(!confirm('¿Corregir sobrantes huérfanos en todos los años? Elimina transferencias en quincenas sin ingreso registrado.')) return;
+  hideClean();
+  toast('🧹 Revisando sobrantes…');
+  let limpiados=0;
+  const yearActual=new Date().getFullYear();
+  for(let y=MIN_YEAR;y<=yearActual;y++){
+    for(let mi=0;mi<12;mi++){
+      for(const q of [1,2]){
+        try{
+          delete cache[cacheKey(y,mi,q)];
+          const d=await getPeriodo(y,mi,q);
+          if((!d.income||d.income===0) && d.transferIn>0){
+            d.transferIn=0; d.transferLabel='';
+            await savePeriodo(y,mi,q,d);
+            limpiados++;
+          }
+        }catch(e){}
+      }
+    }
+  }
+  toast(limpiados>0
+    ?`✅ ${limpiados} sobrante${limpiados!==1?'s':''} huérfano${limpiados!==1?'s':''} corregido${limpiados!==1?'s':''}`
+    :'✅ Sin sobrantes huérfanos');
+  renderTabs();
+};
 window.cleanPeriod=async()=>{
   if(!confirm('¿Eliminar esta quincena?'))return;
   const{m,q}=CP;delete cache[cacheKey(CY,m,q)];
