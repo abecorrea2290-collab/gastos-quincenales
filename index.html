@@ -763,16 +763,15 @@ function getActivePeriod(){
   return result;
 }
 
+function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
+
 // Versión async: verifica si la quincena calculada ya tiene ingreso en Firebase
-// Si tiene ingreso → está abierta → es la activa
-// Si no tiene ingreso → la activa es la quincena anterior (la que está en curso)
 async function getActivePeriodFromDB(){
   const base=getActivePeriod();
   try{
     const d=await getPeriodo(base.y,base.m,base.q);
-    if(d.income&&d.income>0) return base; // ya se abrió → es la activa
+    if(d.income&&d.income>0) return base;
   }catch(e){}
-  // No tiene ingreso → la activa es la anterior
   const prev=prevQ(base.y,base.m,base.q);
   if(prev.y<MIN_YEAR) return base;
   return prev;
@@ -837,7 +836,6 @@ window.changeYear=delta=>{
   CY=next;
   renderTabs();
 };
-function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
 async function prevBalance(y,m,q){
   const p=prevQ(y,m,q);
   const d=await getPeriodo(p.y,p.m,p.q);
@@ -852,22 +850,21 @@ function renderTabs(){
   document.getElementById('yd').textContent=CY;
   const el=document.getElementById('tabs');el.innerHTML='';
   const now=new Date();now.setHours(0,0,0,0);
-  const active=getActivePeriod();
+  // CP ya fue calculado por getActivePeriodFromDB en initApp — usarlo directamente
+  const active=CP;
 
   if(viewMode==='q'){
     MN.forEach((mn,mi)=>[1,2].forEach(q=>{
       const pd=payDate(CY,mi,q);
-      const isActive=mi===CP.m&&q===CP.q;
+      const isSelected=mi===CP.m&&q===CP.q;
       const isActualActive=CY===active.y&&mi===active.m&&q===active.q;
 
-      // Estado del tab según fecha de pago
       let state='future';
-      if(pd<now) state='past';           // ya se pagó → azul
-      if(isActualActive) state='active-period'; // quincena en curso → verde
+      if(pd<now) state='past';
+      if(isActualActive) state='active-period';
 
       const btn=document.createElement('button');
-      // clase CSS: active (seleccionada) tiene prioridad visual
-      btn.className='tab'+(isActive?' active':state==='past'?' past':state==='active-period'?' active-period':' future');
+      btn.className='tab'+(isSelected?' active':state==='past'?' past':state==='active-period'?' active-period':' future');
       btn.innerHTML=`<span class="tab-name">${mn.slice(0,3)} Q${q}</span><span class="tab-date">Pago ${fmtD(pd)}</span>`;
       btn.onclick=()=>{CP={m:mi,q};renderTabs();};
       el.appendChild(btn);
