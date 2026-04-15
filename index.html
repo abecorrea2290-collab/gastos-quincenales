@@ -609,7 +609,7 @@ const userRef=()=>`usuarios/${currentUser.uid}`;
 const periodoRef=(y,m,q)=>`${userRef()}/periodos/${y}_${m}_${q}`;
 const recRef=()=>`${userRef()}/config/recurrentes`;
 const cacheKey=(y,m,q)=>`${y}_${m}_${q}`;
-const emptyP=()=>({income:0,extraIncome:[],items:[],transferIn:0,transferLabel:''});
+const emptyP=()=>({income:0,extraIncome:[],items:[],transferIn:0,transferLabel:'',closed:false});
 
 async function getPeriodo(y,m,q){
   const k=cacheKey(y,m,q);
@@ -765,13 +765,21 @@ function getActivePeriod(){
 
 function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
 
-// Versión async: verifica si la quincena calculada ya tiene ingreso en Firebase
+// Versión async: busca la primera quincena no cerrada con ingreso, o la siguiente a la última cerrada
 async function getActivePeriodFromDB(){
   const base=getActivePeriod();
   try{
     const d=await getPeriodo(base.y,base.m,base.q);
+    // Si la quincena base está cerrada → pasar a la siguiente
+    if(d.closed){
+      const next=base.q===1?{y:base.y,m:base.m,q:2}:
+        base.m===11?{y:base.y+1,m:0,q:1}:{y:base.y,m:base.m+1,q:1};
+      return next;
+    }
+    // Si tiene ingreso y no está cerrada → es la activa
     if(d.income&&d.income>0) return base;
   }catch(e){}
+  // Sin ingreso → la activa es la anterior
   const prev=prevQ(base.y,base.m,base.q);
   if(prev.y<MIN_YEAR) return base;
   return prev;
@@ -916,8 +924,19 @@ async function renderMain(){
   destroyCharts();
   document.getElementById('content').innerHTML=`
     <div class="pay-box">
-      <div class="pay-box-left"><div class="pd-label">Fecha de pago — ${MN[m]} Q${q}</div><strong>${fmtD(pd)}, ${pd.toLocaleDateString('es-CO',{weekday:'long'})}</strong></div>
-      <div class="pay-badge">${payBadge}</div>
+      <div class="pay-box-left">
+        <div class="pd-label">Fecha de pago — ${MN[m]} Q${q}</div>
+        <strong>${fmtD(pd)}, ${pd.toLocaleDateString('es-CO',{weekday:'long'})}</strong>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${data.closed
+          ? `<span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;border:1.5px solid var(--accent)">✅ Cerrada</span>`
+          : data.income>0
+            ? `<button class="btn btn-g bsm" onclick="window._cerrarQuincena()" style="border-radius:20px;font-size:11px">🔒 Cerrar quincena</button>`
+            : ''
+        }
+        <div class="pay-badge">${payBadge}</div>
+      </div>
     </div>
     ${data.transferIn>0?`<div class="banner ban-i">↩ <strong>${data.transferLabel}:</strong>&nbsp;${fmtCOP(data.transferIn,'amt-blue')} sumado al disponible</div>`:''}
 
@@ -1186,6 +1205,20 @@ window._mvTab=(tab)=>{
 };
 
 // ── CRUD ──────────────────────────────────────────────────────────────
+window._cerrarQuincena=async()=>{
+  if(!confirm(`¿Cerrar ${MN[CP.m]} Q${CP.q}? El saldo restante se transferirá al registrar el ingreso de la siguiente quincena.`)) return;
+  const{m,q}=CP;const y=CY;
+  const d=await getPeriodo(y,m,q);
+  d.closed=true;
+  await savePeriodo(y,m,q,d);
+  // Pasar a la siguiente quincena automáticamente
+  const next=q===1?{m,q:2}:{m:m===11?0:m+1,q:1};
+  const nextY=q===2&&m===11?y+1:y;
+  CP={m:next.m,q:next.q};
+  CY=nextY;
+  toast(`✅ ${MN[m]} Q${q} cerrada — ahora en ${MN[next.m]} Q${next.q}`);
+  renderTabs();
+};
 window._setIncome=async()=>{
   const{m}=CP;const y=CY;
   const q=viewMode==='m'?mQSel:CP.q;
@@ -1193,18 +1226,14 @@ window._setIncome=async()=>{
   const nuevoIngreso=parseFloat(document.getElementById('ii').value)||0;
   const esPrimerIngreso=d.income===0&&nuevoIngreso>0;
   d.income=nuevoIngreso;
-
-  // Al registrar ingreso por primera vez → cerrar quincena anterior
-  // y transferir el sobrante
+  // Al registrar ingreso por primera vez → cerrar anterior y transferir sobrante
   if(esPrimerIngreso){
+    const p=prevQ(y,m,q);
+    const dPrev=await getPeriodo(p.y,p.m,p.q);
+    if(!dPrev.closed&&dPrev.income>0){dPrev.closed=true;await savePeriodo(p.y,p.m,p.q,dPrev);}
     const pb=await prevBalance(y,m,q);
-    if(pb>0){
-      const p=prevQ(y,m,q);
-      d.transferIn=pb;
-      d.transferLabel=`Sobrante ${MN[p.m]} Q${p.q}${p.y!==y?' '+p.y:''}`;
-    }
+    if(pb>0){d.transferIn=pb;d.transferLabel=`Sobrante ${MN[p.m]} Q${p.q}${p.y!==y?' '+p.y:''}`;}
   }
-
   await savePeriodo(y,m,q,d);
   viewMode==='m'?renderMonthly():renderMain();
   toast('✓ Ingreso guardado'+(esPrimerIngreso&&d.transferIn>0?` · Sobrante ${fmtPlain(d.transferIn)} transferido`:''));
