@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231e6b45'/><rect x='8' y='8' width='84' height='84' rx='14' fill='%23268a58'/><text x='50' y='58' font-family='system-ui,sans-serif' font-size='36' font-weight='900' fill='white' text-anchor='middle'>GQ</text></svg>">
-<title>Control de Gastos v1.1.5</title>
+<title>Control de Gastos v1.1.6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{
@@ -304,9 +304,10 @@ input:checked+.sldr:before{transform:translateX(16px)}
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="h1">💰 Gastos <span class="ver-badge">v1.1.5</span></div>
+    <div class="h1">💰 Gastos <span class="ver-badge">v1.1.6</span></div>
     <div class="hdr-r">
       <div class="user-chip"><div class="user-initials" id="user-initials">?</div><span id="user-name">...</span></div>
+      <button class="btn btn-g bsm" onclick="showCats()" title="Categorías">🏷️</button>
       <button class="btn btn-g bsm" onclick="showChangelog()" title="Notas de versión">📋</button>
       <button class="btn btn-g bsm" onclick="showClean()" title="Limpiar datos">🗑</button>
       <button class="btn btn-g bsm" onclick="logout()" title="Cerrar sesión">↩</button>
@@ -399,6 +400,41 @@ input:checked+.sldr:before{transform:translateX(16px)}
     <div class="modal-btns">
       <button class="btn btn-g" onclick="hideEditRec()">Cancelar</button>
       <button class="btn btn-p" onclick="saveEditRec()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar referencia de recurrente aplicado -->
+<div class="overlay" id="edit-ref-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--info)">🏷️ Editar referencia de pago</h3>
+    <p class="sub" id="edit-ref-desc"></p>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Referencia (ej: **** 1234, cuota 3/12…)</label>
+      <input type="text" id="edit-ref-val" placeholder="Referencia del pago" maxlength="40">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="hideEditRef()">Cancelar</button>
+      <button class="btn btn-p" onclick="saveEditRef()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal categorías personalizadas -->
+<div class="overlay" id="cats-modal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--accent)">🏷️ Categorías de gastos</h3>
+    <p class="sub">Personaliza las categorías. Las categorías ya usadas en gastos no se pueden eliminar.</p>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <input type="text" id="new-cat-input" placeholder="Nueva categoría…" maxlength="30" style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:14px;background:var(--bg);color:var(--text)">
+      <button class="btn btn-p" onclick="window._addCat()">+ Agregar</button>
+    </div>
+    <div id="cats-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn btn-g" onclick="hideCats()">Cerrar</button>
+      <button class="btn btn-w" onclick="window._resetCats()">↺ Restaurar predeterminadas</button>
     </div>
   </div>
 </div>
@@ -513,13 +549,19 @@ function checkRateLimit() {
 
 // ── CONSTANTES ────────────────────────────────────────────────────────
 const MN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const CATS=[
+// Categorías por defecto como objetos {nombre, activa}
+const CATS_DEFAULT=[
   'Vivienda','Alimentación','Comidas fuera de casa','Domicilios','Mercado',
   'Transporte','Peajes','Gasolina','Mantenimiento del carro','Seguros',
   'Salud','Medicamentos','Educación','Entretenimiento','Suscripciones',
   'Ropa','Servicios','Préstamos','Tarjetas de crédito','Ahorro',
   'Viajes','Otros'
-];
+].map(n=>({nombre:n,activa:true}));
+
+// CATS_OBJ: array de objetos completo (para gestión)
+// CATS: array de strings solo con las activas (para selects y lógica existente)
+let CATS_OBJ=[...CATS_DEFAULT];
+let CATS=CATS_OBJ.filter(c=>c.activa).map(c=>c.nombre);
 const CCLR=[
   '#1e6b45','#c96c1a','#d63031','#e17055','#00b894',
   '#1552a0','#636e72','#e84393','#0984e3','#6c5ce7',
@@ -532,6 +574,14 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  {ver:'1.1.6',date:'Abril 2026',changes:[
+    'Categorías personalizables: agregar, activar/desactivar y eliminar',
+    'Toggle por categoría — las inactivas no aparecen en el selector de gastos',
+    'Categorías predeterminadas no se pueden eliminar, solo desactivar',
+    'Las categorías personalizadas se guardan en Firebase por usuario',
+    'Editar referencia de pago en recurrentes con botón 🏷️',
+    'Control de cambios actualizado a v1.1.6',
+  ]},
   {ver:'1.1.5',date:'Abril 2026',changes:[
     'Sobrante solo se transfiere al registrar el ingreso de la nueva quincena',
     'Al registrar ingreso por primera vez se cierra automáticamente la quincena anterior',
@@ -608,6 +658,32 @@ let editRecId=null;
 const userRef=()=>`usuarios/${currentUser.uid}`;
 const periodoRef=(y,m,q)=>`${userRef()}/periodos/${y}_${m}_${q}`;
 const recRef=()=>`${userRef()}/config/recurrentes`;
+const catsRef=()=>`${userRef()}/config/categorias`;
+
+async function getCats(){
+  try{
+    const snap=await getDoc(doc(db,catsRef()));
+    if(snap.exists()&&snap.data().lista&&snap.data().lista.length>0){
+      // Soportar formato antiguo (array de strings) y nuevo (array de objetos)
+      const raw=snap.data().lista;
+      if(typeof raw[0]==='string'){
+        CATS_OBJ=raw.map(n=>({nombre:n,activa:true}));
+      } else {
+        CATS_OBJ=raw;
+      }
+    } else {
+      CATS_OBJ=[...CATS_DEFAULT];
+    }
+  }catch(e){ CATS_OBJ=[...CATS_DEFAULT]; }
+  // Actualizar CATS con solo las activas
+  CATS=CATS_OBJ.filter(c=>c.activa).map(c=>c.nombre);
+}
+async function saveCats(){
+  try{
+    await setDoc(doc(db,catsRef()),{lista:CATS_OBJ,updatedAt:serverTimestamp()});
+    CATS=CATS_OBJ.filter(c=>c.activa).map(c=>c.nombre);
+  }catch(e){}
+}
 const cacheKey=(y,m,q)=>`${y}_${m}_${q}`;
 const emptyP=()=>({income:0,extraIncome:[],items:[],transferIn:0,transferLabel:'',closed:false});
 
@@ -713,7 +789,7 @@ onAuthStateChanged(auth,async user=>{
 
 async function initApp(){
   setSyncStatus('syncing','Cargando…');
-  // Usar versión async para detectar correctamente la quincena activa
+  await getCats(); // cargar categorías personalizadas
   CP=await getActivePeriodFromDB();
   CY=CP.y;
   viewMode='q';
@@ -1334,6 +1410,7 @@ async function renderRecList(){
     <td class="amt-cell">${fmtCOP(r.amount,'amt-red')}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-g bsm" onclick="window._editRec(${r.id})" title="Editar monto">✏️</button>
+      <button class="btn btn-g bsm" onclick="window._editRef(${r.id})" title="Editar referencia">🏷️</button>
       <button class="btn btn-g bsm" onclick="window._showHist(${r.id})" title="Historial">📜</button>
       <button class="btn btn-d bsm" onclick="window._delRec(${r.id})">✕</button>
     </td>
@@ -1832,6 +1909,91 @@ function toast(msg,type=''){
   document.body.appendChild(t);setTimeout(()=>t.remove(),2800);
 }
 window.toast=toast;
+window.showCats=()=>{renderCatsList();document.getElementById('cats-modal').style.display='flex';};
+window.hideCats=()=>document.getElementById('cats-modal').style.display='none';
+
+function renderCatsList(){
+  const el=document.getElementById('cats-list');
+  const defaultNames=CATS_DEFAULT.map(c=>c.nombre);
+  el.innerHTML=CATS_OBJ.map((c,i)=>{
+    const esDefault=defaultNames.includes(c.nombre);
+    const color=CCLR[i]||'#999';
+    return `
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface2);border-radius:var(--radius-sm);border:1.5px solid ${c.activa?'var(--border)':'var(--border)'};opacity:${c.activa?'1':'0.5'}">
+      <span style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0"></span>
+      <span style="flex:1;font-size:13px;font-weight:${c.activa?'600':'400'};color:var(--text);text-decoration:${c.activa?'none':'line-through'}">${c.nombre}</span>
+      <span style="font-size:9px;color:var(--text3);margin-right:2px">${esDefault?'predeterminada':'personalizada'}</span>
+      <!-- Toggle activa/inactiva -->
+      <label class="tog" title="${c.activa?'Desactivar':'Activar'}" style="flex-shrink:0">
+        <input type="checkbox" ${c.activa?'checked':''} onchange="window._toggleCat(${i},this.checked)">
+        <span class="sldr"></span>
+      </label>
+      <!-- Eliminar solo personalizadas -->
+      ${!esDefault
+        ?`<button class="btn btn-d bsm" onclick="window._delCat(${i})" style="padding:3px 8px;margin-left:2px">✕</button>`
+        :''
+      }
+    </div>`;
+  }).join('');
+}
+
+window._toggleCat=async(idx,activa)=>{
+  CATS_OBJ[idx].activa=activa;
+  await saveCats();
+  renderCatsList();
+  toast(activa?`✅ "${CATS_OBJ[idx].nombre}" activada`:`⛔ "${CATS_OBJ[idx].nombre}" desactivada`);
+};
+
+window._addCat=async()=>{
+  const input=document.getElementById('new-cat-input');
+  const nombre=sanitize(input.value.trim());
+  if(!nombre){toast('Escribe el nombre de la categoría','err');return;}
+  if(CATS_OBJ.find(c=>c.nombre===nombre)){toast('Esa categoría ya existe','err');return;}
+  CATS_OBJ.push({nombre,activa:true});
+  await saveCats();
+  input.value='';
+  renderCatsList();
+  toast(`✅ Categoría "${nombre}" agregada`);
+};
+
+window._delCat=async(idx)=>{
+  const cat=CATS_OBJ[idx];
+  if(!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los gastos que la usen conservarán el nombre.`)) return;
+  CATS_OBJ.splice(idx,1);
+  await saveCats();
+  renderCatsList();
+  toast(`🗑 Categoría "${cat.nombre}" eliminada`);
+};
+
+window._resetCats=async()=>{
+  if(!confirm('¿Restaurar las categorías predeterminadas? Las personalizadas se eliminarán y todas quedarán activas.')) return;
+  CATS_OBJ=[...CATS_DEFAULT];
+  await saveCats();
+  renderCatsList();
+  toast('✅ Categorías restauradas');
+};
+
+// ── EDITAR REFERENCIA DE RECURRENTE ──────────────────────────────────
+let editRefId=null;
+window._editRef=async(id)=>{
+  const lista=await getRec();
+  const r=lista.find(x=>x.id===id);if(!r)return;
+  editRefId=id;
+  document.getElementById('edit-ref-desc').textContent=r.desc;
+  document.getElementById('edit-ref-val').value=r.ref||'';
+  document.getElementById('edit-ref-modal').style.display='flex';
+};
+window.hideEditRef=()=>document.getElementById('edit-ref-modal').style.display='none';
+window.saveEditRef=async()=>{
+  const ref=sanitize(document.getElementById('edit-ref-val').value.trim());
+  const lista=await getRec();
+  const idx=lista.findIndex(r=>r.id===editRefId);if(idx<0)return;
+  lista[idx].ref=ref;
+  await saveRec(lista);
+  window.hideEditRef();
+  renderRecList();
+  toast('✅ Referencia actualizada');
+};
 
 // ── PWA: Registrar Service Worker ─────────────────────────────────────
 if('serviceWorker' in navigator){
