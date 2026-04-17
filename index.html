@@ -59,8 +59,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .ver-badge{font-size:9px;background:var(--accent);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700}
 .hdr-r{display:flex;align-items:center;gap:5px;flex-wrap:nowrap}
 .user-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 8px 3px 3px;font-size:11px;color:var(--text2);font-weight:600;white-space:nowrap}
-.user-avatar{width:20px;height:20px;border-radius:50%;object-fit:cover}
-.user-initials{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--accent-light)}
+.user-initials{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 /* SYNC BAR */
 .sync-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 14px;display:flex;align-items:center;gap:8px;font-size:11px;min-height:28px}
@@ -569,6 +569,38 @@ const CCLR=[
   '#e17055','#0e7490','#e84393','#a29bfe','#00b894',
   '#fdcb6e','#95a5a6'
 ];
+
+// Pool de colores adicionales para categorías personalizadas
+const CCLR_EXTRA=[
+  '#e74c3c','#8e44ad','#2980b9','#27ae60','#f39c12',
+  '#16a085','#d35400','#2c3e50','#7f8c8d','#c0392b',
+  '#1abc9c','#9b59b6','#3498db','#2ecc71','#e67e22',
+  '#e91e63','#009688','#ff5722','#607d8b','#795548',
+  '#f06292','#4caf50','#ff9800','#03a9f4','#9c27b0',
+  '#00bcd4','#8bc34a','#ffc107','#673ab7','#ff4081'
+];
+
+// Obtener color de una categoría por nombre
+function getCatColor(nombre){
+  // Buscar en CATS_OBJ si tiene color asignado
+  const obj=CATS_OBJ.find(c=>c.nombre===nombre);
+  if(obj&&obj.color) return obj.color;
+  // Fallback: usar CCLR por índice (categorías predeterminadas)
+  const idx=CATS_OBJ.findIndex(c=>c.nombre===nombre);
+  return CCLR[idx]||'#95a5a6';
+}
+
+// Obtener el próximo color disponible que no esté usado
+function getNextColor(){
+  const usados=new Set(CATS_OBJ.map(c=>c.color).filter(Boolean));
+  // Buscar en CCLR_EXTRA el primero no usado
+  for(const clr of CCLR_EXTRA){
+    if(!usados.has(clr)) return clr;
+  }
+  // Si todos están usados, generar uno aleatorio
+  const h=Math.floor(Math.random()*360);
+  return `hsl(${h},65%,45%)`;
+}
 const FEST=['01-01','01-06','03-24','04-17','04-18','05-01','05-26','06-16','06-23','06-30','07-20','08-07','08-18','10-13','11-03','11-17','12-08','12-25'];
 const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
@@ -777,7 +809,21 @@ onAuthStateChanged(auth,async user=>{
     const init=(user.displayName||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('user-initials').textContent=init;
     document.getElementById('user-name').textContent=(user.displayName||'').split(' ')[0];
-    if(user.photoURL){const img=document.createElement('img');img.src=user.photoURL;img.className='user-avatar';document.getElementById('user-initials').replaceWith(img);}
+    if(user.photoURL){
+      const img=document.createElement('img');
+      // Forzar tamaño 40px en la URL de Google para mejor resolución
+      img.src=user.photoURL.replace(/=s\d+-c/,'=s40-c')+'?sz=40';
+      img.className='user-avatar';
+      img.alt=init;
+      // Si falla la imagen → mostrar iniciales
+      img.onerror=()=>{
+        const div=document.createElement('div');
+        div.className='user-initials';
+        div.textContent=init;
+        img.replaceWith(div);
+      };
+      document.getElementById('user-initials').replaceWith(img);
+    }
     initApp();
   }else{
     currentUser=null;
@@ -1392,7 +1438,7 @@ function renderItems(items,readonly=false){
     <td style="color:var(--text3);font-size:10px;white-space:nowrap">${i.ref||'—'}</td>
     <td style="color:var(--text3);white-space:nowrap;font-size:11px">${i.date||'-'}</td>
     <td><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}</td>
-    <td><span class="cc" style="background:${CCLR[CATS.indexOf(i.cat)]||'#999'}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
+    <td><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
     ${readonly?'':`<td style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td><button class="btn btn-d bsm" onclick="window._delItem(${i.id}${i._q?','+i._q:''})">✕</button></td>`}
   </tr>`).join('')}</tbody></table>`;
@@ -1406,7 +1452,7 @@ async function renderRecList(){
   el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Descripción</th><th>Categoría</th><th style="text-align:right">Valor</th><th>Acciones</th></tr></thead><tbody>
   ${lista.map(r=>`<tr>
     <td style="font-weight:600">${r.desc}${r.ref?`<br><span style="font-size:10px;color:var(--text3)">${r.ref}</span>`:''}</td>
-    <td><span class="cc" style="background:${CCLR[CATS.indexOf(r.cat)]||'#999'}"></span><span class="badge b-cat">${r.cat}</span></td>
+    <td><span class="cc" style="background:${getCatColor(r.cat)}"></span><span class="badge b-cat">${r.cat}</span></td>
     <td class="amt-cell">${fmtCOP(r.amount,'amt-red')}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-g bsm" onclick="window._editRec(${r.id})" title="Editar monto">✏️</button>
@@ -1474,7 +1520,7 @@ window._showRec=async()=>{
   grid.innerHTML=lista.map(r=>`
     <label class="rec-item selected" id="ri-${r.id}">
       <input type="checkbox" checked onchange="window._onRecCk(this,${r.id})" value="${r.id}" data-amt="${r.amount}" data-desc="${encodeURIComponent(r.desc)}" data-cat="${r.cat}" data-ref="${r.ref||''}">
-      <div class="rec-item-info"><div class="rec-item-name">${r.desc}</div><div class="rec-item-cat"><span class="cc" style="background:${CCLR[CATS.indexOf(r.cat)]||'#999'}"></span>${r.cat}</div></div>
+      <div class="rec-item-info"><div class="rec-item-name">${r.desc}</div><div class="rec-item-cat"><span class="cc" style="background:${getCatColor(r.cat)}"></span>${r.cat}</div></div>
       <div style="flex-shrink:0">${fmtCOP(r.amount,'amt-red')}</div>
     </label>`).join('');
   updateSelTotal();
@@ -1530,7 +1576,7 @@ function renderPie(items){
 
   const labels=CATS.filter(c=>t[c]>0);
   const vals=labels.map(c=>t[c]);
-  const colors=labels.map(c=>CCLR[CATS.indexOf(c)]);
+  const colors=labels.map(c=>getCatColor(c));
   const total=vals.reduce((a,b)=>a+b,0);
 
   const leg=document.getElementById('cleg');
@@ -1647,7 +1693,7 @@ window.renderDash=async()=>{
   // Categorías con gasto, ordenadas de mayor a menor
   const catLabels=CATS.filter(c=>catTotals[c]>0).sort((a,b)=>catTotals[b]-catTotals[a]);
   const catVals=catLabels.map(c=>catTotals[c]);
-  const catColors=catLabels.map(c=>CCLR[CATS.indexOf(c)]);
+  const catColors=catLabels.map(c=>getCatColor(c));
   const catTotal=catVals.reduce((a,b)=>a+b,0);
 
   destroyDashCharts();
@@ -1917,7 +1963,7 @@ function renderCatsList(){
   const defaultNames=CATS_DEFAULT.map(c=>c.nombre);
   el.innerHTML=CATS_OBJ.map((c,i)=>{
     const esDefault=defaultNames.includes(c.nombre);
-    const color=CCLR[i]||'#999';
+    const color=getCatColor(c.nombre);
     return `
     <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface2);border-radius:var(--radius-sm);border:1.5px solid ${c.activa?'var(--border)':'var(--border)'};opacity:${c.activa?'1':'0.5'}">
       <span style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0"></span>
@@ -1949,7 +1995,8 @@ window._addCat=async()=>{
   const nombre=sanitize(input.value.trim());
   if(!nombre){toast('Escribe el nombre de la categoría','err');return;}
   if(CATS_OBJ.find(c=>c.nombre===nombre)){toast('Esa categoría ya existe','err');return;}
-  CATS_OBJ.push({nombre,activa:true});
+  const color=getNextColor();
+  CATS_OBJ.push({nombre,activa:true,color});
   await saveCats();
   input.value='';
   renderCatsList();
