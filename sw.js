@@ -1,8 +1,12 @@
-const CACHE_NAME = 'gastos-gq-v1.1.4';
+const CACHE_NAME = 'gastos-gq-v1.2.0';
 const ASSETS = [
   '/',
   '/index.html',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js'
+  '/app/index.html',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
+  'https://unpkg.com/react@18.3.1/umd/react.development.js',
+  'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js',
+  'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',
 ];
 
 self.addEventListener('install', e => {
