@@ -2024,25 +2024,24 @@ window.addEventListener('beforeinstallprompt', e=>{
 });
 
 // ── SIDEBAR & BOTTOM NAV HELPERS ─────────────────────────────────
-function sbNav(tab){
+window.sbNav=function(tab){
   if(tab==='dash'){setViewTab('d');}
   else{setViewTab('q');}
   document.querySelectorAll('.sb-item[id^="sbnav-"]').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('sbnav-'+tab);
   if(el)el.classList.add('active');
-}
-function bnActivate(tab){
+};
+window.bnActivate=function(tab){
   document.querySelectorAll('.bn-item').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('bn-'+tab);
   if(el)el.classList.add('active');
-}
-// Sync sidebar sync-dot with main sync-dot
-function syncSbDot(cls,label){
+};
+window.syncSbDot=function(cls,label){
   const d=document.getElementById('sync-dot-sb');
   const l=document.getElementById('sync-label-sb');
   if(d){d.className='sync-dot '+cls;}
   if(l)l.textContent=label;
-}
+};
 </script>
 </body>
 </html>
