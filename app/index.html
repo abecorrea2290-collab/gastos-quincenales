@@ -1,0 +1,1294 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gastos · Control Quincenal</title>
+<link rel="icon" href="/manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --brand-green:        #1ed760;
+  --brand-green-border: #1db954;
+  --bg-base:      #121212;
+  --bg-surface:   #181818;
+  --bg-elevated:  #1f1f1f;
+  --bg-card:      #252525;
+  --bg-card-alt:  #272727;
+  --text-base:    #ffffff;
+  --text-bright:  #fdfdfd;
+  --text-muted:   #cbcbcb;
+  --text-silver:  #b3b3b3;
+  --text-faint:   #7c7c7c;
+  --text-negative:     #f3727f;
+  --text-warning:      #ffa42b;
+  --text-announcement: #539df5;
+  --text-positive:     #1ed760;
+  --border-dark:    #4d4d4d;
+  --border-mid:     #7c7c7c;
+  --shadow-heavy:   rgba(0,0,0,0.5) 0px 8px 24px;
+  --radius-pill:   500px;
+}
+
+html, body { margin:0; padding:0; min-height:100vh; background:#121212; color:#fff; font-family:'Manrope',sans-serif; -webkit-font-smoothing:antialiased; }
+*, *::before, *::after { box-sizing:border-box; }
+#root { min-height:100vh; }
+.app { display:flex; min-height:100vh; background:#000; }
+.sb { width:232px; background:#000; padding:20px 12px; display:flex; flex-direction:column; gap:18px; flex-shrink:0; position:sticky; top:0; height:100vh; }
+.sb-logo { display:flex; align-items:center; gap:10px; padding:0 10px; }
+.sb-back { display:inline-flex; align-items:center; gap:6px; color:#b3b3b3; font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; text-decoration:none; padding:0 10px; }
+.sb-back:hover { color:#fff; }
+.sb-nav { background:#121212; border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:2px; }
+.sb-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:6px; color:#b3b3b3; font-size:14px; cursor:pointer; transition:color 120ms; font-weight:400; }
+.sb-item:hover { color:#fff; }
+.sb-item.active { color:#fff; font-weight:700; }
+.main { flex:1; background:linear-gradient(180deg,#1a1a1a 0%,#121212 280px); overflow-y:auto; min-width:0; }
+.topbar { position:sticky; top:0; z-index:10; background:rgba(0,0,0,0.55); backdrop-filter:blur(14px); padding:14px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.mobile-nav-btn { display:none; background:#181818; border:1px solid #2a2a2a; color:#fff; width:40px; height:40px; border-radius:8px; align-items:center; justify-content:center; cursor:pointer; }
+.bottom-nav { display:none; }
+.user-chip { display:flex; align-items:center; gap:8px; background:#181818; border-radius:500px; padding:4px 14px 4px 4px; }
+.user-av { width:28px; height:28px; border-radius:50%; background:#1ed760; color:#121212; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; }
+.content { padding:8px 32px 40px; display:flex; flex-direction:column; gap:28px; }
+.btn { border:none; border-radius:500px; padding:11px 20px; font-size:12px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; cursor:pointer; transition:transform 120ms,background 150ms; font-family:'Manrope',sans-serif; }
+.btn-primary { background:#1ed760; color:#121212; }
+.btn-primary:hover { background:#1fdf64; }
+.btn-primary:active { transform:scale(0.97); }
+.btn-ghost { background:transparent; color:#fff; border:1px solid #7c7c7c; }
+.btn-ghost:hover { border-color:#fff; }
+.btn-sm { padding:7px 14px; font-size:10px; letter-spacing:1.2px; }
+.card { background:#181818; border-radius:8px; padding:20px; }
+.card-sm { background:#1f1f1f; border-radius:6px; padding:16px; }
+.num { font-variant-numeric:tabular-nums; font-feature-settings:'tnum'; }
+.eyebrow { color:#b3b3b3; font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; }
+input, select, textarea { background:#121212; border:1px solid #2a2a2a; color:#fff; padding:10px 12px; border-radius:4px; font-family:'Manrope',sans-serif; font-size:14px; outline:none; width:100%; transition:border-color 150ms; }
+input:focus, select:focus, textarea:focus { border-color:#1ed760; }
+input::placeholder, textarea::placeholder { color:#7c7c7c; }
+label { display:block; color:#b3b3b3; font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:6px; }
+.table-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; color:#7c7c7c; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:10px 12px; border-bottom:1px solid #2a2a2a; white-space:nowrap; }
+td { padding:12px; border-bottom:1px solid #222; font-size:13px; }
+tbody tr:hover { background:#1f1f1f; }
+tbody tr:last-child td { border-bottom:none; }
+.pill { display:inline-block; padding:3px 10px; border-radius:500px; font-size:10px; font-weight:700; background:#252525; color:#b3b3b3; }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:500px; font-size:10px; font-weight:700; background:#252525; color:#b3b3b3; border:1px solid #333; }
+.dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.progress { height:4px; background:#121212; border-radius:2px; overflow:hidden; }
+.progress > div { height:100%; transition:width 300ms; }
+.tabs-pill { display:inline-flex; background:#181818; border-radius:500px; padding:3px; gap:2px; }
+.tabs-pill button { background:transparent; border:none; padding:7px 16px; border-radius:500px; color:#b3b3b3; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; cursor:pointer; font-family:inherit; transition:all 150ms; }
+.tabs-pill button.active { background:#fff; color:#121212; }
+.period-tabs { display:flex; gap:4px; overflow-x:auto; padding:4px 0; scrollbar-width:none; }
+.period-tabs::-webkit-scrollbar { display:none; }
+.period-tab { flex-shrink:0; background:#181818; border:1px solid transparent; color:#b3b3b3; padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; gap:2px; align-items:flex-start; min-width:90px; transition:all 150ms; }
+.period-tab:hover { background:#1f1f1f; color:#fff; }
+.period-tab.active { background:#1ed760; color:#121212; border-color:#1ed760; }
+.period-tab.past { opacity:0.55; }
+.period-tab .pt-name { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; }
+.period-tab .pt-date { font-size:10px; opacity:0.7; }
+.period-tab.active .pt-date { opacity:0.8; }
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:100; display:flex; align-items:center; justify-content:center; padding:24px; }
+.modal { background:#181818; border-radius:12px; padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:rgba(0,0,0,0.5) 0 8px 24px; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1ed760; color:#121212; padding:12px 24px; border-radius:500px; font-size:11px; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; box-shadow:rgba(0,0,0,0.5) 0 8px 24px; z-index:200; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.hero-title { font-size:64px; font-weight:800; letter-spacing:-2px; margin:6px 0 10px; line-height:1; }
+.page-title { font-size:48px; font-weight:800; letter-spacing:-1.5px; margin:8px 0 12px; }
+
+@media (max-width:900px) {
+  .grid-4, .grid-3 { grid-template-columns:repeat(2,1fr); }
+  .sb { display:none; }
+  .mobile-nav-btn { display:inline-flex; }
+  .bottom-nav { display:flex; position:fixed; bottom:0; left:0; right:0; background:rgba(10,10,10,0.95); backdrop-filter:blur(14px); border-top:1px solid #1f1f1f; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px)); z-index:50; justify-content:space-around; }
+  .bottom-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; background:none; border:none; color:#7c7c7c; cursor:pointer; font-family:inherit; font-size:9px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; border-radius:8px; }
+  .bottom-nav-item.active { color:#1ed760; }
+  .main { padding-bottom:80px; }
+  .topbar { padding:12px 16px; gap:10px; }
+  .content { padding:8px 16px 20px; gap:20px; }
+  .card { padding:14px; border-radius:10px; }
+  .hero-title { font-size:40px; letter-spacing:-1px; }
+  .page-title { font-size:32px; letter-spacing:-0.8px; }
+  .form-grid-expense { grid-template-columns:1fr 1fr !important; }
+  .form-grid-expense > *:nth-child(2) { grid-column:1 / -1; }
+  .form-grid-expense > button, .form-grid-rec > button { grid-column:1 / -1; }
+  .form-grid-income { grid-template-columns:1fr !important; }
+  .catbreak-grid { grid-template-columns:1fr !important; gap:20px; }
+  .year-chart-grid { gap:4px; height:140px; }
+  .modal { padding:20px; border-radius:14px; }
+  .period-tab { min-width:76px; padding:8px 12px; }
+  th, td { padding:8px 10px; font-size:12px; }
+  .btn { padding:10px 16px; font-size:11px; }
+}
+@media (max-width:560px) {
+  .grid-4, .grid-3 { grid-template-columns:1fr; }
+  .hero-title { font-size:34px; }
+  .page-title { font-size:26px; }
+  .topbar > :first-child { flex:1; min-width:0; }
+}
+::-webkit-scrollbar { width:12px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#4d4d4d; border-radius:6px; border:3px solid transparent; background-clip:content-box; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const MN = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MN_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CATS = [
+  { n:'Vivienda', c:'#1e6b45' },
+  { n:'Alimentación', c:'#c96c1a' },
+  { n:'Comidas fuera de casa', c:'#d63031' },
+  { n:'Domicilios', c:'#e17055' },
+  { n:'Mercado', c:'#00b894' },
+  { n:'Transporte', c:'#1552a0' },
+  { n:'Peajes', c:'#636e72' },
+  { n:'Gasolina', c:'#e84393' },
+  { n:'Mantenimiento del carro', c:'#0984e3' },
+  { n:'Seguros', c:'#6c5ce7' },
+  { n:'Salud', c:'#b80f1a' },
+  { n:'Medicamentos', c:'#fd79a8' },
+  { n:'Educación', c:'#2d3436' },
+  { n:'Entretenimiento', c:'#6d4c41' },
+  { n:'Suscripciones', c:'#00cec9' },
+  { n:'Ropa', c:'#ff7675' },
+  { n:'Servicios', c:'#74b9ff' },
+  { n:'Préstamos', c:'#a29bfe' },
+  { n:'Tarjetas de crédito', c:'#fdcb6e' },
+  { n:'Ahorro', c:'#55efc4' },
+  { n:'Viajes', c:'#ff9f43' },
+  { n:'Otros', c:'#95a5a6' },
+];
+const catColor = (n, catsState) => {
+  if (catsState) { const found = catsState.find(c => c.n === n); if (found) return found.c; }
+  return (CATS.find(c => c.n === n) || { c:'#a0aec0' }).c;
+};
+const fmt = (n) => {
+  const abs = Math.abs(Math.round(n));
+  const s = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (n < 0 ? '−' : '') + '$ ' + s;
+};
+
+const SEED = {
+  '2026_3_1': {
+    income: 2100000, transferIn: 145000, transferLabel: 'Sobrante Marzo Q2',
+    extraIncome: [{ id:'e1', desc:'Horas extra', amount:180000 }],
+    items: [
+      { id:'i1', ref:'', desc:'Arriendo', amount:850000, cat:'Vivienda', date:'2026-04-16', rec:true },
+      { id:'i2', ref:'', desc:'Éxito semana 1', amount:215400, cat:'Mercado', date:'2026-04-17', rec:false },
+      { id:'i3', ref:'**** 4521', desc:'Netflix', amount:38900, cat:'Suscripciones', date:'2026-04-18', rec:true },
+      { id:'i4', ref:'', desc:'Gasolina Terpel', amount:120000, cat:'Gasolina', date:'2026-04-19', rec:false },
+      { id:'i5', ref:'**** 4521', desc:'Spotify', amount:16900, cat:'Suscripciones', date:'2026-04-20', rec:true },
+      { id:'i6', ref:'', desc:'Almuerzo oficina', amount:42000, cat:'Comidas fuera de casa', date:'2026-04-20', rec:false },
+      { id:'i7', ref:'', desc:'Transmilenio', amount:18000, cat:'Transporte', date:'2026-04-21', rec:false },
+      { id:'i8', ref:'', desc:'Farmacia', amount:48200, cat:'Salud', date:'2026-04-21', rec:false },
+    ],
+    closed: false,
+  },
+  '2026_2_2': {
+    income: 2100000, transferIn: 0, extraIncome: [],
+    items: [
+      { id:'p1', desc:'Arriendo', amount:850000, cat:'Vivienda', date:'2026-03-30', rec:true },
+      { id:'p2', desc:'Mercado mes', amount:520000, cat:'Mercado', date:'2026-03-31', rec:false },
+      { id:'p3', desc:'Servicios', amount:185000, cat:'Servicios', date:'2026-04-01', rec:true },
+      { id:'p4', desc:'Netflix', amount:38900, cat:'Suscripciones', date:'2026-04-02', rec:true },
+      { id:'p5', desc:'Gasolina', amount:180000, cat:'Gasolina', date:'2026-04-05', rec:false },
+      { id:'p6', desc:'Salida cena', amount:95000, cat:'Comidas fuera de casa', date:'2026-04-08', rec:false },
+    ],
+    closed: true,
+  },
+};
+
+const RECURRENTES_SEED = [
+  { id:'r1', desc:'Arriendo', amount:850000, cat:'Vivienda', ref:'', history:[
+    { id:'h1a', date:'2026-01-01', amount:820000, note:'Monto inicial' },
+    { id:'h1b', date:'2026-03-01', amount:850000, note:'Incremento anual por IPC (+3.7%)' },
+  ] },
+  { id:'r2', desc:'Netflix', amount:38900, cat:'Suscripciones', ref:'**** 4521', history:[
+    { id:'h2a', date:'2026-01-01', amount:38900, note:'Monto inicial' },
+  ] },
+  { id:'r3', desc:'Spotify', amount:16900, cat:'Suscripciones', ref:'**** 4521', history:[
+    { id:'h3a', date:'2026-01-01', amount:16900, note:'Monto inicial' },
+  ] },
+  { id:'r4', desc:'Gimnasio', amount:85000, cat:'Salud', ref:'', history:[
+    { id:'h4a', date:'2026-01-01', amount:85000, note:'Monto inicial' },
+  ] },
+  { id:'r5', desc:'Servicios (EPM)', amount:185000, cat:'Servicios', ref:'', history:[
+    { id:'h5a', date:'2026-01-01', amount:160000, note:'Monto inicial' },
+    { id:'h5b', date:'2026-02-15', amount:210000, note:'Aumento por ola de calor, más aire acondicionado' },
+    { id:'h5c', date:'2026-04-01', amount:185000, note:'Estabilización tras ajuste de hábitos' },
+  ] },
+  { id:'r6', desc:'Internet+TV', amount:120000, cat:'Servicios', ref:'', history:[
+    { id:'h6a', date:'2026-01-01', amount:120000, note:'Monto inicial' },
+  ] },
+];
+
+const LogoIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" fill="none" style={{ width:48, height:48, borderRadius:10 }}>
+    <circle cx="28" cy="28" r="24" fill="#1ed760"/>
+    <path d="M21 20 C21 16.7, 23.7 14, 27 14 L34 14 C37.3 14, 40 16.7, 40 20 L40 22 L34 22 L34 20 L27 20 L27 36 L34 36 L34 32 L30 32 L30 28 L40 28 L40 36 C40 39.3, 37.3 42, 34 42 L27 42 C23.7 42, 21 39.3, 21 36 Z" fill="#121212"/>
+  </svg>
+);
+
+const NAV_ITEMS = [
+  { id:'panel', label:'Panel', short:'Panel', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> },
+  { id:'resumen', label:'Resumen anual', short:'Resumen', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg> },
+  { id:'recurrentes', label:'Recurrentes', short:'Recur.', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> },
+  { id:'categorias', label:'Categorías', short:'Categ.', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg> },
+  { id:'config', label:'Configuración', short:'Config', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
+];
+
+function App() {
+  const [view, setView] = React.useState('q');
+  const [year, setYear] = React.useState(new Date().getFullYear());
+  const [period, setPeriod] = React.useState(() => {
+    const now = new Date();
+    return { m: now.getMonth(), q: now.getDate() <= 15 ? 1 : 2 };
+  });
+  const [data, setData] = React.useState(SEED);
+  const [screen, setScreen] = React.useState('panel');
+  const [toast, setToast] = React.useState(null);
+  const [recModal, setRecModal] = React.useState(false);
+  const [recurrentes, setRecurrentes] = React.useState(RECURRENTES_SEED);
+  const [editRec, setEditRec] = React.useState(null);
+  const [cats, setCats] = React.useState(CATS.map(c => ({ ...c, active:true, custom:false })));
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2400); };
+  const periodKey = (y, m, q) => `${y}_${m}_${q}`;
+
+  const getP = (y, m, q) => data[periodKey(y, m, q)] || { income:0, transferIn:0, transferLabel:'', extraIncome:[], items:[], closed:false };
+  const setP = (y, m, q, next) => setData(d => ({ ...d, [periodKey(y, m, q)]: next }));
+
+  const curData = view === 'q' ? getP(year, period.m, period.q) : null;
+
+  const totals = React.useMemo(() => {
+    if (view === 'q') {
+      const d = getP(year, period.m, period.q);
+      const extra = (d.extraIncome || []).reduce((a,i) => a+i.amount, 0);
+      const totalIn = d.income + d.transferIn + extra;
+      const totalOut = (d.items || []).reduce((a,i) => a+i.amount, 0);
+      return { totalIn, totalOut, bal:totalIn-totalOut, pct:totalIn>0?Math.round(totalOut/totalIn*100):0, extra };
+    }
+    const d1 = getP(year, period.m, 1), d2 = getP(year, period.m, 2);
+    const e1 = (d1.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
+    const e2 = (d2.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
+    const totalIn = d1.income+d1.transferIn+e1 + d2.income+d2.transferIn+e2;
+    const items = [...(d1.items||[]).map(i=>({...i,_q:1})), ...(d2.items||[]).map(i=>({...i,_q:2}))];
+    const totalOut = items.reduce((a,i)=>a+i.amount, 0);
+    return { totalIn, totalOut, bal:totalIn-totalOut, pct:totalIn>0?Math.round(totalOut/totalIn*100):0, items, d1, d2 };
+  }, [view, year, period, data]);
+
+  return (
+    <div className="app">
+      <aside className="sb">
+        <a className="sb-back" href="/">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Inicio
+        </a>
+        <div className="sb-logo">
+          <LogoIcon/>
+          <span style={{ fontSize:24, fontWeight:800, letterSpacing:'-0.5px' }}>Gastos</span>
+        </div>
+        <nav className="sb-nav">
+          {NAV_ITEMS.map(it => (
+            <div key={it.id} className={'sb-item' + (screen === it.id ? ' active' : '')} onClick={() => setScreen(it.id)}>
+              {it.icon}{it.label}
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      <nav className="bottom-nav">
+        {NAV_ITEMS.map(it => (
+          <button key={it.id} className={'bottom-nav-item' + (screen === it.id ? ' active' : '')} onClick={() => setScreen(it.id)}>
+            {it.icon}
+            <span>{it.short || it.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="main">
+        <div className="topbar">
+          <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+            <div className="tabs-pill">
+              <button className={view==='q'?'active':''} onClick={() => setView('q')}>Quincenal</button>
+              <button className={view==='m'?'active':''} onClick={() => setView('m')}>Mensual</button>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <button className="btn btn-sm btn-ghost" onClick={() => setYear(y => Math.max(2020, y-1))}>←</button>
+              <span className="num" style={{ fontSize:14, fontWeight:700, minWidth:50, textAlign:'center' }}>{year}</span>
+              <button className="btn btn-sm btn-ghost" onClick={() => setYear(y => y+1)}>→</button>
+            </div>
+          </div>
+          <div className="user-chip">
+            <div className="user-av">G</div>
+            <span style={{ fontSize:12, color:'#b3b3b3' }}>Gastos</span>
+          </div>
+        </div>
+
+        {screen === 'panel' && (
+          <div className="content">
+            <div className="period-tabs">
+              {view === 'q' ? MN.flatMap((mn,mi) => [1,2].map(q => {
+                const active = mi === period.m && q === period.q;
+                const past = mi < period.m || (mi === period.m && q < period.q);
+                return (
+                  <button key={`${mi}-${q}`} className={'period-tab' + (active?' active':past?' past':'')} onClick={() => setPeriod({ m:mi, q })}>
+                    <span className="pt-name">{mn} Q{q}</span>
+                    <span className="pt-date">{q===1?'1–15':'16–fin'} {mn}</span>
+                  </button>
+                );
+              })) : MN.map((mn,mi) => {
+                const active = mi === period.m;
+                const past = mi < period.m;
+                return (
+                  <button key={mi} className={'period-tab' + (active?' active':past?' past':'')} onClick={() => setPeriod({ m:mi, q:1 })}>
+                    <span className="pt-name">{mn}</span>
+                    <span className="pt-date">{year}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Hero view={view} period={period} year={year} totals={totals} curData={curData}/>
+
+            {totals.pct >= 80 && (
+              <div style={{ background: totals.pct >= 95 ? 'rgba(243,114,127,0.1)' : 'rgba(255,164,43,0.1)', border:`1px solid ${totals.pct>=95?'#f3727f':'#ffa42b'}`, padding:'14px 18px', borderRadius:8, color: totals.pct>=95?'#f3727f':'#ffa42b', fontSize:13, fontWeight:600, display:'flex', alignItems:'center', gap:10 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                {totals.pct>=95 ? `Has consumido el ${totals.pct}% del presupuesto. Cuidado con los gastos.` : `Llevas el ${totals.pct}% del presupuesto. Revisa tus movimientos.`}
+              </div>
+            )}
+
+            <div className="grid-4">
+              <Stat label="Ingreso base" value={view==='q' ? (curData?.income||0) : ((totals.d1?.income||0)+(totals.d2?.income||0))} tone="positive"/>
+              <Stat label="Total disponible" value={totals.totalIn} sub={view==='q' && curData?.transferIn>0 ? `+ ${fmt(curData.transferIn)} sobrante` : null}/>
+              <Stat label="Gastos" value={-totals.totalOut} tone="negative" sub={`${view==='q' ? (curData?.items||[]).length : (totals.items||[]).length} movimientos`}/>
+              <Stat label="Saldo" value={totals.bal} tone={totals.bal>=0?'positive':'negative'} sub={totals.bal>=0?'Pasa a la próxima Q':'Déficit'}/>
+            </div>
+
+            <div className="card">
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:12 }}>
+                <span className="eyebrow">Consumo del presupuesto</span>
+                <span className="num" style={{ fontSize:32, fontWeight:800, color: totals.pct>=95?'#f3727f':totals.pct>=80?'#ffa42b':'#1ed760', letterSpacing:'-1px' }}>{totals.pct}%</span>
+              </div>
+              <div className="progress" style={{ height:8 }}>
+                <div style={{ width:`${Math.min(100,totals.pct)}%`, background: totals.pct>=95?'#f3727f':totals.pct>=80?'#ffa42b':'#1ed760' }}/>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', marginTop:10, fontSize:12, color:'#b3b3b3' }}>
+                <span className="num">{fmt(totals.totalOut)} gastado</span>
+                <span className="num">{fmt(totals.totalIn)} disponible</span>
+              </div>
+            </div>
+
+            {view === 'q' && curData && !curData.closed && (
+              <div className="grid-2">
+                <IncomeForm data={curData} onSave={(inc) => { setP(year,period.m,period.q, { ...curData, income:inc }); showToast('Guardado'); }}/>
+                <ExtraIncomeForm data={curData} onAdd={(ei) => { setP(year,period.m,period.q, { ...curData, extraIncome:[...(curData.extraIncome||[]), ei] }); showToast('Ingreso extra guardado'); }}/>
+              </div>
+            )}
+
+            {view === 'q' && curData && !curData.closed && (
+              <ExpenseForm cats={cats.filter(c => c.active)} onAdd={(it) => { setP(year,period.m,period.q, { ...curData, items:[...(curData.items||[]), it] }); showToast('Gasto guardado'); }}/>
+            )}
+
+            {((view === 'q' && curData && !curData.closed) || view === 'm') && (
+              <div className="card">
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:16, gap:10, flexWrap:'wrap' }}>
+                  <h2 style={{ fontSize:18, fontWeight:700, margin:0 }}>Recurrentes</h2>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button className="btn btn-sm btn-ghost" onClick={() => setScreen('recurrentes')}>Gestionar</button>
+                    <button className="btn btn-sm btn-primary" onClick={() => setRecModal(true)}>
+                      {view === 'm' ? 'Aplicar al mes →' : 'Aplicar selección →'}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {recurrentes.map(r => (
+                    <button key={r.id} onClick={() => setEditRec(r)} className="chip" style={{ cursor:'pointer', background:'#252525' }}>
+                      <span className="dot" style={{ background:catColor(r.cat, cats) }}/>
+                      {r.desc} · <span className="num">{fmt(r.amount)}</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft:2, opacity:0.6 }}><path d="M12 20h9M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Movements view={view} totals={totals} curData={curData} period={period} cats={cats} onDelete={(id) => {
+              if (view === 'q') setP(year,period.m,period.q, { ...curData, items:(curData.items||[]).filter(i=>i.id!==id) });
+              showToast('Gasto eliminado');
+            }}/>
+
+            <CategoryBreakdown items={view==='q' ? (curData?.items||[]) : (totals.items||[])} total={totals.totalOut} cats={cats}/>
+
+            <YearChart year={year} data={data}/>
+          </div>
+        )}
+
+        {screen === 'resumen' && <AnnualSummary year={year} data={data} cats={cats}/>}
+        {screen === 'recurrentes' && <RecurrentesScreen
+          recurrentes={recurrentes}
+          onEdit={r => setEditRec(r)}
+          onDelete={id => { setRecurrentes(rs => rs.filter(r => r.id !== id)); showToast('Recurrente eliminado'); }}
+          onAdd={r => {
+            const id = `r-${Date.now()}`;
+            const today = new Date().toISOString().split('T')[0];
+            setRecurrentes(rs => [...rs, { ...r, id, history:[{ id:`h-${id}`, date:today, amount:r.amount, note:'Monto inicial' }] }]);
+            showToast('Recurrente creado');
+          }}
+          cats={cats}
+        />}
+        {screen === 'categorias' && <CategoriasScreen
+          cats={cats}
+          onAdd={name => { if (!name.trim()) return; setCats(cs => [...cs, { n:name.trim(), c:'#a0aec0', active:true, custom:true }]); showToast('Categoría agregada'); }}
+          onToggle={n => setCats(cs => cs.map(c => c.n === n ? { ...c, active:!c.active } : c))}
+          onDelete={n => { setCats(cs => cs.filter(c => !(c.n === n && c.custom))); showToast('Categoría eliminada'); }}
+          usedCats={new Set(Object.values(data).flatMap(d => (d.items||[]).map(i => i.cat)))}
+        />}
+        {screen === 'config' && <ConfigScreen
+          year={year}
+          data={data}
+          onClearYear={() => {
+            setData(d => Object.fromEntries(Object.entries(d).filter(([k]) => !k.startsWith(`${year}_`))));
+            showToast(`Datos de ${year} eliminados`);
+          }}
+          onClearItems={() => {
+            setData(d => Object.fromEntries(Object.entries(d).map(([k,v]) => [k, { ...v, items:[] }])));
+            showToast('Gastos eliminados');
+          }}
+          onClearAll={() => {
+            setData({});
+            setRecurrentes([]);
+            showToast('Todos los datos eliminados');
+          }}
+          onResetDemo={() => {
+            setData(SEED);
+            setRecurrentes(RECURRENTES_SEED);
+            setCats(CATS.map(c => ({ ...c, active:true, custom:false })));
+            showToast('Datos demo restaurados');
+          }}
+        />}
+      </div>
+
+      {editRec && <EditRecurrenteModal rec={editRec} cats={cats} onClose={() => setEditRec(null)} onSave={r => {
+        setRecurrentes(rs => rs.map(x => x.id === r.id ? r : x));
+        setEditRec(null);
+        showToast('Recurrente actualizado');
+      }}/>}
+
+      {recModal && <RecurrentesModal recurrentes={recurrentes} view={view} onClose={() => setRecModal(false)} onApply={(selected) => {
+        const today = new Date().toISOString().split('T')[0];
+        if (view === 'q' && curData) {
+          const newItems = selected.map(r => ({ ...r, id:`r-${Date.now()}-${Math.random()}`, date:today, rec:true }));
+          setP(year,period.m,period.q, { ...curData, items:[...(curData.items||[]), ...newItems] });
+          showToast(`${selected.length} recurrentes aplicados`);
+        } else if (view === 'm') {
+          const d1 = getP(year, period.m, 1), d2 = getP(year, period.m, 2);
+          const mm = String(period.m+1).padStart(2,'0');
+          const newQ1 = selected.map(r => ({ ...r, id:`r-${Date.now()}-${Math.random()}-1`, date:`${year}-${mm}-01`, rec:true }));
+          const newQ2 = selected.map(r => ({ ...r, id:`r-${Date.now()}-${Math.random()}-2`, date:`${year}-${mm}-16`, rec:true }));
+          setP(year, period.m, 1, { ...d1, items:[...(d1.items||[]), ...newQ1] });
+          setP(year, period.m, 2, { ...d2, items:[...(d2.items||[]), ...newQ2] });
+          showToast(`${selected.length * 2} recurrentes aplicados al mes`);
+        }
+        setRecModal(false);
+      }}/>}
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+function Hero({ view, period, year, totals, curData }) {
+  const title = view === 'q' ? `${MN_FULL[period.m]} Q${period.q}` : `${MN_FULL[period.m]} ${year}`;
+  const payDate = view === 'q' ? (period.q === 1 ? 15 : 30) : null;
+  return (
+    <div style={{ display:'flex', alignItems:'flex-end', gap:24, padding:'12px 0 8px' }}>
+      <div style={{
+        width:88, height:88, borderRadius:'50%', background:'#1ed760',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        boxShadow:'rgba(30,215,96,0.25) 0 8px 30px', flexShrink:0,
+      }}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#121212" strokeWidth="3.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+      <div>
+        <div className="eyebrow" style={{ color:'#1ed760' }}>{view === 'q' ? 'Quincena' : 'Mes'} · {year}</div>
+        <div className="num" style={{ fontSize:64, fontWeight:800, letterSpacing:'-2px', margin:'6px 0 10px', lineHeight:1 }}>
+          {fmt(totals.totalIn - totals.totalOut)}
+        </div>
+        <div style={{ display:'flex', gap:20, flexWrap:'wrap', fontSize:13 }}>
+          <span style={{ color:'#b3b3b3' }}>{title}</span>
+          {payDate && <span style={{ color:'#b3b3b3' }}>· Pago día {payDate}</span>}
+          <span style={{ color:'#b3b3b3' }}>· <span className="num" style={{ color:'#fff' }}>{fmt(totals.totalOut)}</span> gastado</span>
+          {view === 'q' && curData?.closed && <span className="pill" style={{ background:'#1ed76022', color:'#1ed760' }}>Cerrada</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, sub, tone }) {
+  const color = tone === 'positive' ? '#1ed760' : tone === 'negative' ? '#f3727f' : '#fff';
+  return (
+    <div className="card">
+      <div className="eyebrow" style={{ marginBottom:10 }}>{label}</div>
+      <div className="num" style={{ fontSize:26, fontWeight:800, color, letterSpacing:'-0.5px' }}>{fmt(value)}</div>
+      {sub && <div style={{ fontSize:11, color:'#7c7c7c', marginTop:6 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function IncomeForm({ data, onSave }) {
+  const [val, setVal] = React.useState(data.income || '');
+  React.useEffect(() => setVal(data.income || ''), [data]);
+  return (
+    <div className="card">
+      <h2 style={{ fontSize:18, fontWeight:700, margin:'0 0 16px' }}>Ingreso base</h2>
+      <div style={{ display:'flex', gap:10, alignItems:'flex-end' }}>
+        <div style={{ flex:1 }}>
+          <label>Monto (COP)</label>
+          <input type="number" value={val} onChange={e => setVal(e.target.value)} placeholder="0"/>
+        </div>
+        <button className="btn btn-primary" onClick={() => onSave(Number(val)||0)}>Guardar</button>
+      </div>
+      {data.transferIn > 0 && (
+        <div style={{ marginTop:14, padding:12, background:'rgba(83,157,245,0.1)', borderRadius:6, fontSize:12, color:'#539df5' }}>
+          + <span className="num">{fmt(data.transferIn)}</span> sobrante · {data.transferLabel}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExtraIncomeForm({ data, onAdd }) {
+  const [desc, setDesc] = React.useState('');
+  const [amt, setAmt] = React.useState('');
+  const add = () => {
+    if (!desc || !amt) return;
+    onAdd({ id:`e-${Date.now()}`, desc, amount:Number(amt) });
+    setDesc(''); setAmt('');
+  };
+  return (
+    <div className="card">
+      <h2 style={{ fontSize:18, fontWeight:700, margin:'0 0 16px' }}>Ingresos adicionales</h2>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 140px auto', gap:10, alignItems:'flex-end' }}>
+        <div><label>Descripción</label><input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Horas extra, freelance..."/></div>
+        <div><label>Monto</label><input type="number" value={amt} onChange={e => setAmt(e.target.value)} placeholder="0"/></div>
+        <button className="btn btn-primary" onClick={add}>+ Añadir</button>
+      </div>
+      {(data.extraIncome||[]).length > 0 && (
+        <div style={{ marginTop:14, display:'flex', flexDirection:'column', gap:6 }}>
+          {data.extraIncome.map(ei => (
+            <div key={ei.id} style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', background:'#121212', borderRadius:4, fontSize:12 }}>
+              <span style={{ color:'#b3b3b3' }}>{ei.desc}</span>
+              <span className="num" style={{ color:'#ffa42b', fontWeight:700 }}>{fmt(ei.amount)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExpenseForm({ onAdd, cats }) {
+  const [ref, setRef] = React.useState('');
+  const [desc, setDesc] = React.useState('');
+  const [amt, setAmt] = React.useState('');
+  const [cat, setCat] = React.useState(cats[0]?.n || '');
+  const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
+  const [rec, setRec] = React.useState(false);
+
+  React.useEffect(() => { if (!cats.find(c => c.n === cat) && cats[0]) setCat(cats[0].n); }, [cats]);
+
+  const add = () => {
+    if (!desc || !amt) return;
+    onAdd({ id:`i-${Date.now()}`, ref, desc, amount:Number(amt), cat, date, rec });
+    setRef(''); setDesc(''); setAmt(''); setRec(false);
+  };
+
+  return (
+    <div className="card">
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:16 }}>
+        <h2 style={{ fontSize:18, fontWeight:700, margin:0 }}>Añadir gasto</h2>
+        <span style={{ fontSize:11, color:'#7c7c7c' }}>Se registra en la quincena activa</span>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'140px 1fr 140px 180px 150px', gap:12, alignItems:'flex-end' }} className="form-grid-expense">
+        <div><label>Referencia</label><input value={ref} onChange={e => setRef(e.target.value)} placeholder="**** 1234"/></div>
+        <div><label>Descripción</label><input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Arriendo, mercado..."/></div>
+        <div><label>Valor (COP)</label><input type="number" value={amt} onChange={e => setAmt(e.target.value)} placeholder="0"/></div>
+        <div><label>Categoría</label><select value={cat} onChange={e => setCat(e.target.value)}>{cats.map(c => <option key={c.n} value={c.n}>{c.n}</option>)}</select></div>
+        <div><label>Fecha</label><input type="date" value={date} onChange={e => setDate(e.target.value)}/></div>
+      </div>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:16 }}>
+        <label style={{ display:'flex', alignItems:'center', gap:8, margin:0, cursor:'pointer' }}>
+          <input type="checkbox" checked={rec} onChange={e => setRec(e.target.checked)} style={{ width:'auto' }}/>
+          <span style={{ color:'#b3b3b3', fontSize:12, textTransform:'none', letterSpacing:0, fontWeight:400 }}>Marcar como recurrente</span>
+        </label>
+        <button className="btn btn-primary" onClick={add}>Guardar gasto</button>
+      </div>
+    </div>
+  );
+}
+
+function Movements({ view, totals, curData, period, cats, onDelete }) {
+  const items = view === 'q' ? (curData?.items||[]) : (totals.items||[]);
+  return (
+    <div className="card" style={{ padding:0, overflow:'hidden' }}>
+      <div style={{ padding:'20px 20px 12px', display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
+        <h2 style={{ fontSize:18, fontWeight:700, margin:0 }}>Movimientos</h2>
+        <span style={{ fontSize:11, color:'#7c7c7c', textTransform:'uppercase', letterSpacing:1.2, fontWeight:700 }}>
+          {items.length} · <span className="num">{fmt(items.reduce((a,i)=>a+i.amount,0))}</span>
+        </span>
+      </div>
+      {items.length === 0 ? (
+        <div style={{ padding:40, textAlign:'center', color:'#7c7c7c', fontSize:13 }}>Aún no hay movimientos. Añade el primero.</div>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                {view==='m' && <th>Q</th>}
+                <th>Fecha</th>
+                <th>Ref.</th>
+                <th style={{ textAlign:'right' }}>Monto</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(it => (
+                <tr key={it.id}>
+                  <td style={{ fontWeight:700, color:'#fff' }}>
+                    {it.desc} {it.rec && <span className="pill" style={{ marginLeft:8, background:'#539df522', color:'#539df5' }}>↻</span>}
+                  </td>
+                  <td>
+                    <span className="chip"><span className="dot" style={{ background:catColor(it.cat, cats) }}/>{it.cat}</span>
+                  </td>
+                  {view==='m' && <td><span className="pill">Q{it._q}</span></td>}
+                  <td style={{ color:'#b3b3b3' }}>{new Date(it.date+'T00:00').toLocaleDateString('es-CO', { day:'numeric', month:'short' })}</td>
+                  <td style={{ color:'#7c7c7c', fontSize:11 }}>{it.ref || '—'}</td>
+                  <td className="num" style={{ textAlign:'right', fontWeight:800, color:'#f3727f' }}>−{fmt(it.amount)}</td>
+                  <td style={{ textAlign:'right' }}>
+                    <button onClick={() => onDelete && onDelete(it.id)} style={{ background:'transparent', border:'none', color:'#7c7c7c', cursor:'pointer', padding:6 }} title="Eliminar">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CategoryBreakdown({ items, total, cats }) {
+  const byCat = {};
+  items.forEach(it => { byCat[it.cat] = (byCat[it.cat] || 0) + it.amount; });
+  const sorted = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+  if (sorted.length === 0) return null;
+  return (
+    <div className="card">
+      <h2 style={{ fontSize:18, fontWeight:700, margin:'0 0 20px' }}>Por categoría</h2>
+      <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', gap:32, alignItems:'center' }} className="catbreak-grid">
+        <Donut items={sorted} total={total} cats={cats}/>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {sorted.map(([cat, amt]) => {
+            const pct = total>0 ? Math.round(amt/total*100) : 0;
+            return (
+              <div key={cat}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4, fontSize:12 }}>
+                  <span style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span className="dot" style={{ background:catColor(cat, cats) }}/>
+                    <span style={{ color:'#fff', fontWeight:700 }}>{cat}</span>
+                    <span style={{ color:'#7c7c7c' }}>{pct}%</span>
+                  </span>
+                  <span className="num" style={{ color:'#b3b3b3', fontWeight:700 }}>{fmt(amt)}</span>
+                </div>
+                <div className="progress"><div style={{ width:`${pct}%`, background:catColor(cat, cats) }}/></div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Donut({ items, total, cats }) {
+  const size = 180, stroke = 28, r = (size - stroke) / 2, C = 2 * Math.PI * r;
+  let offset = 0;
+  return (
+    <div style={{ position:'relative', width:size, height:size, margin:'0 auto' }}>
+      <svg width={size} height={size} style={{ transform:'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#252525" strokeWidth={stroke}/>
+        {items.map(([cat, amt]) => {
+          const pct = amt / total;
+          const dash = pct * C;
+          const el = <circle key={cat} cx={size/2} cy={size/2} r={r} fill="none" stroke={catColor(cat, cats)} strokeWidth={stroke} strokeDasharray={`${dash} ${C-dash}`} strokeDashoffset={-offset}/>;
+          offset += dash;
+          return el;
+        })}
+      </svg>
+      <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+        <div className="eyebrow" style={{ fontSize:10 }}>Total</div>
+        <div className="num" style={{ fontSize:18, fontWeight:800 }}>{fmt(total)}</div>
+      </div>
+    </div>
+  );
+}
+
+function YearChart({ year, data }) {
+  const months = MN.map((_, mi) => {
+    const d1 = data[`${year}_${mi}_1`] || { items:[] };
+    const d2 = data[`${year}_${mi}_2`] || { items:[] };
+    const out = [...(d1.items||[]), ...(d2.items||[])].reduce((a,i)=>a+i.amount, 0);
+    const inc = (d1.income||0) + (d2.income||0);
+    return { mi, out, inc };
+  });
+  const max = Math.max(...months.map(m => Math.max(m.out, m.inc)), 1);
+  return (
+    <div className="card">
+      <h2 style={{ fontSize:18, fontWeight:700, margin:'0 0 6px' }}>Evolución {year}</h2>
+      <div style={{ display:'flex', gap:16, fontSize:11, color:'#b3b3b3', marginBottom:20 }}>
+        <span style={{ display:'flex', alignItems:'center', gap:6 }}><span className="dot" style={{ background:'#1ed760' }}/>Ingresos</span>
+        <span style={{ display:'flex', alignItems:'center', gap:6 }}><span className="dot" style={{ background:'#f3727f' }}/>Gastos</span>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(12,1fr)', gap:10, alignItems:'end', height:180 }}>
+        {months.map(m => (
+          <div key={m.mi} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, height:'100%' }}>
+            <div style={{ flex:1, display:'flex', alignItems:'flex-end', gap:3, width:'100%', justifyContent:'center' }}>
+              <div style={{ width:10, height:`${m.inc/max*100}%`, background:'#1ed760', borderRadius:2, minHeight:m.inc>0?2:0 }}/>
+              <div style={{ width:10, height:`${m.out/max*100}%`, background:'#f3727f', borderRadius:2, minHeight:m.out>0?2:0 }}/>
+            </div>
+            <div style={{ fontSize:10, color:'#7c7c7c', fontWeight:700 }}>{MN[m.mi]}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnnualSummary({ year, data, cats }) {
+  const months = MN.map((_, mi) => {
+    const d1 = data[`${year}_${mi}_1`] || { items:[], income:0 };
+    const d2 = data[`${year}_${mi}_2`] || { items:[], income:0 };
+    const out = [...(d1.items||[]), ...(d2.items||[])].reduce((a,i)=>a+i.amount, 0);
+    const inc = (d1.income||0) + (d2.income||0);
+    return { mi, out, inc, bal:inc-out };
+  });
+  const totalIn = months.reduce((a,m)=>a+m.inc, 0);
+  const totalOut = months.reduce((a,m)=>a+m.out, 0);
+
+  const allItems = Object.entries(data)
+    .filter(([k]) => k.startsWith(`${year}_`))
+    .flatMap(([,d]) => d.items || []);
+  const byCat = {};
+  allItems.forEach(i => { byCat[i.cat] = (byCat[i.cat]||0) + i.amount; });
+  const catList = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const catMax = catList[0]?.[1] || 1;
+
+  return (
+    <div className="content">
+      <div style={{ display:'flex', alignItems:'flex-end', gap:20 }}>
+        <div>
+          <div className="eyebrow" style={{ color:'#1ed760' }}>Resumen anual · {year}</div>
+          <h1 style={{ fontSize:48, fontWeight:800, letterSpacing:'-1.5px', margin:'8px 0 0' }}>Año {year}</h1>
+        </div>
+      </div>
+      <div className="grid-3">
+        <Stat label="Ingresos año" value={totalIn} tone="positive"/>
+        <Stat label="Gastos año" value={-totalOut} tone="negative"/>
+        <Stat label="Saldo año" value={totalIn-totalOut} tone={totalIn-totalOut>=0?'positive':'negative'}/>
+      </div>
+      <YearChart year={year} data={data}/>
+
+      <div className="card">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:20 }}>
+          <h2 style={{ fontSize:18, fontWeight:700, margin:0 }}>Gastos por categoría</h2>
+          <span style={{ fontSize:11, color:'#7c7c7c', textTransform:'uppercase', letterSpacing:1.2, fontWeight:700 }}>
+            {catList.length} categorías · <span className="num">{fmt(totalOut)}</span>
+          </span>
+        </div>
+        {catList.length === 0 ? (
+          <div style={{ padding:20, textAlign:'center', color:'#7c7c7c', fontSize:13 }}>Sin gastos registrados este año.</div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            {catList.map(([cat, amt]) => {
+              const pct = totalOut > 0 ? (amt/totalOut*100) : 0;
+              return (
+                <div key={cat} style={{ display:'grid', gridTemplateColumns:'180px 1fr 120px 60px', gap:16, alignItems:'center' }} className="catyear-row">
+                  <div style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontWeight:700 }}>
+                    <span className="dot" style={{ background:catColor(cat, cats) }}/>
+                    {cat}
+                  </div>
+                  <div className="progress" style={{ height:8 }}>
+                    <div style={{ width:`${(amt/catMax)*100}%`, background:catColor(cat, cats) }}/>
+                  </div>
+                  <div className="num" style={{ textAlign:'right', fontWeight:700, color:'#fff' }}>{fmt(amt)}</div>
+                  <div style={{ textAlign:'right', fontSize:12, color:'#7c7c7c', fontWeight:700 }}>{pct.toFixed(1)}%</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="card" style={{ padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'20px' }}><h2 style={{ fontSize:18, fontWeight:700, margin:0 }}>Desglose mensual</h2></div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Mes</th><th style={{ textAlign:'right' }}>Ingresos</th><th style={{ textAlign:'right' }}>Gastos</th><th style={{ textAlign:'right' }}>Saldo</th><th style={{ textAlign:'right' }}>% Uso</th></tr></thead>
+            <tbody>
+              {months.map(m => {
+                const pct = m.inc>0 ? Math.round(m.out/m.inc*100) : 0;
+                return (
+                  <tr key={m.mi}>
+                    <td style={{ fontWeight:700 }}>{MN_FULL[m.mi]}</td>
+                    <td className="num" style={{ textAlign:'right', color:'#1ed760', fontWeight:700 }}>{fmt(m.inc)}</td>
+                    <td className="num" style={{ textAlign:'right', color:'#f3727f', fontWeight:700 }}>{fmt(m.out)}</td>
+                    <td className="num" style={{ textAlign:'right', fontWeight:700, color: m.bal>=0?'#1ed760':'#f3727f' }}>{fmt(m.bal)}</td>
+                    <td style={{ textAlign:'right', color:'#b3b3b3', fontWeight:700 }}>{pct}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecurrentesScreen({ recurrentes, onEdit, onDelete, onAdd, cats }) {
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [desc, setDesc] = React.useState('');
+  const [amt, setAmt] = React.useState('');
+  const activeCats = cats.filter(c => c.active);
+  const [cat, setCat] = React.useState(activeCats[0]?.n || '');
+  const [ref, setRef] = React.useState('');
+  const submit = () => {
+    if (!desc || !amt) return;
+    onAdd({ desc, amount:Number(amt), cat, ref });
+    setDesc(''); setAmt(''); setRef(''); setAddOpen(false);
+  };
+  return (
+    <div className="content">
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', gap:16, flexWrap:'wrap' }}>
+        <div>
+          <div className="eyebrow" style={{ color:'#1ed760' }}>Config</div>
+          <h1 style={{ fontSize:48, fontWeight:800, letterSpacing:'-1.5px', margin:'8px 0 12px' }}>Gastos recurrentes</h1>
+          <p style={{ color:'#b3b3b3', fontSize:14, maxWidth:600, margin:0 }}>Los que se repiten cada quincena o cada mes. Edítalos, elimínalos o agrega nuevos.</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setAddOpen(o => !o)}>{addOpen ? 'Cancelar' : '+ Nuevo recurrente'}</button>
+      </div>
+      {addOpen && (
+        <div className="card">
+          <h2 style={{ fontSize:16, fontWeight:700, margin:'0 0 16px' }}>Nuevo recurrente</h2>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 140px 180px 140px auto', gap:12, alignItems:'flex-end' }} className="form-grid-rec">
+            <div><label>Descripción</label><input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Ej. Arriendo"/></div>
+            <div><label>Monto</label><input type="number" value={amt} onChange={e => setAmt(e.target.value)} placeholder="0"/></div>
+            <div><label>Categoría</label><select value={cat} onChange={e => setCat(e.target.value)}>{activeCats.map(c => <option key={c.n} value={c.n}>{c.n}</option>)}</select></div>
+            <div><label>Referencia</label><input value={ref} onChange={e => setRef(e.target.value)} placeholder="**** 1234"/></div>
+            <button className="btn btn-primary" onClick={submit}>Guardar</button>
+          </div>
+        </div>
+      )}
+      <div className="card" style={{ padding:0, overflow:'hidden' }}>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Descripción</th><th>Categoría</th><th>Ref.</th><th style={{ textAlign:'right' }}>Monto</th><th style={{ textAlign:'center', width:80 }}>Cambios</th><th style={{ width:140, textAlign:'right' }}>Acciones</th></tr></thead>
+            <tbody>
+              {recurrentes.map(r => {
+                const hist = r.history || [];
+                const changes = Math.max(0, hist.length - 1);
+                const first = hist[0];
+                const delta = first ? r.amount - first.amount : 0;
+                return (
+                <tr key={r.id}>
+                  <td style={{ fontWeight:700 }}>{r.desc}</td>
+                  <td><span className="chip"><span className="dot" style={{ background:catColor(r.cat, cats) }}/>{r.cat}</span></td>
+                  <td style={{ color:'#7c7c7c' }}>{r.ref || '—'}</td>
+                  <td className="num" style={{ textAlign:'right', fontWeight:800 }}>{fmt(r.amount)}</td>
+                  <td style={{ textAlign:'center' }}>
+                    {changes > 0 ? (
+                      <button onClick={() => onEdit(r)} style={{ background:'transparent', border:'none', cursor:'pointer', padding:0, display:'inline-flex', alignItems:'center', gap:6 }} title="Ver historial">
+                        <span className="pill" style={{ background:'#1ed76022', color:'#1ed760' }}>{changes} {changes===1?'cambio':'cambios'}</span>
+                        {delta !== 0 && <span className="num" style={{ fontSize:10, fontWeight:700, color: delta>0?'#f3727f':'#1ed760' }}>{delta>0?'↑':'↓'}{fmt(Math.abs(delta))}</span>}
+                      </button>
+                    ) : <span style={{ color:'#4d4d4d', fontSize:11 }}>—</span>}
+                  </td>
+                  <td style={{ textAlign:'right' }}>
+                    <button onClick={() => onEdit(r)} style={{ background:'transparent', border:'none', color:'#539df5', cursor:'pointer', padding:6, marginRight:4 }} title="Editar">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                    <button onClick={() => onDelete(r.id)} style={{ background:'transparent', border:'none', color:'#f3727f', cursor:'pointer', padding:6 }} title="Eliminar">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                );
+              })}
+              {recurrentes.length === 0 && <tr><td colSpan="6" style={{ textAlign:'center', padding:40, color:'#7c7c7c' }}>Sin recurrentes. Agrega el primero.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditRecurrenteModal({ rec, cats, onClose, onSave }) {
+  const [desc, setDesc] = React.useState(rec.desc);
+  const [amt, setAmt] = React.useState(rec.amount);
+  const [cat, setCat] = React.useState(rec.cat);
+  const [ref, setRef] = React.useState(rec.ref || '');
+  const [note, setNote] = React.useState('');
+  const history = rec.history || [];
+  const amountChanged = Number(amt) !== Number(rec.amount);
+  const diff = Number(amt) - Number(rec.amount);
+
+  const save = () => {
+    const next = { ...rec, desc, amount:Number(amt)||0, cat, ref };
+    if (amountChanged || note.trim()) {
+      next.history = [...history, {
+        id:`h-${Date.now()}`,
+        date: new Date().toISOString().split('T')[0],
+        amount: Number(amt)||0,
+        note: note.trim() || (amountChanged ? '(sin nota)' : 'Ajuste sin cambio de monto'),
+      }];
+    }
+    onSave(next);
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth:560 }}>
+        <h2 style={{ fontSize:22, fontWeight:800, margin:'0 0 20px' }}>Editar recurrente</h2>
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div><label>Descripción</label><input value={desc} onChange={e => setDesc(e.target.value)}/></div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div><label>Monto</label><input type="number" value={amt} onChange={e => setAmt(e.target.value)}/></div>
+            <div><label>Categoría</label><select value={cat} onChange={e => setCat(e.target.value)}>{cats.filter(c => c.active).map(c => <option key={c.n} value={c.n}>{c.n}</option>)}</select></div>
+          </div>
+          <div><label>Referencia</label><input value={ref} onChange={e => setRef(e.target.value)} placeholder="**** 1234"/></div>
+
+          <div style={{
+            background: amountChanged ? 'rgba(30,215,96,0.08)' : '#1f1f1f',
+            border: amountChanged ? '1px solid #1ed760' : '1px solid #2a2a2a',
+            borderRadius:8, padding:14,
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, gap:10, flexWrap:'wrap' }}>
+              <span className="eyebrow" style={{ color: amountChanged ? '#1ed760' : '#b3b3b3' }}>
+                {amountChanged ? 'Cambio detectado' : 'Nota / Comentario'}
+              </span>
+              {amountChanged && (
+                <span className="num" style={{ fontWeight:800, fontSize:14, color: diff>0?'#f3727f':'#1ed760' }}>
+                  {diff>0?'+':''}{fmt(diff)}
+                </span>
+              )}
+            </div>
+            <label>
+              {amountChanged ? 'Motivo del cambio' : 'Comentario'}
+              <span style={{ color:'#7c7c7c', fontWeight:400, textTransform:'none', letterSpacing:0, marginLeft:6 }}>
+                {amountChanged ? '(recomendado)' : '(opcional, se guarda en el historial)'}
+              </span>
+            </label>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder={amountChanged ? 'Ej. Aumento por IPC, renegociación...' : 'Ej. Cambié la cuenta asociada, cambio de proveedor...'}
+              rows={2}
+              style={{ resize:'vertical' }}
+              autoFocus={amountChanged}
+            />
+          </div>
+
+          {history.length > 0 && (
+            <details style={{ marginTop:4 }}>
+              <summary style={{ cursor:'pointer', color:'#b3b3b3', fontSize:12, fontWeight:700, letterSpacing:1, textTransform:'uppercase', padding:'8px 0' }}>
+                Historial de cambios ({history.length})
+              </summary>
+              <div style={{ marginTop:12, borderLeft:'2px solid #2a2a2a', paddingLeft:16, display:'flex', flexDirection:'column', gap:14 }}>
+                {[...history].reverse().map((h, idx, arr) => {
+                  const prev = arr[idx+1];
+                  const d = prev ? h.amount - prev.amount : 0;
+                  return (
+                    <div key={h.id} style={{ position:'relative' }}>
+                      <span style={{ position:'absolute', left:-22, top:4, width:10, height:10, borderRadius:'50%', background: idx===0 ? '#1ed760' : '#4d4d4d', border:'2px solid #181818' }}/>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', gap:8, flexWrap:'wrap' }}>
+                        <div style={{ display:'flex', gap:8, alignItems:'baseline', flexWrap:'wrap' }}>
+                          <span className="num" style={{ fontWeight:800, fontSize:14 }}>{fmt(h.amount)}</span>
+                          {prev && d !== 0 && (
+                            <span className="num" style={{ fontSize:11, fontWeight:700, color: d>0?'#f3727f':'#1ed760' }}>
+                              ({d>0?'+':''}{fmt(d)})
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontSize:11, color:'#7c7c7c' }}>{h.date}</span>
+                      </div>
+                      <div style={{ color:'#b3b3b3', fontSize:12, marginTop:3 }}>{h.note}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          )}
+        </div>
+        <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:24 }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Guardar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CategoriasScreen({ cats, onAdd, onToggle, onDelete, usedCats }) {
+  const [newCat, setNewCat] = React.useState('');
+  const submit = () => { if (newCat.trim()) { onAdd(newCat); setNewCat(''); } };
+  return (
+    <div className="content">
+      <div>
+        <div className="eyebrow" style={{ color:'#1ed760' }}>Config</div>
+        <h1 style={{ fontSize:48, fontWeight:800, letterSpacing:'-1.5px', margin:'8px 0 12px' }}>Categorías</h1>
+        <p style={{ color:'#b3b3b3', fontSize:14, maxWidth:600, margin:0 }}>Agrega las tuyas, desactiva las que no uses, o elimínalas. Las categorías ya usadas en gastos no se pueden eliminar — solo desactivar.</p>
+      </div>
+      <div className="card">
+        <h2 style={{ fontSize:16, fontWeight:700, margin:'0 0 14px' }}>Nueva categoría</h2>
+        <div style={{ display:'flex', gap:10, alignItems:'flex-end' }}>
+          <div style={{ flex:1 }}>
+            <label>Nombre</label>
+            <input value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} placeholder="Ej. Mascota, Regalos..." maxLength={30}/>
+          </div>
+          <button className="btn btn-primary" onClick={submit}>+ Agregar</button>
+        </div>
+      </div>
+      <div className="card" style={{ padding:0, overflow:'hidden' }}>
+        <div style={{ padding:'18px 20px 10px', display:'flex', justifyContent:'space-between' }}>
+          <h2 style={{ fontSize:16, fontWeight:700, margin:0 }}>{cats.length} categorías</h2>
+          <span style={{ fontSize:11, color:'#7c7c7c' }}>{cats.filter(c => c.active).length} activas</span>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column' }}>
+          {cats.map(c => {
+            const used = usedCats.has(c.n);
+            const canDelete = c.custom && !used;
+            return (
+              <div key={c.n} style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 20px', borderTop:'1px solid #222', opacity: c.active ? 1 : 0.5 }}>
+                <span className="dot" style={{ width:14, height:14, background:c.c }}/>
+                <span style={{ fontWeight:700, flex:1 }}>{c.n}</span>
+                {c.custom && <span className="pill" style={{ background:'#1ed76022', color:'#1ed760' }}>Propia</span>}
+                {used && <span className="pill">En uso</span>}
+                <button onClick={() => onToggle(c.n)} style={{
+                  width:40, height:22, borderRadius:22, border:'none',
+                  background: c.active ? '#1ed760' : '#4d4d4d', cursor:'pointer',
+                  position:'relative', transition:'background 150ms', flexShrink:0,
+                }} title={c.active ? 'Desactivar' : 'Activar'}>
+                  <span style={{
+                    position:'absolute', top:2, left: c.active ? 20 : 2,
+                    width:18, height:18, borderRadius:'50%', background:'#fff',
+                    transition:'left 150ms',
+                  }}/>
+                </button>
+                <button onClick={() => canDelete && onDelete(c.n)} disabled={!canDelete} style={{
+                  background:'transparent', border:'none', color: canDelete ? '#f3727f' : '#3a3a3a',
+                  cursor: canDelete ? 'pointer' : 'not-allowed', padding:6,
+                }} title={canDelete ? 'Eliminar' : used ? 'Está en uso' : 'No se puede eliminar'}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecurrentesModal({ recurrentes, onClose, onApply, view }) {
+  const [sel, setSel] = React.useState({});
+  const toggle = (id) => setSel(s => ({ ...s, [id]:!s[id] }));
+  const selected = recurrentes.filter(r => sel[r.id]);
+  const total = selected.reduce((a,r)=>a+r.amount, 0);
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h2 style={{ fontSize:22, fontWeight:800, margin:'0 0 8px' }}>Aplicar recurrentes</h2>
+        <p style={{ color:'#b3b3b3', fontSize:13, margin:'0 0 20px' }}>
+          {view === 'm'
+            ? 'Marca los recurrentes del mes. Se aplicarán a Q1 y Q2 automáticamente.'
+            : 'Marca los que correspondan a esta quincena.'}
+        </p>
+        <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:320, overflowY:'auto' }}>
+          {recurrentes.map(r => (
+            <label key={r.id} onClick={() => toggle(r.id)} style={{
+              display:'flex', alignItems:'center', gap:12, padding:12, borderRadius:6, cursor:'pointer',
+              background: sel[r.id] ? 'rgba(30,215,96,0.1)' : '#121212',
+              border: `1px solid ${sel[r.id] ? '#1ed760' : '#2a2a2a'}`,
+            }}>
+              <input type="checkbox" checked={!!sel[r.id]} readOnly style={{ width:18, height:18, accentColor:'#1ed760' }}/>
+              <div style={{ flex:1 }}>
+                <div style={{ fontWeight:700, fontSize:14 }}>{r.desc}</div>
+                <div style={{ fontSize:11, color:'#7c7c7c' }}>{r.cat} · {r.ref || 'sin ref'}</div>
+              </div>
+              <div className="num" style={{ fontWeight:800 }}>{fmt(r.amount)}</div>
+            </label>
+          ))}
+        </div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:20, padding:'14px 16px', background:'#121212', borderRadius:6 }}>
+          <span style={{ color:'#b3b3b3', fontSize:12 }}>{selected.length} seleccionados</span>
+          <span className="num" style={{ fontSize:18, fontWeight:800, color:'#1ed760' }}>{fmt(total)}</span>
+        </div>
+        <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:20 }}>
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={() => onApply(selected)} disabled={selected.length===0}>Aplicar {selected.length>0?`(${selected.length})`:''}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfigScreen({ year, data, onClearYear, onClearItems, onClearAll, onResetDemo }) {
+  const [confirm, setConfirm] = React.useState(null);
+
+  const stats = React.useMemo(() => {
+    const keys = Object.keys(data);
+    const yearKeys = keys.filter(k => k.startsWith(`${year}_`));
+    const allItems = Object.values(data).flatMap(d => d.items || []);
+    const yearItems = yearKeys.flatMap(k => data[k].items || []);
+    return {
+      periods: keys.length,
+      yearPeriods: yearKeys.length,
+      items: allItems.length,
+      yearItems: yearItems.length,
+    };
+  }, [data, year]);
+
+  const actions = [
+    {
+      id:'items', title:'Eliminar todos los gastos',
+      desc:'Borra todos los movimientos pero conserva ingresos, presupuestos y configuración.',
+      btn:'Eliminar gastos', count:`${stats.items} gastos`, danger:false, onRun:onClearItems,
+    },
+    {
+      id:'year', title:`Eliminar datos del año ${year}`,
+      desc:`Borra ingresos, gastos y periodos del año ${year} únicamente. Los demás años no se tocan.`,
+      btn:`Eliminar ${year}`, count:`${stats.yearPeriods} periodos · ${stats.yearItems} gastos`,
+      danger:true, onRun:onClearYear,
+    },
+    {
+      id:'all', title:'Eliminar todos los datos',
+      desc:'Borra absolutamente todo: periodos, gastos, recurrentes. No hay vuelta atrás.',
+      btn:'Eliminar todo', count:`${stats.periods} periodos · ${stats.items} gastos`,
+      danger:true, onRun:onClearAll,
+    },
+    {
+      id:'reset', title:'Restaurar datos demo',
+      desc:'Vuelve al estado inicial con los datos de ejemplo. Útil para probar la app.',
+      btn:'Restaurar demo', count:'Sobrescribe todo', danger:false, onRun:onResetDemo,
+    },
+  ];
+
+  const MiniStat = ({ label, value }) => (
+    <div className="card" style={{ padding:16 }}>
+      <div className="eyebrow" style={{ color:'#7c7c7c', fontSize:10 }}>{label}</div>
+      <div className="num" style={{ fontSize:32, fontWeight:800, color:'#fff', letterSpacing:'-0.5px', marginTop:4 }}>{value}</div>
+    </div>
+  );
+
+  return (
+    <div className="content">
+      <div>
+        <div className="eyebrow" style={{ color:'#1ed760' }}>Config</div>
+        <h1 style={{ fontSize:48, fontWeight:800, letterSpacing:'-1.5px', margin:'8px 0 12px' }}>Configuración</h1>
+        <p style={{ color:'#b3b3b3', fontSize:14, maxWidth:600, margin:0 }}>Gestiona tus datos. Las acciones de limpieza son irreversibles, úsalas con cuidado.</p>
+      </div>
+
+      <div className="card">
+        <h2 style={{ fontSize:18, fontWeight:700, margin:'0 0 6px' }}>Datos almacenados</h2>
+        <p style={{ color:'#7c7c7c', fontSize:12, margin:'0 0 16px' }}>Resumen de lo que hay guardado en esta sesión.</p>
+        <div className="grid-4">
+          <MiniStat label="Periodos totales" value={stats.periods}/>
+          <MiniStat label={`Periodos ${year}`} value={stats.yearPeriods}/>
+          <MiniStat label="Gastos totales" value={stats.items}/>
+          <MiniStat label={`Gastos ${year}`} value={stats.yearItems}/>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 style={{ fontSize:18, fontWeight:700, margin:'0 0 6px' }}>Zona de limpieza</h2>
+        <p style={{ color:'#7c7c7c', fontSize:12, margin:'0 0 20px' }}>Cada acción pide confirmación antes de ejecutarse.</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {actions.map(a => (
+            <div key={a.id} style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between', gap:16,
+              padding:16, background:'#1f1f1f', borderRadius:8,
+              border: a.danger ? '1px solid rgba(243,114,127,0.25)' : '1px solid #2a2a2a',
+            }}>
+              <div style={{ minWidth:0, flex:1 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>{a.title}</span>
+                  <span style={{ fontSize:10, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', color: a.danger ? '#f3727f' : '#7c7c7c' }}>
+                    {a.count}
+                  </span>
+                </div>
+                <div style={{ color:'#b3b3b3', fontSize:12, lineHeight:1.5 }}>{a.desc}</div>
+              </div>
+              <button
+                className="btn"
+                onClick={() => setConfirm(a)}
+                style={{
+                  background: a.danger ? 'transparent' : '#fff',
+                  color: a.danger ? '#f3727f' : '#121212',
+                  border: a.danger ? '1px solid #f3727f' : 'none',
+                  flexShrink:0,
+                }}
+              >{a.btn}</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {confirm && (
+        <div className="overlay" onClick={() => setConfirm(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth:440 }}>
+            <div style={{
+              width:48, height:48, borderRadius:'50%',
+              background: confirm.danger ? 'rgba(243,114,127,0.15)' : 'rgba(30,215,96,0.15)',
+              color: confirm.danger ? '#f3727f' : '#1ed760',
+              display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16,
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            </div>
+            <h2 style={{ fontSize:20, fontWeight:800, margin:'0 0 8px' }}>{confirm.title}</h2>
+            <p style={{ color:'#b3b3b3', fontSize:13, margin:'0 0 24px', lineHeight:1.5 }}>
+              {confirm.desc} {confirm.danger && <strong style={{ color:'#f3727f' }}>Esta acción no se puede deshacer.</strong>}
+            </p>
+            <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+              <button className="btn btn-ghost" onClick={() => setConfirm(null)}>Cancelar</button>
+              <button
+                className="btn"
+                onClick={() => { confirm.onRun(); setConfirm(null); }}
+                style={{
+                  background: confirm.danger ? '#f3727f' : '#1ed760',
+                  color:'#121212',
+                }}
+              >{confirm.btn}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
