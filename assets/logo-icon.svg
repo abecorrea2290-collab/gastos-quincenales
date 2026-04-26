@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Green rounded background -->
+  <rect width="200" height="200" rx="38" fill="#1b7a22"/>
+
+  <!-- Arc ring segments (R=76, circ≈478) -->
+  <!-- Green: left side ~130° (173 units), starts at 155° -->
+  <circle cx="100" cy="100" r="76" fill="none"
+    stroke="#2ecc40" stroke-width="15" stroke-linecap="round"
+    stroke-dasharray="173 305"
+    transform="rotate(155 100 100)"/>
+
+  <!-- Purple: top ~55° (73 units), starts at 298° -->
+  <circle cx="100" cy="100" r="76" fill="none"
+    stroke="#7c3aed" stroke-width="15" stroke-linecap="round"
+    stroke-dasharray="73 405"
+    transform="rotate(298 100 100)"/>
+
+  <!-- Yellow/Gold: upper-right ~40° (53 units), starts at 5° -->
+  <circle cx="100" cy="100" r="76" fill="none"
+    stroke="#d97706" stroke-width="15" stroke-linecap="round"
+    stroke-dasharray="53 425"
+    transform="rotate(5 100 100)"/>
+
+  <!-- Red: bottom ~85° (113 units), starts at 58° -->
+  <circle cx="100" cy="100" r="76" fill="none"
+    stroke="#dc2626" stroke-width="15" stroke-linecap="round"
+    stroke-dasharray="113 365"
+    transform="rotate(58 100 100)"/>
+
+  <!-- White dollar sign, large -->
+  <text x="100" y="116" text-anchor="middle"
+    font-family="Impact, 'Arial Black', 'Helvetica Neue', sans-serif"
+    font-size="96" font-weight="900" fill="white">$</text>
+
+  <!-- Bar chart (4 bars, bottom portion, matching arc colors) -->
+  <rect x="67" y="134" width="12" height="16" rx="3" fill="#dc2626"/>
+  <rect x="82" y="124" width="12" height="26" rx="3" fill="#d97706"/>
+  <rect x="97" y="113" width="12" height="37" rx="3" fill="#7c3aed"/>
+  <rect x="112" y="103" width="12" height="47" rx="3" fill="#2ecc40"/>
+</svg>
