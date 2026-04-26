@@ -12,8 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gastos GQ">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="/assets/logo-mark.svg">
-<link rel="apple-touch-icon" href="/assets/logo-mark.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/logo-icon.svg">
+<link rel="apple-touch-icon" href="/assets/logo-icon.svg">
 <title>Control de Gastos v1.2.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -297,7 +297,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo"><img src="/assets/logo-mark.svg" alt="Logo" style="width:72px;height:72px;border-radius:16px"></div>
+    <div class="login-logo"><img src="/assets/logo-icon.svg" alt="Logo" style="width:100px;height:100px;border-radius:22px"></div>
     <div class="login-title">Control de Gastos</div>
     <div class="login-sub">Tus finanzas quincenales sincronizadas<br>en todos tus dispositivos</div>
     <button class="btn-google" onclick="loginGoogle()">
@@ -315,7 +315,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
     <!-- SIDEBAR (desktop) -->
     <aside class="sb">
       <div class="sb-logo">
-        <img src="/assets/logo-mark.svg" alt="Logo" class="sb-logo-icon">
+        <img src="/assets/logo-icon.svg" alt="Logo" class="sb-logo-icon">
         <span class="sb-logo-name">Gastos <span class="ver-badge">v1.2.0</span></span>
       </div>
       <nav class="sb-nav">
@@ -666,7 +666,7 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
-  { ver:'1.2.0', date:'2026-04-26', items:[
+  { ver:'1.2.0', date:'2026-04-26', changes:[
     'Rediseño completo de interfaz: tema Spotify dark (fondo negro, verde #1ed760)',
     'Nuevo layout: sidebar fija en escritorio con logo, navegación y usuario',
     'Barra de navegación inferior en móvil con 4 acciones rápidas',
@@ -842,6 +842,11 @@ function setSyncStatus(state,msg){
   document.getElementById('sync-dot').className='sync-dot '+state;
   document.getElementById('sync-label').textContent=msg;
   if(state==='ok')document.getElementById('sync-time').textContent=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+  // Sync sidebar indicator
+  const sd=document.getElementById('sync-dot-sb');
+  const sl=document.getElementById('sync-label-sb');
+  if(sd)sd.className='sync-dot '+state;
+  if(sl)sl.textContent=msg;
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────
