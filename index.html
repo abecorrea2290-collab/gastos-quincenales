@@ -332,7 +332,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
           Categorías
         </button>
         <button class="sb-item" id="sbnav-clean" onclick="showClean()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Configuración
         </button>
         <button class="sb-item" id="sbnav-log" onclick="showChangelog()">
@@ -376,10 +376,6 @@ input:checked+.sldr:before{transform:translateX(16px)}
           </label>
           <span class="vtog-label" id="vtog-right">Mensual</span>
         </div>
-        <button class="view-tab-dash" id="vtab-d" onclick="setViewTab('d')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg>
-          Resumen
-        </button>
         <div class="ynav-inline" id="ynav-inline">
           <button onclick="changeYear(-1)">&#8592;</button>
           <span id="yd"></span>
@@ -430,6 +426,115 @@ input:checked+.sldr:before{transform:translateX(16px)}
       <span>Config.</span>
     </button>
   </nav>
+</div>
+
+<!-- Modal aplicar recurrentes -->
+<div class="overlay" id="rec-modal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--teal)">🔁 Aplicar recurrentes</h3>
+    <p class="sub">Selecciona los que aplican a <strong id="rec-period-label"></strong></p>
+    <div class="sel-bar">
+      <button class="btn btn-g bsm" onclick="selAll(true)">✓ Todos</button>
+      <button class="btn btn-g bsm" onclick="selAll(false)">✗ Ninguno</button>
+      <span id="sel-count"></span>
+    </div>
+    <div class="rec-grid" id="rec-grid"></div>
+    <div class="rec-sel-total">
+      <span style="font-size:12px;color:var(--text2);font-weight:600">Total seleccionado:</span>
+      <strong id="sel-total"></strong>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="hideRec()">Cancelar</button>
+      <button class="btn btn-t" onclick="applySelected()">✓ Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar recurrente -->
+<div class="overlay" id="edit-rec-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--info)">✏️ Editar recurrente</h3>
+    <div id="edit-rec-body" style="margin-bottom:12px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="hideEditRec()">Cancelar</button>
+      <button class="btn btn-p" onclick="saveEditRec()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar referencia de recurrente aplicado -->
+<div class="overlay" id="edit-ref-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--info)">🏷️ Editar referencia de pago</h3>
+    <p class="sub" id="edit-ref-desc"></p>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Referencia (ej: **** 1234, cuota 3/12…)</label>
+      <input type="text" id="edit-ref-val" placeholder="Referencia del pago" maxlength="40">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="hideEditRef()">Cancelar</button>
+      <button class="btn btn-p" onclick="saveEditRef()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal categorías -->
+<div class="overlay" id="cats-modal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--accent)">🏷️ Categorías de gastos</h3>
+    <p class="sub">Personaliza las categorías. Las ya usadas en gastos no se pueden eliminar.</p>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <input type="text" id="new-cat-input" placeholder="Nueva categoría…" maxlength="30" style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:14px;background:var(--bg);color:var(--text)">
+      <button class="btn btn-p" onclick="window._addCat()">+ Agregar</button>
+    </div>
+    <div id="cats-list" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn btn-g" onclick="hideCats()">Cerrar</button>
+      <button class="btn btn-w" onclick="window._resetCats()">↺ Restaurar predeterminadas</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal historial montos -->
+<div class="overlay" id="hist-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--purple)">📜 Historial de cambios</h3>
+    <p class="sub" id="hist-title"></p>
+    <div id="hist-body" style="max-height:50vh;overflow-y:auto"></div>
+    <div class="modal-btns"><button class="btn btn-g" onclick="hideHist()">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- Modal configuración / limpiar datos -->
+<div class="overlay" id="clean-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--danger)">🗑 Limpiar datos</h3>
+    <p class="sub">Los datos se eliminan de Firebase. <strong>Irreversible.</strong></p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
+      <button class="btn btn-w" onclick="cleanPeriod()">Solo esta quincena</button>
+      <button class="btn btn-w" onclick="cleanYear()">Todo el año <span id="cyl"></span></button>
+      <button class="btn btn-d" onclick="cleanAll()">⚠ Limpiar TODO</button>
+      <button class="btn btn-t" onclick="fixSobrantes()">🧹 Corregir sobrantes huérfanos</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:8px">Corregir sobrantes elimina transferencias en quincenas sin ingreso registrado</div>
+    <div class="modal-btns"><button class="btn btn-g" onclick="hideClean()">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- Modal notas de versión -->
+<div class="overlay" id="changelog-modal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-drag"></div>
+    <h3 style="color:var(--accent)">📋 Notas de versión</h3>
+    <div id="changelog-body" style="max-height:60vh;overflow-y:auto;margin-top:10px"></div>
+    <div class="modal-btns"><button class="btn btn-g" onclick="hideChangelog()">Cerrar</button></div>
+  </div>
 </div>
 
 <script type="module">
