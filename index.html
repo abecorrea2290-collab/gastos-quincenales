@@ -956,7 +956,7 @@ function fmtCOP(n,cls=''){
 function fmtPlain(n){return '$ '+Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 const fmtMoneyVal=n=>(!n||n<=0)?'':Number(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 function parseMoneyInput(id){return parseFloat(String(document.getElementById(id).value).replace(/\./g,''))||0;}
-function onMoneyInput(el){const raw=String(el.value).replace(/[^\d]/g,'');el.value=raw?parseInt(raw).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';};
+window.onMoneyInput=function(el){const raw=String(el.value).replace(/[^\d]/g,'');el.value=raw?parseInt(raw).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';};
 
 // ── FECHAS ────────────────────────────────────────────────────────────
 const isWE=d=>d.getDay()===0||d.getDay()===6;
