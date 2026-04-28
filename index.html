@@ -2601,7 +2601,7 @@ window.registrarPago=async function(id){
   }
   const numCuota=loan.cuotasPagadas+1;
   loan.pagos=loan.pagos||[];
-  loan.pagos.push({num:numCuota,fecha:new Date().toISOString().split('T')[0],monto:loan.cuota});
+  loan.pagos.push({num:numCuota,fecha:new Date().toISOString().split('T')[0],monto:loan.cuota,tipo:'cuota'});
   loan.cuotasPagadas+=1;
   if(loan.cuotasPagadas>=loan.cuotas)loan.done=true;
   lista[idx]=loan;
@@ -2626,6 +2626,88 @@ window.delPrest=async function(id){
   await window.renderPrestPanel();
 };
 
+// Calcula saldo de capital pendiente recorriendo el historial de pagos
+function calcSaldoCapital(loan){
+  let saldo=loan.monto;
+  const r=loan.tasa/100;
+  const pagos=[...(loan.pagos||[])].sort((a,b)=>(a.num||0)-(b.num||0));
+  for(const p of pagos){
+    if(p.tipo==='abono'){
+      saldo=Math.max(0,saldo-p.monto);
+    } else {
+      // cuota regular: restar solo la parte capital (cuota − interés del saldo actual)
+      const interes=saldo*r;
+      const capital=Math.max(0,p.monto-interes);
+      saldo=Math.max(0,saldo-capital);
+    }
+  }
+  return Math.round(saldo);
+}
+
+window.abonarCapital=function(id){
+  const ex=document.getElementById('abono-modal');
+  if(ex)ex.remove();
+  const el=document.createElement('div');
+  el.className='overlay';el.id='abono-modal';
+  el.innerHTML=`
+    <div class="modal modal-sm">
+      <div class="modal-drag"></div>
+      <h3>Abono a Capital</h3>
+      <p class="sub">El abono reduce directamente el saldo pendiente y recalcula la cuota mensual.</p>
+      <div class="fg" style="margin-bottom:14px">
+        <label>Monto del abono</label>
+        <div class="fw"><input id="abono-amt" type="text" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-g" onclick="document.getElementById('abono-modal').remove()">Cancelar</button>
+        <button class="btn btn-p" onclick="window._confirmarAbono(${id})">Registrar abono</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>document.getElementById('abono-amt')?.focus(),80);
+};
+
+window._confirmarAbono=async function(id){
+  const raw=document.getElementById('abono-amt')?.value||'';
+  const monto=parseFloat(raw.replace(/\./g,''))||0;
+  if(!monto||monto<=0){toast('Ingresa un monto válido','warn');return;}
+  const lista=await getPrest();
+  const idx=lista.findIndex(l=>l.id===id);
+  if(idx<0)return;
+  const loan=lista[idx];
+  if(loan.done){toast('Préstamo ya completado','warn');return;}
+  const saldo=calcSaldoCapital(loan);
+  if(monto>=saldo){toast(`Abono (${fmtPlain(monto)}) no puede superar el saldo (${fmtPlain(saldo)})`,'warn');return;}
+  // Registrar abono en historial
+  loan.pagos=loan.pagos||[];
+  const num=(loan.pagos.length>0?Math.max(...loan.pagos.map(p=>p.num)):0)+1;
+  loan.pagos.push({num,fecha:new Date().toISOString().split('T')[0],monto,tipo:'abono'});
+  // Recalcular cuota mensual sobre el nuevo saldo
+  const newSaldo=saldo-monto;
+  const remaining=loan.cuotas-loan.cuotasPagadas;
+  if(remaining>0)loan.cuota=Math.round(calcCuota(newSaldo,loan.tasa,remaining));
+  lista[idx]=loan;
+  await savePrest(lista);
+  // Si el préstamo es tipo "ingreso": registrar en ingresos del período actual
+  if(loan.tipo==='ingreso'&&CP){
+    const d=await getPeriodo(CY,CP.m,CP.q);
+    d.extraIncome=d.extraIncome||[];
+    d.extraIncome.push({
+      id:Date.now(),
+      desc:`Abono capital — ${loan.persona}${loan.desc?' · '+loan.desc:''}`,
+      amount:monto,
+      date:new Date().toISOString().split('T')[0]
+    });
+    await savePeriodo(CY,CP.m,CP.q,d);
+    delete cache[cacheKey(CY,CP.m,CP.q)];
+    toast(`✓ Abono registrado en período actual · Nueva cuota: ${fmtPlain(loan.cuota)}`);
+  } else {
+    toast(`✓ Abono registrado · Nueva cuota: ${fmtPlain(loan.cuota)}`);
+  }
+  document.getElementById('abono-modal')?.remove();
+  await window.renderPrestPanel();
+};
+
 window.renderPrestPanel=async function(){
   const panel=document.getElementById('prestamos-panel');
   if(!panel||panel.style.display==='none')return;
@@ -2639,7 +2721,10 @@ window.renderPrestPanel=async function(){
     const pct=loan.cuotas>0?Math.round((loan.cuotasPagadas/loan.cuotas)*100):0;
     const restantes=loan.cuotas-loan.cuotasPagadas;
     const tipoBadge=loan.done?`<span class="prest-badge done">Completado</span>`:`<span class="prest-badge ${loan.tipo}">${loan.tipo==='egreso'?'Egreso':'Ingreso'}</span>`;
-    const btns=loan.done?`<button class="btn btn-d bsm" onclick="window.delPrest(${loan.id})">Eliminar</button>`:`<button class="btn btn-t bsm" onclick="window.registrarPago(${loan.id})">Registrar pago</button><button class="btn btn-d bsm" onclick="window.delPrest(${loan.id})">Eliminar</button>`;
+    const saldo=calcSaldoCapital(loan);
+    const btns=loan.done
+      ?`<button class="btn btn-d bsm" onclick="window.delPrest(${loan.id})">Eliminar</button>`
+      :`<button class="btn btn-t bsm" onclick="window.registrarPago(${loan.id})">Reg. cuota</button><button class="btn bsm" style="border:1px solid var(--info);color:var(--info);background:transparent" onclick="window.abonarCapital(${loan.id})">Abonar capital</button><button class="btn btn-d bsm" onclick="window.delPrest(${loan.id})">Eliminar</button>`;
     const interesInfo=loan.tasa>0?`<span style="color:var(--text3)">Tasa: ${loan.tasa}% · </span>`:'';
     const diaLabel=`día ${loan.diaPago}`;
     return `<div class="prest-card ${loan.tipo}${loan.done?' done':''}">
@@ -2652,24 +2737,29 @@ window.renderPrestPanel=async function(){
         <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${tipoBadge}</div>
       </div>
       <div class="prest-prog"><div class="prest-prog-bar" style="width:${pct}%;background:${loan.tipo==='egreso'?'var(--danger)':'var(--accent)'}"></div></div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:10px">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:10px">
         <span>Cuota: <strong style="color:${loan.tipo==='egreso'?'var(--danger)':'var(--accent)'}">${fmtPlain(loan.cuota)}</strong></span>
-        <span>Total crédito: <strong style="color:var(--warning)">${fmtPlain(loan.totalCredito)}</strong></span>
-        <span>Progreso: <strong>${loan.cuotasPagadas}/${loan.cuotas}</strong> ${loan.done?'':'('+restantes+' restantes)'}</span>
-        <span style="color:var(--text3)">Capital: ${fmtPlain(loan.monto)}</span>
+        <span>Saldo capital: <strong style="color:var(--warning)">${fmtPlain(saldo)}</strong></span>
+        <span>Progreso: <strong>${loan.cuotasPagadas}/${loan.cuotas}</strong> ${loan.done?'':'('+restantes+' rest.)'}</span>
+        <span style="color:var(--text3)">Capital original: ${fmtPlain(loan.monto)}</span>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end">${btns}</div>
       ${(loan.pagos&&loan.pagos.length)?`
       <div class="prest-hist-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'block':'none'">
-        Historial de pagos (${loan.pagos.length})
+        Historial (${loan.pagos.length} mov.)
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="prest-hist-body">
-        ${[...loan.pagos].reverse().map(p=>`<div class="prest-hist-row">
-          <span class="prest-hist-num">#${p.num}</span>
-          <span class="prest-hist-date">${p.fecha}</span>
-          <span class="prest-hist-amt" style="color:${loan.tipo==='egreso'?'var(--danger)':'var(--accent)'}">${fmtPlain(p.monto)}</span>
-        </div>`).join('')}
+        ${[...loan.pagos].reverse().map(p=>{
+          const esAbono=p.tipo==='abono';
+          const color=esAbono?'var(--info)':loan.tipo==='egreso'?'var(--danger)':'var(--accent)';
+          const tag=esAbono?'<span style="font-size:9px;background:var(--info);color:#000;border-radius:3px;padding:1px 5px;font-weight:800;margin-left:4px">ABONO</span>':'';
+          return `<div class="prest-hist-row">
+            <span class="prest-hist-num" style="color:${color}">${esAbono?'↓':'#'}${p.num}</span>
+            <span class="prest-hist-date">${p.fecha}${tag}</span>
+            <span class="prest-hist-amt" style="color:${color}">${fmtPlain(p.monto)}</span>
+          </div>`;
+        }).join('')}
       </div>`:''}
     </div>`; 
   }).join('');
