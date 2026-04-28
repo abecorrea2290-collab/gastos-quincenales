@@ -264,6 +264,17 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .prest-badge.egreso{background:var(--danger-light);color:var(--danger)}
 .prest-badge.ingreso{background:var(--accent-light);color:var(--accent)}
 .prest-badge.done{background:var(--surface3);color:var(--text3)}
+.prest-hist-toggle{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;padding:6px 0;border-top:1px solid var(--border);margin-top:8px;text-transform:uppercase;letter-spacing:.5px;user-select:none}
+.prest-hist-toggle:hover{color:var(--text2)}
+.prest-hist-toggle svg{transition:transform 200ms}
+.prest-hist-toggle.open svg{transform:rotate(180deg)}
+.prest-hist-body{display:none;margin-top:6px}
+.prest-hist-toggle.open+.prest-hist-body{display:block}
+.prest-hist-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.prest-hist-row:last-child{border-bottom:none}
+.prest-hist-num{font-size:10px;font-weight:800;color:var(--text3);min-width:24px}
+.prest-hist-date{color:var(--text3);font-size:11px;flex:1}
+.prest-hist-amt{font-weight:700;white-space:nowrap}
 .dash-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
 @media(min-width:600px){.dash-cards{grid-template-columns:repeat(4,1fr)}}
 
@@ -536,7 +547,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
               <div class="fg grow"><label>Descripción</label><input id="pf-desc" type="text" placeholder="Ej: Préstamo carro, computador…"></div>
               <div class="fg wsm"><label>Monto</label><div class="fw"><input id="pf-monto" type="text" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this);calcPrestPreview()"></div></div>
               <div class="fg" style="width:90px"><label>Tasa % mes</label><input id="pf-tasa" type="number" min="0" step="0.01" placeholder="0" oninput="calcPrestPreview()"></div>
-              <div class="fg" style="width:90px"><label>Cuotas</label><input id="pf-cuotas" type="number" min="1" placeholder="1" oninput="calcPrestPreview()"></div>
+              <div class="fg" style="width:90px"><label>Cuotas</label><input id="pf-cuotas" type="number" min="1" placeholder="1" oninput="calcPrestPreview()" onchange="calcPrestPreview()"></div>
               <div class="fg" style="width:110px"><label>Tipo</label><select id="pf-tipo"><option value="egreso">Egreso (nos prestan)</option><option value="ingreso">Ingreso (prestamos)</option></select></div>
               <div class="fg" style="width:120px"><label>Frecuencia</label>
                 <div style="display:flex;height:40px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
@@ -546,11 +557,12 @@ input:checked+.sldr:before{transform:translateX(16px)}
                 <input type="hidden" id="pf-freq" value="mensual">
               </div>
               <div class="fg" style="width:90px"><label id="pf-diapago-lbl">Día de pago</label><input id="pf-diapago" type="number" min="1" max="28" placeholder="15"></div>
-              <div class="fg" style="width:120px"><label>Mes inicio</label><input id="pf-inicio" type="month"></div>
+              <div class="fg" style="width:120px"><label>Mes inicio</label><input id="pf-inicio" type="month" oninput="calcPrestPreview()"></div>
             </div>
             <div id="pf-preview" style="margin-top:10px;display:none;padding:10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:13px;gap:20px;flex-wrap:wrap">
               <span>Cuota: <strong id="pf-prev-cuota" style="color:var(--accent)">—</strong></span>
               <span>Total: <strong id="pf-prev-total" style="color:var(--warning)">—</strong></span>
+              <span>Finaliza: <strong id="pf-prev-end" style="color:var(--info)">—</strong></span>
             </div>
             <div style="margin-top:12px;display:flex;justify-content:flex-end">
               <button class="btn btn-p" onclick="window.addPrest()">+ Agregar préstamo</button>
@@ -2396,6 +2408,14 @@ window.toggleSec=function(hdr){
 };
 // ── SIDEBAR & BOTTOM NAV HELPERS ─────────────────────────────────
 // ── PRÉSTAMOS ─────────────────────────────────────────────────────────────
+function calcEndDate(inicio,cuotas,freq){
+  if(!inicio||!cuotas)return null;
+  const parts=inicio.split('-');
+  const y=parseInt(parts[0]),m=parseInt(parts[1]);
+  const months=freq==='quincenal'?Math.ceil(cuotas/2):cuotas;
+  const end=new Date(y,m-1+months,1);
+  return end.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
+}
 window.setFreq=function(f){
   document.getElementById('pf-freq').value=f;
   const m=document.getElementById('pf-freq-m');
@@ -2422,6 +2442,11 @@ window.calcPrestPreview=function(){
   const total=c*cuotas;
   document.getElementById('pf-prev-cuota').textContent=fmtPlain(Math.round(c));
   document.getElementById('pf-prev-total').textContent=fmtPlain(Math.round(total));
+  const inicio=document.getElementById('pf-inicio').value;
+  const freq=document.getElementById('pf-freq').value||'mensual';
+  const endStr=calcEndDate(inicio,cuotas,freq);
+  const endEl=document.getElementById('pf-prev-end');
+  if(endEl)endEl.textContent=endStr||'—';
   prev.style.display='flex';
 };
 
@@ -2441,7 +2466,8 @@ window.addPrest=async function(){
   const cuota=calcCuota(monto,tasa,cuotas);
   const totalCredito=cuota*cuotas;
   const id=Date.now();
-  const loan={id,persona,desc,monto,tasa,cuotas,tipo,freq,diaPago,inicio,cuota:Math.round(cuota),totalCredito:Math.round(totalCredito),cuotasPagadas:0,done:false,createdAt:new Date().toISOString()};
+  const fechaFin=calcEndDate(inicio,cuotas,freq)||'';
+  const loan={id,persona,desc,monto,tasa,cuotas,tipo,freq,diaPago,inicio,fechaFin,cuota:Math.round(cuota),totalCredito:Math.round(totalCredito),cuotasPagadas:0,done:false,pagos:[],createdAt:new Date().toISOString()};
   const lista=await getPrest();
   lista.push(loan);
   await savePrest(lista);
@@ -2481,6 +2507,9 @@ window.registrarPago=async function(id){
   } else {
     toast(`✓ Cuota ${loan.cuotasPagadas+1} registrada`);
   }
+  const numCuota=loan.cuotasPagadas+1;
+  loan.pagos=loan.pagos||[];
+  loan.pagos.push({num:numCuota,fecha:new Date().toISOString().split('T')[0],monto:loan.cuota});
   loan.cuotasPagadas+=1;
   if(loan.cuotasPagadas>=loan.cuotas)loan.done=true;
   lista[idx]=loan;
@@ -2527,7 +2556,7 @@ window.renderPrestPanel=async function(){
         <div>
           <div style="font-size:15px;font-weight:800;color:#fff">${loan.persona}</div>
           ${loan.desc?`<div style="font-size:13px;color:var(--text2);margin-top:1px">${loan.desc}</div>`:''}
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">${interesInfo}Inicio: ${loan.inicio||'—'} · Pago: ${diaLabel}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${interesInfo}Inicio: ${loan.inicio||'—'} · Pago: ${diaLabel}${loan.fechaFin?` · Fin estimado: <strong style="color:var(--info)">${loan.fechaFin}</strong>`:''}</div>
         </div>
         <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${freqBadge}${tipoBadge}</div>
       </div>
@@ -2539,7 +2568,19 @@ window.renderPrestPanel=async function(){
         <span style="color:var(--text3)">Capital: ${fmtPlain(loan.monto)}</span>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end">${btns}</div>
-    </div>`;
+      ${(loan.pagos&&loan.pagos.length)?`
+      <div class="prest-hist-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'block':'none'">
+        Historial de pagos (${loan.pagos.length})
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="prest-hist-body">
+        ${[...loan.pagos].reverse().map(p=>`<div class="prest-hist-row">
+          <span class="prest-hist-num">#${p.num}</span>
+          <span class="prest-hist-date">${p.fecha}</span>
+          <span class="prest-hist-amt" style="color:${loan.tipo==='egreso'?'var(--danger)':'var(--accent)'}">${fmtPlain(p.monto)}</span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`; 
   }).join('');
 };
 
