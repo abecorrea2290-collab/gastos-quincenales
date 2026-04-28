@@ -248,6 +248,17 @@ input:checked+.sldr:before{transform:translateX(16px)}
 
 /* ── DASHBOARD PANEL ─────────────────────────────────────────────── */
 #dash-panel{background:transparent;min-height:60vh}
+#prestamos-panel{min-height:60vh}
+.prest-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;border-left:3px solid var(--teal)}
+.prest-card.egreso{border-left-color:var(--danger)}
+.prest-card.ingreso{border-left-color:var(--accent)}
+.prest-card.done{border-left-color:var(--text3);opacity:0.6}
+.prest-prog{height:6px;border-radius:3px;background:var(--surface3);margin:8px 0;overflow:hidden}
+.prest-prog-bar{height:100%;border-radius:3px;background:var(--accent);transition:width 300ms}
+.prest-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:500px;text-transform:uppercase;letter-spacing:.5px}
+.prest-badge.egreso{background:var(--danger-light);color:var(--danger)}
+.prest-badge.ingreso{background:var(--accent-light);color:var(--accent)}
+.prest-badge.done{background:var(--surface3);color:var(--text3)}
 .dash-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
 @media(min-width:600px){.dash-cards{grid-template-columns:repeat(4,1fr)}}
 
@@ -395,6 +406,10 @@ input:checked+.sldr:before{transform:translateX(16px)}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
           Notas de versión
         </button>
+        <button class="sb-item" id="sbnav-prest" onclick="sbNav('prest')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Préstamos
+        </button>
       </nav>
       <div class="sb-footer">
         <div class="sb-user">
@@ -468,6 +483,38 @@ input:checked+.sldr:before{transform:translateX(16px)}
             <span style="font-size:12px;color:var(--text3)" id="rec-panel-total"></span>
           </div>
           <div id="rec-panel-body"></div>
+        </div>
+      </div>
+
+      <!-- PRÉSTAMOS PANEL -->
+      <div id="prestamos-panel" style="display:none">
+        <div class="main" style="max-width:960px;margin:0 auto">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding-top:8px">
+            <span style="font-size:16px;font-weight:800;color:#fff">Préstamos</span>
+            <span style="font-size:12px;color:var(--text3)" id="prest-panel-total"></span>
+          </div>
+          <!-- FORM -->
+          <div style="background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:20px">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Nuevo préstamo</div>
+            <div class="form" style="gap:10px">
+              <div class="fg grow"><label>Persona</label><input id="pf-persona" type="text" placeholder="Nombre" style="min-width:130px"></div>
+              <div class="fg wsm"><label>Monto</label><input id="pf-monto" type="number" min="1" placeholder="0" oninput="calcPrestPreview()"></div>
+              <div class="fg" style="width:90px"><label>Tasa % mes</label><input id="pf-tasa" type="number" min="0" step="0.01" placeholder="0" oninput="calcPrestPreview()"></div>
+              <div class="fg" style="width:90px"><label>Cuotas</label><input id="pf-cuotas" type="number" min="1" placeholder="1" oninput="calcPrestPreview()"></div>
+              <div class="fg" style="width:110px"><label>Tipo</label><select id="pf-tipo"><option value="egreso">Egreso (nos prestan)</option><option value="ingreso">Ingreso (prestamos)</option></select></div>
+              <div class="fg" style="width:90px"><label>Día de pago</label><input id="pf-diapago" type="number" min="1" max="28" placeholder="15"></div>
+              <div class="fg" style="width:120px"><label>Mes inicio</label><input id="pf-inicio" type="month"></div>
+            </div>
+            <div id="pf-preview" style="margin-top:10px;display:none;padding:10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:13px;gap:20px;flex-wrap:wrap">
+              <span>Cuota: <strong id="pf-prev-cuota" style="color:var(--accent)">—</strong></span>
+              <span>Total: <strong id="pf-prev-total" style="color:var(--warning)">—</strong></span>
+            </div>
+            <div style="margin-top:12px;display:flex;justify-content:flex-end">
+              <button class="btn btn-p" onclick="window.addPrest()">+ Agregar préstamo</button>
+            </div>
+          </div>
+          <!-- LIST -->
+          <div id="prest-panel-body"></div>
         </div>
       </div>
 
@@ -889,6 +936,12 @@ async function getRec(){
   catch(e){return [];}
 }
 async function saveRec(lista){cache['_rec']=lista;try{await setDoc(doc(db,recRef()),{lista,updatedAt:serverTimestamp()});}catch(e){}}
+
+const prestRef=()=>`${userRef()}/config/prestamos`;
+async function getPrest(){if(cache['_prest'])return cache['_prest'];try{const snap=await getDoc(doc(db,prestRef()));const d=snap.exists()?(snap.data().lista||[]):[];cache['_prest']=d;return d;}catch(e){return [];}}
+async function savePrest(lista){cache['_prest']=lista;try{await setDoc(doc(db,prestRef()),{lista,updatedAt:serverTimestamp()});}catch(e){}}
+
+function calcCuota(monto,tasa,cuotas){if(!tasa||tasa<=0)return monto/cuotas;const r=tasa/100;return monto*(r*Math.pow(1+r,cuotas))/(Math.pow(1+r,cuotas)-1);}
 
 // ── FORMATO ───────────────────────────────────────────────────────────
 function fmtCOP(n,cls=''){
@@ -1581,7 +1634,7 @@ async function renderRecList(){
     <td class="hide-mobile"><span class="cc" style="background:${getCatColor(r.cat)}"></span><span class="badge b-cat">${r.cat}</span></td>
     <td class="amt-cell">${fmtCOP(r.amount,'amt-red')}</td>
     <td style="white-space:nowrap">
-      <div class="act-btns"><button class="act-btn" onclick="window._editRec(${r.id})" title="Editar monto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="act-btn teal" onclick="window._editRef(${r.id})" title="Referencia"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg></button><button class="act-btn" onclick="window._showHist(${r.id})" title="Historial"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></button><button class="act-btn danger" onclick="window._delRec(${r.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>
+      <div class="act-btns"><button class="act-btn" onclick="window._editRec(${r.id})" title="Editar monto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="act-btn danger" onclick="window._delRec(${r.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>
     </td>
   </tr>`).join('')}</tbody></table>
   <div style="display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)">
@@ -2273,10 +2326,141 @@ window.toggleSec=function(hdr){
   sec.classList.toggle('collapsed');
 };
 // ── SIDEBAR & BOTTOM NAV HELPERS ─────────────────────────────────
+// ── PRÉSTAMOS ─────────────────────────────────────────────────────────────
+window.calcPrestPreview=function(){
+  const monto=parseFloat(document.getElementById('pf-monto').value)||0;
+  const tasa=parseFloat(document.getElementById('pf-tasa').value)||0;
+  const cuotas=parseInt(document.getElementById('pf-cuotas').value)||0;
+  const prev=document.getElementById('pf-preview');
+  if(!monto||!cuotas){prev.style.display='none';return;}
+  const c=calcCuota(monto,tasa,cuotas);
+  const total=c*cuotas;
+  document.getElementById('pf-prev-cuota').textContent=fmtPlain(Math.round(c));
+  document.getElementById('pf-prev-total').textContent=fmtPlain(Math.round(total));
+  prev.style.display='flex';
+};
+
+window.addPrest=async function(){
+  const persona=(document.getElementById('pf-persona').value||'').trim();
+  const monto=parseFloat(document.getElementById('pf-monto').value)||0;
+  const tasa=parseFloat(document.getElementById('pf-tasa').value)||0;
+  const cuotas=parseInt(document.getElementById('pf-cuotas').value)||0;
+  const tipo=document.getElementById('pf-tipo').value;
+  const diaPago=parseInt(document.getElementById('pf-diapago').value)||15;
+  const inicio=document.getElementById('pf-inicio').value;
+  if(!persona){toast('Ingresa el nombre de la persona');return;}
+  if(!monto||monto<=0){toast('Ingresa un monto válido');return;}
+  if(!cuotas||cuotas<=0){toast('Ingresa el número de cuotas');return;}
+  const cuota=calcCuota(monto,tasa,cuotas);
+  const totalCredito=cuota*cuotas;
+  const id=Date.now();
+  const loan={id,persona,monto,tasa,cuotas,tipo,diaPago,inicio,cuota:Math.round(cuota),totalCredito:Math.round(totalCredito),cuotasPagadas:0,done:false,createdAt:new Date().toISOString()};
+  const lista=await getPrest();
+  lista.push(loan);
+  await savePrest(lista);
+  if(tipo==='egreso'){
+    const recs=await getRec();
+    const recId=id+1;
+    recs.push({id:recId,desc:`Cuota préstamo - ${persona}`,amount:Math.round(cuota),cat:'Préstamos',ref:`prestamo-${id}`,history:[]});
+    await saveRec(recs);
+    cache['_rec']=null;
+    toast(`✓ Préstamo creado y agregado a recurrentes`);
+  } else {
+    toast(`✓ Préstamo creado`);
+  }
+  ['pf-persona','pf-monto','pf-tasa','pf-cuotas','pf-diapago','pf-inicio'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pf-tasa').value='';
+  document.getElementById('pf-preview').style.display='none';
+  await window.renderPrestPanel();
+};
+
+window.registrarPago=async function(id){
+  const lista=await getPrest();
+  const idx=lista.findIndex(l=>l.id===id);
+  if(idx<0)return;
+  const loan=lista[idx];
+  if(loan.done){toast('Este préstamo ya está completado');return;}
+  if(loan.tipo==='ingreso'){
+    if(CP){
+      const d=await getPeriodo(CY,CP.m,CP.q);
+      d.extraIncome=d.extraIncome||[];
+      d.extraIncome.push({id:Date.now(),desc:`Pago préstamo - ${loan.persona} (cuota ${loan.cuotasPagadas+1}/${loan.cuotas})`,amount:loan.cuota,date:new Date().toISOString().split('T')[0]});
+      await savePeriodo(CY,CP.m,CP.q,d);
+      delete cache[cacheKey(CY,CP.m,CP.q)];
+      toast(`✓ Cuota ${loan.cuotasPagadas+1} registrada en el período actual`);
+    }
+  } else {
+    toast(`✓ Cuota ${loan.cuotasPagadas+1} registrada`);
+  }
+  loan.cuotasPagadas+=1;
+  if(loan.cuotasPagadas>=loan.cuotas)loan.done=true;
+  lista[idx]=loan;
+  await savePrest(lista);
+  await window.renderPrestPanel();
+};
+
+window.delPrest=async function(id){
+  if(!confirm('¿Eliminar este préstamo?'))return;
+  const lista=await getPrest();
+  const loan=lista.find(l=>l.id===id);
+  if(loan&&loan.tipo==='egreso'){
+    const recs=await getRec();
+    const filtered=recs.filter(r=>r.ref!==`prestamo-${id}`);
+    if(filtered.length!==recs.length){
+      await saveRec(filtered);
+      cache['_rec']=null;
+    }
+  }
+  await savePrest(lista.filter(l=>l.id!==id));
+  toast('Préstamo eliminado');
+  await window.renderPrestPanel();
+};
+
+window.renderPrestPanel=async function(){
+  const panel=document.getElementById('prestamos-panel');
+  if(!panel||panel.style.display==='none')return;
+  const lista=await getPrest();
+  const body=document.getElementById('prest-panel-body');
+  const total=document.getElementById('prest-panel-total');
+  const active=lista.filter(l=>!l.done);
+  if(total)total.textContent=`${active.length} activos · ${lista.length} total`;
+  if(!lista.length){body.innerHTML='<p style="color:var(--text3);text-align:center;padding:32px 0">Sin préstamos registrados</p>';return;}
+  body.innerHTML=lista.map(loan=>{
+    const pct=loan.cuotas>0?Math.round((loan.cuotasPagadas/loan.cuotas)*100):0;
+    const restantes=loan.cuotas-loan.cuotasPagadas;
+    const tipoBadge=loan.done?`<span class="prest-badge done">Completado</span>`:`<span class="prest-badge ${loan.tipo}">${loan.tipo==='egreso'?'Egreso':'Ingreso'}</span>`;
+    const btns=loan.done?`<button class="btn btn-d bsm" onclick="window.delPrest(${loan.id})">Eliminar</button>`:`<button class="btn btn-t bsm" onclick="window.registrarPago(${loan.id})">Registrar pago</button><button class="btn btn-d bsm" onclick="window.delPrest(${loan.id})">Eliminar</button>`;
+    const interesInfo=loan.tasa>0?`<span style="color:var(--text3)">Tasa: ${loan.tasa}% · </span>`:'';
+    return `<div class="prest-card ${loan.tipo}${loan.done?' done':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:#fff">${loan.persona}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${interesInfo}Inicio: ${loan.inicio||'—'} · Día pago: ${loan.diaPago}</div>
+        </div>
+        ${tipoBadge}
+      </div>
+      <div class="prest-prog"><div class="prest-prog-bar" style="width:${pct}%;background:${loan.tipo==='egreso'?'var(--danger)':'var(--accent)'}"></div></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:10px">
+        <span>Cuota: <strong style="color:${loan.tipo==='egreso'?'var(--danger)':'var(--accent)'}">${fmtPlain(loan.cuota)}</strong></span>
+        <span>Total crédito: <strong style="color:var(--warning)">${fmtPlain(loan.totalCredito)}</strong></span>
+        <span>Progreso: <strong>${loan.cuotasPagadas}/${loan.cuotas}</strong> ${loan.done?'':'('+restantes+' restantes)'}</span>
+        <span style="color:var(--text3)">Capital: ${fmtPlain(loan.monto)}</span>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">${btns}</div>
+    </div>`;
+  }).join('');
+};
+
 window.sbNav=function(tab){
   // Show/hide main panels
   const recPanel=document.getElementById('rec-panel');
+  const prestPanel=document.getElementById('prestamos-panel');
+  const hideSidePanels=()=>{
+    if(recPanel)recPanel.style.display='none';
+    if(prestPanel)prestPanel.style.display='none';
+  };
   if(tab==='rec'){
+    hideSidePanels();
     if(recPanel)recPanel.style.display='block';
     document.getElementById('content').style.display='none';
     document.getElementById('tabs').style.display='none';
@@ -2284,8 +2468,17 @@ window.sbNav=function(tab){
     document.getElementById('ynav-inline').style.display='none';
     document.getElementById('budget-warn-bar').style.display='none';
     renderRecPanel();
+  } else if(tab==='prest'){
+    hideSidePanels();
+    if(prestPanel)prestPanel.style.display='block';
+    document.getElementById('content').style.display='none';
+    document.getElementById('tabs').style.display='none';
+    document.getElementById('dash-panel').style.display='none';
+    document.getElementById('ynav-inline').style.display='none';
+    document.getElementById('budget-warn-bar').style.display='none';
+    window.renderPrestPanel();
   } else {
-    if(recPanel)recPanel.style.display='none';
+    hideSidePanels();
     if(tab==='dash'){setViewTab('d');}
     else{setViewTab('q');}
   }
