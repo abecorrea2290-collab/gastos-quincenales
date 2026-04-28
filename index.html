@@ -127,7 +127,11 @@ body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .fg input:focus,.fg select:focus{border-color:var(--accent)}
 .fg input::placeholder{color:var(--text3)}
 .fg.grow{flex:1;min-width:120px}.fg.wsm input{width:110px}.fg.wmd input{width:140px}.fg.wref input{width:120px}
-@media(max-width:600px){.form{flex-direction:column}.fg,.fg.wsm,.fg.wmd,.fg.wref{width:100%}.fg.wsm input,.fg.wmd input,.fg.wref input{width:100%}}
+@media(max-width:600px){.form{flex-direction:column}.fg,.fg.wsm,.fg.wmd,.fg.wref{width:100%}.fg.wsm input,.fg.wmd input,.fg.wref input,.fg.wsm .fw,.fg.wmd .fw{width:100%}}
+.fw{position:relative;display:flex;align-items:stretch}
+.fw::before{content:"$";position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-weight:700;pointer-events:none;z-index:1;font-size:13px;line-height:1}
+.fw input{flex:1;padding-left:22px!important;min-width:0}
+.fg.wsm .fw{width:110px}.fg.wmd .fw{width:140px}
 
 /* ── BUTTONS ────────────────────────────────────────────────────── */
 .btn{border:none;border-radius:500px;padding:9px 18px;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:transform 120ms,background 150ms,border-color 150ms;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;min-height:38px;-webkit-tap-highlight-color:transparent;font-family:inherit}
@@ -498,7 +502,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
             <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Nuevo préstamo</div>
             <div class="form" style="gap:10px">
               <div class="fg grow"><label>Persona</label><input id="pf-persona" type="text" placeholder="Nombre" style="min-width:130px"></div>
-              <div class="fg wsm"><label>Monto</label><input id="pf-monto" type="number" min="1" placeholder="0" oninput="calcPrestPreview()"></div>
+              <div class="fg wsm"><label>Monto</label><div class="fw"><input id="pf-monto" type="text" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this);calcPrestPreview()"></div></div>
               <div class="fg" style="width:90px"><label>Tasa % mes</label><input id="pf-tasa" type="number" min="0" step="0.01" placeholder="0" oninput="calcPrestPreview()"></div>
               <div class="fg" style="width:90px"><label>Cuotas</label><input id="pf-cuotas" type="number" min="1" placeholder="1" oninput="calcPrestPreview()"></div>
               <div class="fg" style="width:110px"><label>Tipo</label><select id="pf-tipo"><option value="egreso">Egreso (nos prestan)</option><option value="ingreso">Ingreso (prestamos)</option></select></div>
@@ -947,9 +951,12 @@ function calcCuota(monto,tasa,cuotas){if(!tasa||tasa<=0)return monto/cuotas;cons
 function fmtCOP(n,cls=''){
   const neg=n<0;
   const miles=Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  return `<span class="cop${cls?' '+cls:''}">${neg?'<span class="cop-sym">−</span>':''}<span class="cop-sym">$\u202F</span><span class="cop-num">${miles}</span></span>`;
+  return `<span class="cop${cls?' '+cls:''}">${neg?'<span class="cop-sym">−</span>':''}<span class="cop-sym">$</span><span class="cop-num">${miles}</span></span>`;
 }
 function fmtPlain(n){return '$ '+Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+const fmtMoneyVal=n=>(!n||n<=0)?'':Number(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+function parseMoneyInput(id){return parseFloat(String(document.getElementById(id).value).replace(/\./g,''))||0;}
+function onMoneyInput(el){const raw=String(el.value).replace(/[^\d]/g,'');el.value=raw?parseInt(raw).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';};
 
 // ── FECHAS ────────────────────────────────────────────────────────────
 const isWE=d=>d.getDay()===0||d.getDay()===6;
@@ -1280,7 +1287,7 @@ async function renderMain(){
       <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Ingreso de la Quincena</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       <div class="sec-body">
         <div class="form">
-          <div class="fg grow"><label>Ingreso base (COP)</label><input type="number" id="ii" value="${data.income}" min="0" inputmode="numeric" placeholder="0"></div>
+          <div class="fg grow"><label>Ingreso base (COP)</label><div class="fw"><input type="text" id="ii" value="${fmtMoneyVal(data.income)}" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
           <button class="btn btn-p" onclick="window._setIncome()">Guardar</button>
         </div>
         ${(data.income>0||data.transferIn>0||extra>0)?`
@@ -1299,7 +1306,7 @@ async function renderMain(){
       <div class="sec-body">
         <div class="form" style="margin-bottom:10px">
           <div class="fg grow"><label>Descripción</label><input type="text" id="ei-desc" placeholder="Ej: Horas extra, Freelance…"></div>
-          <div class="fg wsm"><label>Valor (COP)</label><input type="number" id="ei-amt" min="0" inputmode="numeric" placeholder="0"></div>
+          <div class="fg wsm"><label>Valor (COP)</label><div class="fw"><input type="text" id="ei-amt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
           <button class="btn btn-p" style="background:var(--warning);align-self:flex-end" onclick="window._addExtra()">+ Agregar</button>
         </div>
         <div id="extra-list"></div>
@@ -1313,7 +1320,7 @@ async function renderMain(){
         <div class="form">
           <div class="fg" style="min-width:90px;max-width:110px"><label>Referencia</label><input type="text" id="iref" placeholder="**** 1234" maxlength="20"></div>
           <div class="fg grow"><label>Descripción</label><input type="text" id="idesc" placeholder="Ej: Arriendo, Mercado…"></div>
-          <div class="fg wsm"><label>Valor (COP)</label><input type="number" id="iamt" min="0" inputmode="numeric" placeholder="0"></div>
+          <div class="fg wsm"><label>Valor (COP)</label><div class="fw"><input type="text" id="iamt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
           <div class="fg"><label>Categoría</label><select id="icat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
           <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
           <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
@@ -1408,7 +1415,7 @@ async function renderMonthly(){
         <div class="form">
           <div class="fg" style="min-width:90px;max-width:110px"><label>Referencia</label><input type="text" id="iref" placeholder="**** 1234" maxlength="20"></div>
           <div class="fg grow"><label>Descripción</label><input type="text" id="idesc" placeholder="Ej: Arriendo, Mercado…"></div>
-          <div class="fg wsm"><label>Valor (COP)</label><input type="number" id="iamt" min="0" inputmode="numeric" placeholder="0"></div>
+          <div class="fg wsm"><label>Valor (COP)</label><div class="fw"><input type="text" id="iamt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
           <div class="fg"><label>Categoría</label><select id="icat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
           <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
           <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
@@ -1425,7 +1432,7 @@ async function renderMonthly(){
       <div class="sec-body">
         <div class="form" style="margin-bottom:8px">
           <div class="fg grow"><label>Descripción</label><input type="text" id="ei-desc" placeholder="Ej: Horas extra, Freelance…"></div>
-          <div class="fg wsm"><label>Valor (COP)</label><input type="number" id="ei-amt" min="0" inputmode="numeric" placeholder="0"></div>
+          <div class="fg wsm"><label>Valor (COP)</label><div class="fw"><input type="text" id="ei-amt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
           <button class="btn btn-p" style="background:var(--warning);align-self:flex-end" onclick="window._addExtra()">+ Agregar</button>
         </div>
         <div id="extra-list"></div>
@@ -1483,7 +1490,7 @@ async function renderMonthly(){
 window._addItemMensual=async()=>{
   const ref=sanitize(document.getElementById('iref').value.trim());
   const desc=sanitize(document.getElementById('idesc').value.trim());
-  const amount=parseFloat(document.getElementById('iamt').value)||0;
+  const amount=parseMoneyInput('iamt');
   const cat=document.getElementById('icat').value;
   const date=document.getElementById('idate').value;
   const rec=document.getElementById('irec').checked;
@@ -1524,7 +1531,7 @@ window._setIncome=async()=>{
   const{m}=CP;const y=CY;
   const q=viewMode==='m'?mQSel:CP.q;
   const d=await getPeriodo(y,m,q);
-  const nuevoIngreso=parseFloat(document.getElementById('ii').value)||0;
+  const nuevoIngreso=parseMoneyInput('ii');
   const esPrimerIngreso=d.income===0&&nuevoIngreso>0;
   d.income=nuevoIngreso;
   // Al registrar ingreso por primera vez → cerrar anterior y transferir sobrante
@@ -1542,7 +1549,7 @@ window._setIncome=async()=>{
 
 window._addExtra=async()=>{
   const desc=sanitize(document.getElementById('ei-desc').value.trim());
-  const amount=parseFloat(document.getElementById('ei-amt').value)||0;
+  const amount=parseMoneyInput('ei-amt');
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
   if(amount>100000000){toast('Valor máximo: $ 100.000.000','err');return;}
   const{m}=CP;const y=CY;
@@ -1581,7 +1588,7 @@ function renderExtraList(data){
 window._addItem=async()=>{
   const ref=sanitize(document.getElementById('iref').value.trim());
   const desc=sanitize(document.getElementById('idesc').value.trim());
-  const amount=parseFloat(document.getElementById('iamt').value)||0;
+  const amount=parseMoneyInput('iamt');
   const cat=document.getElementById('icat').value;
   const date=document.getElementById('idate').value;
   const rec=document.getElementById('irec').checked;
@@ -1719,14 +1726,14 @@ window._editRec=async(id)=>{
   editRecId=id;
   document.getElementById('edit-rec-body').innerHTML=`
     <div style="font-weight:700;margin-bottom:8px">${r.desc}</div>
-    <div class="fg"><label>Nuevo monto (COP)</label><input type="number" id="edit-amt" value="${r.amount}" min="0" inputmode="numeric" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:15px;background:var(--bg);color:var(--text)"></div>
+    <div class="fg"><label>Nuevo monto (COP)</label><div class="fw"><input type="text" id="edit-amt" value="${fmtMoneyVal(r.amount)}" inputmode="numeric" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px 9px 22px;font-size:15px;background:var(--bg);color:var(--text)" oninput="onMoneyInput(this)"></div></div>
     <div class="fg" style="margin-top:8px"><label>Motivo del cambio (opcional)</label><input type="text" id="edit-reason" placeholder="Ej: Ajuste por inflación" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;background:var(--bg);color:var(--text)"></div>`;
   document.getElementById('edit-rec-modal').style.display='flex';
 };
 window.hideEditRec=()=>document.getElementById('edit-rec-modal').style.display='none';
 
 window.saveEditRec=async()=>{
-  const newAmt=parseFloat(document.getElementById('edit-amt').value)||0;
+  const newAmt=parseMoneyInput('edit-amt');
   const reason=document.getElementById('edit-reason').value.trim();
   if(!newAmt){toast('Ingresa un valor válido','err');return;}
   const lista=await getRec();
@@ -2328,7 +2335,7 @@ window.toggleSec=function(hdr){
 // ── SIDEBAR & BOTTOM NAV HELPERS ─────────────────────────────────
 // ── PRÉSTAMOS ─────────────────────────────────────────────────────────────
 window.calcPrestPreview=function(){
-  const monto=parseFloat(document.getElementById('pf-monto').value)||0;
+  const monto=parseMoneyInput('pf-monto');
   const tasa=parseFloat(document.getElementById('pf-tasa').value)||0;
   const cuotas=parseInt(document.getElementById('pf-cuotas').value)||0;
   const prev=document.getElementById('pf-preview');
@@ -2342,7 +2349,7 @@ window.calcPrestPreview=function(){
 
 window.addPrest=async function(){
   const persona=(document.getElementById('pf-persona').value||'').trim();
-  const monto=parseFloat(document.getElementById('pf-monto').value)||0;
+  const monto=parseMoneyInput('pf-monto');
   const tasa=parseFloat(document.getElementById('pf-tasa').value)||0;
   const cuotas=parseInt(document.getElementById('pf-cuotas').value)||0;
   const tipo=document.getElementById('pf-tipo').value;
