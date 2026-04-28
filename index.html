@@ -589,10 +589,18 @@ input:checked+.sldr:before{transform:translateX(16px)}
               <div class="fg" style="width:90px"><label id="pf-diapago-lbl">Día de pago</label><input id="pf-diapago" type="number" min="1" max="28" placeholder="15"></div>
               <div class="fg" style="width:120px"><label>Mes inicio</label><input id="pf-inicio" type="month" oninput="calcPrestPreview()"></div>
             </div>
-            <div id="pf-preview" style="margin-top:10px;display:none;padding:10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:13px;gap:20px;flex-wrap:wrap">
-              <span>Cuota: <strong id="pf-prev-cuota" style="color:var(--accent)">—</strong></span>
-              <span>Total: <strong id="pf-prev-total" style="color:var(--warning)">—</strong></span>
-              <span>Finaliza: <strong id="pf-prev-end" style="color:var(--info)">—</strong></span>
+            <div id="pf-preview" style="margin-top:12px;display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border)">
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--text3)">Cuota estimada</span>
+                <span id="pf-prev-cuota" style="font-size:22px;font-weight:800;color:var(--accent)">—</span>
+                <span id="pf-prev-freq-lbl" style="font-size:11px;color:var(--text3)">mensual</span>
+              </div>
+              <div id="pf-prev-breakdown" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin-bottom:12px"></div>
+              <div id="pf-prev-bar-wrap"></div>
+              <div style="padding-top:10px;border-top:1px solid var(--border);margin-top:10px;display:flex;align-items:center;gap:6px;font-size:12px">
+                <span style="color:var(--text3)">Finaliza estimado:</span>
+                <strong id="pf-prev-end" style="color:var(--info)">—</strong>
+              </div>
             </div>
             <div style="margin-top:12px;display:flex;justify-content:flex-end">
               <button class="btn btn-p" onclick="window.addPrest()">+ Agregar préstamo</button>
@@ -2502,24 +2510,69 @@ window.calcCuotasFromPMT=function(){
     n=Math.ceil(-num/Math.log(1+r));
   }
   document.getElementById('pf-cuotas').value=n;
+  // Si no hay mes de inicio, usar el mes actual para la fecha estimada
+  const _ie=document.getElementById('pf-inicio');
+  if(_ie&&!_ie.value){const _d=new Date();_ie.value=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}`;}
   calcPrestPreview();
 };
 window.calcPrestPreview=function(){
   const monto=parseMoneyInput('pf-monto');
   const tasa=parseFloat(document.getElementById('pf-tasa').value)||0;
   const cuotas=parseInt(document.getElementById('pf-cuotas').value)||0;
+  const freq=document.getElementById('pf-freq').value||'mensual';
   const prev=document.getElementById('pf-preview');
   if(!monto||!cuotas){prev.style.display='none';return;}
-  const c=calcCuota(monto,tasa,cuotas);
-  const total=c*cuotas;
-  document.getElementById('pf-prev-cuota').textContent=fmtPlain(Math.round(c));
-  document.getElementById('pf-prev-total').textContent=fmtPlain(Math.round(total));
-  const inicio=document.getElementById('pf-inicio').value;
-  const freq=document.getElementById('pf-freq').value||'mensual';
-  const endStr=calcEndDate(inicio,cuotas,freq);
+
+  const r=tasa/100;
+  const pmt=calcCuota(monto,tasa,cuotas);
+  const totalPagar=Math.round(pmt*cuotas);
+  const totalInteres=Math.round(totalPagar-monto);
+  const int1=Math.round(monto*r);       // interés primera cuota
+  const cap1=Math.round(pmt-monto*r);   // capital primera cuota
+  const pctCap=totalPagar>0?Math.round(monto/totalPagar*100):100;
+  const pctInt=100-pctCap;
+  const tea=r>0?(((Math.pow(1+r,12)-1)*100).toFixed(1)+'%'):null;
+
+  // Cuota headline
+  document.getElementById('pf-prev-cuota').textContent=fmtPlain(Math.round(pmt));
+  const freqLbl=document.getElementById('pf-prev-freq-lbl');
+  if(freqLbl)freqLbl.textContent=freq==='quincenal'?'quincenal':'mensual';
+
+  // Breakdown stat tiles
+  const stat=(lbl,val,col)=>`<div style="background:var(--surface3);border-radius:6px;padding:8px 10px">
+    <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:3px">${lbl}</div>
+    <div style="font-size:13px;font-weight:800;color:${col||'var(--text)'}">${val}</div>
+  </div>`;
+  const bd=document.getElementById('pf-prev-breakdown');
+  if(bd)bd.innerHTML=[
+    stat('Capital / cuota',fmtPlain(cap1),'var(--info)'),
+    stat('Interés / cuota',r>0?fmtPlain(int1):'—','var(--danger)'),
+    stat('Total intereses',r>0?fmtPlain(totalInteres):'—','var(--danger)'),
+    stat('Total a pagar',fmtPlain(totalPagar),'var(--warning)'),
+    tea?stat('Tasa E.A.',tea,'var(--text2)'):'',
+    stat('N.° cuotas',cuotas+(freq==='quincenal'?' quinc.':(cuotas===1?' mes':' meses')),'var(--text2)'),
+  ].join('');
+
+  // Capital vs interés bar
+  const bw=document.getElementById('pf-prev-bar-wrap');
+  if(bw){
+    bw.innerHTML=r>0?`
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>Capital <strong style="color:var(--info)">${pctCap}%</strong></span>
+        <span>Intereses <strong style="color:var(--danger)">${pctInt}%</strong></span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:var(--danger);overflow:hidden">
+        <div style="height:100%;border-radius:3px;background:var(--info);width:${pctCap}%"></div>
+      </div>`:'';
+  }
+
+  // Fecha fin (usa pf-inicio; si vacío usa mes actual)
+  const inicio=document.getElementById('pf-inicio').value||
+    (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`})();
   const endEl=document.getElementById('pf-prev-end');
-  if(endEl)endEl.textContent=endStr||'—';
-  prev.style.display='flex';
+  if(endEl)endEl.textContent=calcEndDate(inicio,cuotas,freq)||'—';
+
+  prev.style.display='block';
 };
 
 window.addPrest=async function(){
@@ -2698,6 +2751,7 @@ window.sbNav=function(tab){
     document.getElementById('dash-panel').style.display='none';
     document.getElementById('ynav-inline').style.display='none';
     document.getElementById('budget-warn-bar').style.display='none';
+    (function(){const _e=document.getElementById('pf-inicio');if(_e&&!_e.value){const _d=new Date();_e.value=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}`;}})();
     window.renderPrestPanel();
   } else {
     hideSidePanels();
