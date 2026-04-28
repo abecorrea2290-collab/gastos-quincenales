@@ -132,6 +132,7 @@ body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .fw::before{content:"$";position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-weight:700;pointer-events:none;z-index:1;font-size:13px;line-height:1}
 .fw input{flex:1;padding-left:22px!important;min-width:0}
 .fg.wsm .fw{width:110px}.fg.wmd .fw{width:140px}
+@media(max-width:600px){#prestamos-panel .form{display:grid;grid-template-columns:1fr 1fr;gap:8px}#prestamos-panel .form .fg.grow{grid-column:1/-1}#prestamos-panel .form button{grid-column:1/-1}#prestamos-panel .form .fw,.fw input{width:100%!important}}
 
 /* ── BUTTONS ────────────────────────────────────────────────────── */
 .btn{border:none;border-radius:500px;padding:9px 18px;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;transition:transform 120ms,background 150ms,border-color 150ms;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;min-height:38px;-webkit-tap-highlight-color:transparent;font-family:inherit}
@@ -328,12 +329,42 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .rec-hist-change{font-size:12px;flex:1}
 
 /* ── MOBILE TABLE CARDS ──────────────────────────────────────────── */
+.td-meta{display:none;font-size:10px;color:var(--text3);margin-top:2px;line-height:1.4}
 @media(max-width:600px){
-  table{min-width:0!important}
-  .tbl-wrap{overflow-x:visible}
   .hide-mobile{display:none!important}
-  td.amt-cell{text-align:left}
   .rec-card-hdr{flex-wrap:wrap}
+  /* items table → card layout */
+  .items-tbl{width:100%}
+  .items-tbl thead{display:none}
+  .items-tbl tbody tr{display:flex;flex-wrap:wrap;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border);gap:2px}
+  .items-tbl tr:last-child{border-bottom:none}
+  .items-tbl td{display:none;border:none;padding:0}
+  .items-tbl td.td-desc{display:block;flex:1;min-width:0;padding-right:8px}
+  .items-tbl td.td-meta-mob{display:block;width:100%;order:10}
+  .items-tbl td.amt-cell{display:block;white-space:nowrap;font-weight:800;font-size:13px}
+  .items-tbl td.td-del{display:block;margin-left:4px}
+  .td-meta{display:block}
+  /* extra income table */
+  .extra-tbl{width:100%}
+  .extra-tbl thead{display:none}
+  .extra-tbl tbody tr{display:flex;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border);gap:6px}
+  .extra-tbl tr:last-child{border-bottom:none}
+  .extra-tbl td{display:none;border:none;padding:0}
+  .extra-tbl td.td-desc{display:block;flex:1;min-width:0;font-weight:600;font-size:13px}
+  .extra-tbl td.amt-cell{display:block;white-space:nowrap;font-weight:800;font-size:13px}
+  .extra-tbl td.td-del{display:block}
+  /* recurrentes table */
+  .rec-tbl{width:100%}
+  .rec-tbl thead{display:none}
+  .rec-tbl tbody tr{display:flex;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border);gap:6px}
+  .rec-tbl tr:last-child{border-bottom:none}
+  .rec-tbl td{display:none;border:none;padding:0}
+  .rec-tbl td.td-desc{display:block;flex:1;min-width:0}
+  .rec-tbl td.amt-cell{display:block;white-space:nowrap;font-weight:800;font-size:13px}
+  .rec-tbl td.td-acts{display:block}
+  /* annual summary table */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:0}
 }
 
 /* ── SIDEBAR LOGO IMPROVEMENT ────────────────────────────────────── */
@@ -1576,13 +1607,13 @@ function renderExtraList(data){
   const el=document.getElementById('extra-list');if(!el)return;
   const list=data.extraIncome||[];
   if(!list.length){el.innerHTML='<div class="empty" style="padding:10px">Sin ingresos adicionales</div>';return;}
-  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>
+  el.innerHTML=`<table class="extra-tbl"><thead><tr><th class="hide-mobile">Fecha</th><th>Descripción</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>
   ${list.map(i=>`<tr>
-    <td style="color:var(--text3);font-size:11px">${i.date||'-'}</td>
-    <td style="font-weight:600">${i.desc}</td>
+    <td class="hide-mobile" style="color:var(--text3);font-size:11px">${i.date||'-'}</td>
+    <td class="td-desc">${i.desc}${i.date?`<span class="td-meta">${i.date}</span>`:''}</td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-orange')}</td>
-    <td><button class="btn btn-d bsm" onclick="window._delExtra(${i.id})">✕</button></td>
-  </tr>`).join('')}</tbody></table></div>`;
+    <td class="td-del"><button class="btn btn-d bsm" onclick="window._delExtra(${i.id})">✕</button></td>
+  </tr>`).join('')}</tbody></table>`;
 }
 
 window._addItem=async()=>{
@@ -1619,14 +1650,14 @@ function renderItems(items,readonly=false){
   const el=document.getElementById('items-list');if(!el)return;
   if(!items.length){el.innerHTML='<div class="empty">Sin movimientos</div>';return;}
   const s=[...items].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  el.innerHTML=`<table><thead><tr><th>Ref</th><th>Fecha</th><th>Descripción</th><th>Categoría</th><th style="text-align:right">Valor</th>${readonly?'':`<th>Q</th><th></th>`}</tr></thead><tbody>
+  el.innerHTML=`<table class="items-tbl"><thead><tr><th class="hide-mobile">Ref</th><th class="hide-mobile">Fecha</th><th>Descripción</th><th class="hide-mobile">Categoría</th><th style="text-align:right">Valor</th>${readonly?'':`<th class="hide-mobile">Q</th><th></th>`}</tr></thead><tbody>
   ${s.map(i=>`<tr>
-    <td style="color:var(--text3);font-size:10px;white-space:nowrap">${i.ref||'—'}</td>
-    <td style="color:var(--text3);white-space:nowrap;font-size:11px">${i.date||'-'}</td>
-    <td><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}</td>
-    <td><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
+    <td class="hide-mobile" style="color:var(--text3);font-size:10px;white-space:nowrap">${i.ref||'—'}</td>
+    <td class="hide-mobile" style="color:var(--text3);white-space:nowrap;font-size:11px">${i.date||'-'}</td>
+    <td class="td-desc"><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}<span class="td-meta">${[i.ref&&i.ref!=='—'?i.ref:'',i.date||'',i.cat||''].filter(Boolean).join(' · ')}</span></td>
+    <td class="hide-mobile"><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
-    ${readonly?'':`<td style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`}
+    ${readonly?'':`<td class="hide-mobile" style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td class="td-del"><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`}
   </tr>`).join('')}</tbody></table>`;
 }
 
@@ -1635,12 +1666,12 @@ async function renderRecList(){
   const lista=await getRec();const el=document.getElementById('rec-list');if(!el)return;
   if(!lista.length){el.innerHTML='<div class="empty">Sin recurrentes. Actívalo al agregar un gasto.</div>';return;}
   const total=lista.reduce((a,r)=>a+r.amount,0);
-  el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Descripción</th><th>Categoría</th><th style="text-align:right">Valor</th><th>Acciones</th></tr></thead><tbody>
+  el.innerHTML=`<table class="rec-tbl"><thead><tr><th>Descripción</th><th class="hide-mobile">Categoría</th><th style="text-align:right">Valor</th><th>Acciones</th></tr></thead><tbody>
   ${lista.map(r=>`<tr>
-    <td style="font-weight:600">${r.desc}${r.ref?`<br><span style="font-size:10px;color:var(--text3)">${r.ref}</span>`:''}</td>
+    <td class="td-desc" style="font-weight:600">${r.desc}${r.ref?`<span class="td-meta">${r.ref}</span>`:''}</td>
     <td class="hide-mobile"><span class="cc" style="background:${getCatColor(r.cat)}"></span><span class="badge b-cat">${r.cat}</span></td>
     <td class="amt-cell">${fmtCOP(r.amount,'amt-red')}</td>
-    <td style="white-space:nowrap">
+    <td class="td-acts" style="white-space:nowrap">
       <div class="act-btns"><button class="act-btn" onclick="window._editRec(${r.id})" title="Editar monto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="act-btn danger" onclick="window._delRec(${r.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>
     </td>
   </tr>`).join('')}</tbody></table>
