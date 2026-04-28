@@ -1057,7 +1057,11 @@ const prestRef=()=>`${userRef()}/config/prestamos`;
 async function getPrest(){if(cache['_prest'])return cache['_prest'];try{const snap=await getDoc(doc(db,prestRef()));const d=snap.exists()?(snap.data().lista||[]):[];cache['_prest']=d;return d;}catch(e){return [];}}
 async function savePrest(lista){cache['_prest']=lista;try{await setDoc(doc(db,prestRef()),{lista,updatedAt:serverTimestamp()});}catch(e){}}
 
-function calcCuota(monto,tasa,cuotas){if(!tasa||tasa<=0)return monto/cuotas;const r=tasa/100;return monto*(r*Math.pow(1+r,cuotas))/(Math.pow(1+r,cuotas)-1);}
+function calcCuota(monto,tasa,cuotas,freq){
+  if(!tasa||tasa<=0)return monto/cuotas;
+  const r=freq==='quincenal'?Math.pow(1+tasa/100,0.5)-1:tasa/100;
+  return monto*(r*Math.pow(1+r,cuotas))/(Math.pow(1+r,cuotas)-1);
+}
 
 // ── FORMATO ───────────────────────────────────────────────────────────
 function fmtCOP(n,cls=''){
@@ -2498,9 +2502,11 @@ window.calcCuotasFromPMT=function(){
   const monto=parseMoneyInput('pf-monto');
   const tasa=parseFloat(document.getElementById('pf-tasa').value)||0;
   const pmt=parseMoneyInput('pf-cuota-man');
+  const freq=document.getElementById('pf-freq').value||'mensual';
   if(!monto||!pmt||pmt<=0)return;
+  // Tasa por período: quincenal usa conversión geométrica (1+r_m)^0.5 − 1
+  const r=freq==='quincenal'?Math.pow(1+tasa/100,0.5)-1:tasa/100;
   let n;
-  const r=tasa/100;
   if(r===0){
     n=Math.ceil(monto/pmt);
   } else {
@@ -2510,7 +2516,6 @@ window.calcCuotasFromPMT=function(){
     n=Math.ceil(-num/Math.log(1+r));
   }
   document.getElementById('pf-cuotas').value=n;
-  // Si no hay mes de inicio, usar el mes actual para la fecha estimada
   const _ie=document.getElementById('pf-inicio');
   if(_ie&&!_ie.value){const _d=new Date();_ie.value=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}`;}
   calcPrestPreview();
@@ -2523,15 +2528,17 @@ window.calcPrestPreview=function(){
   const prev=document.getElementById('pf-preview');
   if(!monto||!cuotas){prev.style.display='none';return;}
 
-  const r=tasa/100;
-  const pmt=calcCuota(monto,tasa,cuotas);
+  // Tasa por período: quincenal usa conversión geométrica (1+r_m)^0.5 − 1
+  const r=freq==='quincenal'?Math.pow(1+tasa/100,0.5)-1:tasa/100;
+  const rm=tasa/100; // tasa mensual para TEA
+  const pmt=calcCuota(monto,tasa,cuotas,freq);
   const totalPagar=Math.round(pmt*cuotas);
   const totalInteres=Math.round(totalPagar-monto);
-  const int1=Math.round(monto*r);       // interés primera cuota
+  const int1=Math.round(monto*r);       // interés primera cuota (tasa período)
   const cap1=Math.round(pmt-monto*r);   // capital primera cuota
   const pctCap=totalPagar>0?Math.round(monto/totalPagar*100):100;
   const pctInt=100-pctCap;
-  const tea=r>0?(((Math.pow(1+r,12)-1)*100).toFixed(1)+'%'):null;
+  const tea=rm>0?(((Math.pow(1+rm,12)-1)*100).toFixed(1)+'%'):null;
 
   // Cuota headline
   document.getElementById('pf-prev-cuota').textContent=fmtPlain(Math.round(pmt));
@@ -2588,7 +2595,7 @@ window.addPrest=async function(){
   if(!persona){toast('Ingresa el nombre de la persona');return;}
   if(!monto||monto<=0){toast('Ingresa un monto válido');return;}
   if(!cuotas||cuotas<=0){toast('Ingresa el número de cuotas');return;}
-  const cuota=calcCuota(monto,tasa,cuotas);
+  const cuota=calcCuota(monto,tasa,cuotas,freq);
   const totalCredito=cuota*cuotas;
   const id=Date.now();
   const fechaFin=calcEndDate(inicio,cuotas,freq)||'';
