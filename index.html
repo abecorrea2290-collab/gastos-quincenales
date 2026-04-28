@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="/assets/logo-icon.svg">
 <link rel="apple-touch-icon" href="/assets/logo-icon.svg">
-<title>Control de Gastos v1.2.0</title>
+<title>Gastos GQ v1.3.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -819,8 +819,31 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  { ver:'1.3.0', date:'2026-04-27', changes:[
+    'Nueva herramienta Préstamos en barra lateral con amortización francesa',
+    'Préstamos de egreso: cuota se agrega automáticamente a recurrentes',
+    'Préstamos de ingreso: pago registrado se acredita al período activo',
+    'Seguimiento de cuotas pagadas con barra de progreso por préstamo',
+    'Separadores de miles en tiempo real en todos los campos de valor (1.500.000)',
+    'Símbolo $ con prefijo visual dentro de cada campo de entrada',
+    'Tablas convertidas a tarjetas en móvil: sin scroll horizontal, valores completos',
+    'Subtexto con referencia, fecha y categoría bajo la descripción en móvil',
+    'Formulario de Préstamos en cuadrícula de 2 columnas en móvil',
+    'Botones de Recurrentes simplificados en vista principal: solo editar y eliminar',
+    'Historial de recurrentes accesible exclusivamente desde la barra lateral',
+  ]},
+  { ver:'1.2.1', date:'2026-04-26', changes:[
+    'Logo personalizado con diseño de dona multicolor y barras de progreso',
+    'Estado de sincronización Firebase visible en barra lateral',
+    'Panel de gestión de recurrentes en barra lateral con historial de cambios',
+    'Tabs de quincenas cerradas marcadas en rojo',
+    'Secciones del panel principal colapsables',
+    'Iconos SVG personalizados en toda la interfaz',
+    'Selección de recurrentes desmarcada por defecto al abrir nueva quincena',
+    'Corrección de errores en navegación lateral, modales y control de cambios',
+  ]},
   { ver:'1.2.0', date:'2026-04-26', changes:[
-    'Rediseño completo de interfaz: tema Spotify dark (fondo negro, verde #1ed760)',
+    'Rediseño completo de interfaz con tema oscuro profesional (fondo negro, verde #1ed760)',
     'Nuevo layout: sidebar fija en escritorio con logo, navegación y usuario',
     'Barra de navegación inferior en móvil con 4 acciones rápidas',
     'Topbar compacta con toggle Quincenal/Mensual y año',
@@ -828,7 +851,7 @@ const CHANGELOG=[
     'Cards de estadísticas con borde de acento de color por categoría',
     'Formularios y tablas adaptados al sistema de diseño oscuro',
     'Fuente Manrope (Google Fonts) — tipografía geométrica de alta legibilidad',
-    'Service worker v1.3.0 — caché de app/index.html y CDN React/Babel',
+    'Service worker con caché de dependencias CDN',
   ]},
   {ver:'1.1.6',date:'Abril 2026',changes:[
     'Categorías personalizables: agregar, activar/desactivar y eliminar',
