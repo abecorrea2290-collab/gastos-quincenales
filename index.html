@@ -1566,7 +1566,7 @@ function renderItems(items,readonly=false){
     <td><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}</td>
     <td><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
-    ${{readonly?'':`<td style="font-size:10px;color:var(--text3);font-weight:700">${{i._q?'Q'+i._q:''}}</td><td><button class="act-btn danger" onclick="window._delItem(${{i.id}}${{i._q?','+i._q:''}})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`}}
+    ${readonly?'':`<td style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`}
   </tr>`).join('')}</tbody></table>`;
 }
 
