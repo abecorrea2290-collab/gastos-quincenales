@@ -645,11 +645,11 @@ input:checked+.sldr:before{transform:translateX(16px)}
       <span>Resumen</span>
     </button>
     <button class="bn-item" id="bn-rec" onclick="sbNav('rec');bnActivate('rec')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg>
       <span>Recur.</span>
     </button>
     <button class="bn-item" id="bn-prest" onclick="sbNav('prest');bnActivate('prest')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
       <span>Créd.</span>
     </button>
     <button class="bn-item" id="bn-clean" onclick="showClean()">
@@ -2526,7 +2526,7 @@ window.calcEstimacion=async function(){
           const d=await getPeriodo(y,mi,q);
           if(!d.income||d.income===0)continue;
           const extra=(d.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
-          const totalIncome=d.income+d.transferIn+extra;
+          const totalIncome=d.income+extra;
           const items=d.items||[];
           const cats={};
           items.forEach(i=>{if(i.cat&&i.amount)cats[i.cat]=(cats[i.cat]||0)+i.amount;});
