@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="/assets/logo-icon.svg">
 <link rel="apple-touch-icon" href="/assets/logo-icon.svg">
-<title>Gastos GQ v1.4.0</title>
+<title>Gastos GQ v1.3.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -465,35 +465,35 @@ input:checked+.sldr:before{transform:translateX(16px)}
       </div>
       <nav class="sb-nav">
         <button class="sb-item active" id="sbnav-q" onclick="sbNav('q')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
           Panel
         </button>
         <button class="sb-item" id="sbnav-dash" onclick="sbNav('dash')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg>
           Resumen anual
         </button>
         <button class="sb-item" id="sbnav-rec" onclick="sbNav('rec')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg>
           Recurrentes
         </button>
         <button class="sb-item" id="sbnav-prest" onclick="sbNav('prest')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
           Préstamos
         </button>
         <button class="sb-item" id="sbnav-est" onclick="sbNav('est')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Estimación
         </button>
         <button class="sb-item" id="sbnav-cats" onclick="showCats()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
           Categorías
         </button>
         <button class="sb-item" id="sbnav-clean" onclick="showClean()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Configuración
         </button>
         <button class="sb-item" id="sbnav-log" onclick="showChangelog()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
           Notas de versión
         </button>
       </nav>
@@ -897,17 +897,15 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
-  { ver:'1.4.0', date:'2026-05-02', changes:[
-    'Nuevo panel "Estimación Estadística" en la barra lateral',
-    'Lee todo el historial de Firestore y calcula promedios reales por categoría',
-    'Separa estadísticas de Q1 (del 15) y Q2 (fin de mes) de forma independiente',
-    'Muestra estimado mensual combinado = promedio Q1 + promedio Q2',
-    'Rango mínimo/máximo basado en el historial real de cada categoría',
-    'Desviación estándar visible para categorías con alta variabilidad (>$500)',
-    'Nivel de confianza automático: Muy baja / Baja / Media / Alta según cantidad de quincenas',
-    'Gráfico de barras horizontales Q1 vs Q2 por categoría',
-    'Tabla detallada con columnas separadas por quincena, mensual y rango',
-    'Nota metodológica explicando el cálculo en el pie del panel',
+  { ver:'1.3.2', date:'2026-05-02', changes:[
+    'Nuevo panel Estimación Estadística debajo de Préstamos en barra lateral',
+    'Proyección separada Q1 (del 15) y Q2 (fin de mes) con ingreso promedio independiente',
+    'Saldo proyectado = ingreso promedio − gasto promedio por cada vista',
+    'Vista mensual combina Q1+Q2 del mismo mes para estimación total',
+    'Nivel de confianza automático: Muy baja / Baja / Media / Alta según quincenas disponibles',
+    'Gráfico de barras Q1 vs Q2 por categoría con tooltip de mensual estimado',
+    'Iconos del sidebar actualizados a tamaño 18×18 según design system',
+    'Ícono de tarjeta de crédito (Préstamos) alineado con design system',
   ]},
   { ver:'1.3.0', date:'2026-04-27', changes:[
     'Nueva herramienta Préstamos en barra lateral con amortización francesa',
@@ -2641,15 +2639,82 @@ window.calcEstimacion=async function(){
     </div>`;
   }
 
+  // Build a full section per quincena type with its own stats + category table
+  function qSection(label,st,conf,borderColor,catKeys){
+    if(!st||st.n===0)return'';
+    const balCol=st.projBalance>=0?'var(--accent)':'var(--danger)';
+    const pct=st.avgIncome>0?Math.min(100,Math.round(st.avgExp/st.avgIncome*100)):0;
+    const barCol=pct>95?'var(--danger)':pct>80?'var(--warning)':'var(--info)';
+    const catRows=catKeys.filter(c=>(st.catStats[c]?.avg||0)>0).map(c=>{
+      const s=st.catStats[c];
+      const clr=getCatColor(c);
+      return `<tr>
+        <td style="font-weight:600"><span class="cc" style="background:${clr}"></span>${c}</td>
+        <td class="amt-cell">
+          <div style="font-weight:700">${fmtPlain(Math.round(s.avg))}</div>
+          ${s.sd>500?`<div class="est-range">±${fmtPlain(Math.round(s.sd))}</div>`:''}
+        </td>
+        <td class="amt-cell hide-mobile"><span class="est-range">${s.min!==s.max?fmtPlain(Math.round(s.min))+' – '+fmtPlain(Math.round(s.max)):fmtPlain(Math.round(s.min))}</span></td>
+      </tr>`;
+    }).join('');
+    return `
+    <div class="sec" style="border-left:4px solid ${borderColor};margin-bottom:14px">
+      <div class="sec-hdr" style="display:flex;align-items:center;gap:8px;padding:10px 14px">
+        <span class="sec-title" style="color:${borderColor}">${label}</span>
+        <span class="conf-badge ${conf.cls}">${conf.dots} ${conf.label}</span>
+        <span style="font-size:10px;color:var(--text3);margin-left:auto">${st.n} período${st.n!==1?'s':''} analizados</span>
+      </div>
+      <div style="padding:0 14px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:3px">Ingreso prom.</div>
+          <div style="font-size:15px;font-weight:800;color:var(--accent)">${fmtPlain(Math.round(st.avgIncome))}</div>
+          <div class="est-range">${fmtPlain(Math.round(st.minIncome))} – ${fmtPlain(Math.round(st.maxIncome))}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:3px">Gasto prom.</div>
+          <div style="font-size:15px;font-weight:800;color:var(--danger)">${fmtPlain(Math.round(st.avgExp))}</div>
+          <div class="est-range">${fmtPlain(Math.round(st.minExp))} – ${fmtPlain(Math.round(st.maxExp))}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:3px">Saldo proyectado</div>
+          <div style="font-size:15px;font-weight:800;color:${balCol}">${fmtPlain(Math.round(st.projBalance))}</div>
+          <div class="est-range">${fmtPlain(Math.round(st.projBalMin))} – ${fmtPlain(Math.round(st.projBalMax))}</div>
+        </div>
+      </div>
+      <div style="padding:0 14px 10px">
+        <div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden">
+          <div style="height:100%;border-radius:2px;background:${barCol};width:${pct}%;transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-size:9px;color:var(--text3)">0%</span>
+          <span style="font-size:9px;color:${barCol};font-weight:700">${pct}% del ingreso en gastos</span>
+        </div>
+      </div>
+      ${catRows?`<div class="tbl-wrap" style="padding:0 14px 12px">
+        <table>
+          <thead><tr>
+            <th>Categoría</th>
+            <th style="text-align:right">Promedio</th>
+            <th style="text-align:right" class="hide-mobile">Rango</th>
+          </tr></thead>
+          <tbody>${catRows}
+            <tr style="border-top:2px solid var(--border)">
+              <td style="font-weight:800">TOTAL</td>
+              <td class="amt-cell"><strong style="color:var(--danger)">${fmtPlain(Math.round(st.avgExp))}</strong></td>
+              <td class="hide-mobile"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`:''}
+    </div>`;
+  }
+
   body.innerHTML=`
     ${warn}
 
-    <!-- Proyecciones por quincena + mensual -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px">
-      ${q1Count?projCard('Q1 — del 15',stQ1,confQ1,'c-blue'):''}
-      ${q2Count?projCard('Q2 — fin de mes',stQ2,confQ2,'c-purple'):''}
-      ${mesCount?projCard('Mensual combinado',stMes,confMes,'c-orange'):''}
-    </div>
+    ${q1Count?qSection('Q1 — del 15',stQ1,confQ1,'var(--info)',catsQ):''}
+    ${q2Count?qSection('Q2 — fin de mes',stQ2,confQ2,'var(--purple)',catsQ):''}
+    ${mesCount?qSection('Mensual combinado',stMes,confMes,'var(--warning)',catsQ):''}
 
     <!-- Gráfico Q1 vs Q2 por categoría -->
     <div class="sec" style="margin-bottom:12px">
@@ -2658,70 +2723,6 @@ window.calcEstimacion=async function(){
         <div class="chart-wrap" style="height:${Math.max(220,catsQ.length*30+70)}px">
           <canvas id="est-bar-cat"></canvas>
         </div>
-      </div>
-    </div>
-
-    <!-- Tabla quincenal -->
-    <div class="sec" style="margin-bottom:12px">
-      <div class="sec-hdr collapsible" onclick="toggleSec(this)">
-        <span class="sec-title">📋 Detalle por quincena y categoría</span>
-        <span style="font-size:10px;color:var(--text3)">${catsQ.length} categorías</span>
-        <svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-      </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th>Categoría</th>
-            <th style="text-align:right">Prom. Q1</th>
-            <th style="text-align:right">Prom. Q2</th>
-            <th style="text-align:right">Mensual est.</th>
-            <th style="text-align:right" class="hide-mobile">Rango mensual</th>
-          </tr></thead>
-          <tbody>
-            ${catsQ.map(c=>{
-              const s1=stQ1.catStats[c]||{avg:0,sd:0,min:0,max:0};
-              const s2=stQ2.catStats[c]||{avg:0,sd:0,min:0,max:0};
-              const mesAvg=s1.avg+s2.avg;
-              const mesMin=s1.min+s2.min;
-              const mesMax=s1.max+s2.max;
-              const clr=getCatColor(c);
-              return `<tr>
-                <td style="font-weight:600"><span class="cc" style="background:${clr}"></span>${c}</td>
-                <td class="amt-cell">
-                  <div style="font-weight:700">${fmtPlain(Math.round(s1.avg))}</div>
-                  ${s1.sd>500?`<div class="est-range">±${fmtPlain(Math.round(s1.sd))}</div>`:''}
-                </td>
-                <td class="amt-cell">
-                  <div style="font-weight:700">${fmtPlain(Math.round(s2.avg))}</div>
-                  ${s2.sd>500?`<div class="est-range">±${fmtPlain(Math.round(s2.sd))}</div>`:''}
-                </td>
-                <td class="amt-cell"><strong style="color:var(--warning)">${fmtPlain(Math.round(mesAvg))}</strong></td>
-                <td class="amt-cell hide-mobile"><span class="est-range">${mesMin!==mesMax?fmtPlain(mesMin)+' – '+fmtPlain(mesMax):fmtPlain(mesMin)}</span></td>
-              </tr>`;
-            }).join('')}
-            <tr style="border-top:2px solid var(--border)">
-              <td style="font-weight:800">TOTAL GASTOS</td>
-              <td class="amt-cell"><strong style="color:var(--danger)">${fmtPlain(Math.round(stQ1.avgExp))}</strong></td>
-              <td class="amt-cell"><strong style="color:var(--danger)">${fmtPlain(Math.round(stQ2.avgExp))}</strong></td>
-              <td class="amt-cell"><strong style="color:var(--warning)">${fmtPlain(Math.round(stMes.avgExp))}</strong></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td style="font-weight:800;color:var(--accent)">INGRESO PROM.</td>
-              <td class="amt-cell"><strong style="color:var(--accent)">${fmtPlain(Math.round(stQ1.avgIncome))}</strong></td>
-              <td class="amt-cell"><strong style="color:var(--accent)">${fmtPlain(Math.round(stQ2.avgIncome))}</strong></td>
-              <td class="amt-cell"><strong style="color:var(--accent)">${fmtPlain(Math.round(stMes.avgIncome))}</strong></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td style="font-weight:800">SALDO PROY.</td>
-              <td class="amt-cell"><strong style="color:${stQ1.projBalance>=0?'var(--accent)':'var(--danger)'}">${fmtPlain(Math.round(stQ1.projBalance))}</strong></td>
-              <td class="amt-cell"><strong style="color:${stQ2.projBalance>=0?'var(--accent)':'var(--danger)'}">${fmtPlain(Math.round(stQ2.projBalance))}</strong></td>
-              <td class="amt-cell"><strong style="color:${stMes.projBalance>=0?'var(--accent)':'var(--danger)'}">${fmtPlain(Math.round(stMes.projBalance))}</strong></td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
 
