@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="/assets/logo-icon.svg">
 <link rel="apple-touch-icon" href="/assets/logo-icon.svg">
-<title>Gastos GQ v1.3.0</title>
+<title>Gastos GQ v1.4.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -426,6 +426,15 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .act-btn.teal:hover{background:var(--teal);color:#fff}
 .act-btns{display:flex;gap:4px;align-items:center}
 
+/* ── ESTIMACIÓN ESTADÍSTICA ──────────────────────────────────────── */
+#estimacion-panel{min-height:60vh}
+.conf-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:500px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.conf-alta{background:var(--accent-light);color:var(--accent)}
+.conf-media{background:var(--info-light);color:var(--info)}
+.conf-baja{background:var(--warning-light);color:var(--warning)}
+.conf-muyBaja{background:var(--danger-light);color:var(--danger)}
+.est-range{font-size:10px;color:var(--text3);white-space:nowrap}
+
 </style>
 </head>
 <body>
@@ -478,6 +487,10 @@ input:checked+.sldr:before{transform:translateX(16px)}
         <button class="sb-item" id="sbnav-clean" onclick="showClean()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Configuración
+        </button>
+        <button class="sb-item" id="sbnav-est" onclick="sbNav('est')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Estimación
         </button>
         <button class="sb-item" id="sbnav-log" onclick="showChangelog()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
@@ -601,6 +614,20 @@ input:checked+.sldr:before{transform:translateX(16px)}
           </div>
           <!-- LIST -->
           <div id="prest-panel-body"></div>
+        </div>
+      </div>
+
+      <!-- ESTIMACIÓN ESTADÍSTICA PANEL -->
+      <div id="estimacion-panel" style="display:none">
+        <div class="main" style="max-width:960px;margin:0 auto">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding-top:8px">
+            <div>
+              <span style="font-size:16px;font-weight:800;color:#fff">Estimación Estadística</span>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Basada en el historial real de Firestore</div>
+            </div>
+            <button class="btn btn-g bsm" onclick="window.calcEstimacion()">↺ Recalcular</button>
+          </div>
+          <div id="estimacion-body"></div>
         </div>
       </div>
 
@@ -870,6 +897,18 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  { ver:'1.4.0', date:'2026-05-02', changes:[
+    'Nuevo panel "Estimación Estadística" en la barra lateral',
+    'Lee todo el historial de Firestore y calcula promedios reales por categoría',
+    'Separa estadísticas de Q1 (del 15) y Q2 (fin de mes) de forma independiente',
+    'Muestra estimado mensual combinado = promedio Q1 + promedio Q2',
+    'Rango mínimo/máximo basado en el historial real de cada categoría',
+    'Desviación estándar visible para categorías con alta variabilidad (>$500)',
+    'Nivel de confianza automático: Muy baja / Baja / Media / Alta según cantidad de quincenas',
+    'Gráfico de barras horizontales Q1 vs Q2 por categoría',
+    'Tabla detallada con columnas separadas por quincena, mensual y rango',
+    'Nota metodológica explicando el cálculo en el pie del panel',
+  ]},
   { ver:'1.3.0', date:'2026-04-27', changes:[
     'Nueva herramienta Préstamos en barra lateral con amortización francesa',
     'Préstamos de egreso: cuota se agrega automáticamente a recurrentes',
@@ -2460,6 +2499,237 @@ function restoreSecState(){
     else if(val==='col:false')sec.classList.remove('collapsed');
   });
 }
+// ── ESTIMACIÓN ESTADÍSTICA ────────────────────────────────────────────────
+window.renderEstimacionPanel=async function(){
+  const panel=document.getElementById('estimacion-panel');
+  if(!panel||panel.style.display==='none')return;
+  await window.calcEstimacion();
+};
+
+window.calcEstimacion=async function(){
+  const body=document.getElementById('estimacion-body');
+  if(!body)return;
+  body.innerHTML=`<div style="padding:32px;text-align:center;color:var(--text3)"><div class="spinner" style="width:24px;height:24px;border-color:rgba(162,155,254,.2);border-top-color:var(--purple);margin:0 auto 10px"></div>Analizando historial de Firestore…</div>`;
+
+  const yearActual=Math.max(new Date().getFullYear(),MIN_YEAR);
+
+  // Recolectar datos por quincena: solo períodos con ingreso registrado
+  const q1Data={}, q2Data={};
+  CATS_OBJ.map(c=>c.nombre).forEach(c=>{q1Data[c]=[];q2Data[c]=[];});
+
+  let q1Count=0, q2Count=0;
+  for(let y=MIN_YEAR;y<=yearActual;y++){
+    for(let mi=0;mi<12;mi++){
+      for(const q of [1,2]){
+        try{
+          const d=await getPeriodo(y,mi,q);
+          if(!d.income||d.income===0)continue;
+          const items=d.items||[];
+          // Acumular totales de esta quincena por categoría
+          const qt={};
+          items.forEach(i=>{if(i.cat&&i.amount)qt[i.cat]=(qt[i.cat]||0)+i.amount;});
+          const allCatNames=[...new Set([...CATS_OBJ.map(c=>c.nombre),...Object.keys(qt)])];
+          if(q===1){
+            q1Count++;
+            allCatNames.forEach(c=>{
+              if(!q1Data[c])q1Data[c]=[];
+              q1Data[c].push(qt[c]||0);
+            });
+          }else{
+            q2Count++;
+            allCatNames.forEach(c=>{
+              if(!q2Data[c])q2Data[c]=[];
+              q2Data[c].push(qt[c]||0);
+            });
+          }
+        }catch(e){}
+      }
+    }
+  }
+
+  // Funciones estadísticas
+  const _mean=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;
+  const _sd=arr=>{
+    if(arr.length<2)return 0;
+    const m=_mean(arr);
+    return Math.sqrt(arr.reduce((s,x)=>s+(x-m)**2,0)/(arr.length-1));
+  };
+
+  // Nivel de confianza según número de quincenas analizadas
+  function getConf(n){
+    if(n>=12)return{label:'Alta',cls:'conf-alta',dots:'●●●●'};
+    if(n>=6) return{label:'Media',cls:'conf-media',dots:'●●●○'};
+    if(n>=3) return{label:'Baja',cls:'conf-baja',dots:'●●○○'};
+    return          {label:'Muy baja',cls:'conf-muyBaja',dots:'●○○○'};
+  }
+
+  // Construir estadísticas por categoría
+  const allCatNames=[...new Set([...Object.keys(q1Data),...Object.keys(q2Data)])];
+  const stats={};
+  allCatNames.forEach(c=>{
+    const a1=q1Data[c]||[];
+    const a2=q2Data[c]||[];
+    const nz1=a1.filter(v=>v>0);
+    const nz2=a2.filter(v=>v>0);
+    const avg1=_mean(a1), avg2=_mean(a2);
+    const sd1=_sd(a1), sd2=_sd(a2);
+    stats[c]={
+      q1:{avg:avg1,sd:sd1,min:nz1.length?Math.min(...nz1):0,max:nz1.length?Math.max(...nz1):0,freq:nz1.length},
+      q2:{avg:avg2,sd:sd2,min:nz2.length?Math.min(...nz2):0,max:nz2.length?Math.max(...nz2):0,freq:nz2.length},
+      monthly:{
+        avg:avg1+avg2,
+        min:(nz1.length?Math.min(...nz1):0)+(nz2.length?Math.min(...nz2):0),
+        max:(nz1.length?Math.max(...nz1):0)+(nz2.length?Math.max(...nz2):0)
+      }
+    };
+  });
+
+  // Filtrar categorías con algún gasto y ordenar por promedio mensual desc
+  const catsConDatos=allCatNames
+    .filter(c=>stats[c]&&stats[c].monthly.avg>0)
+    .sort((a,b)=>stats[b].monthly.avg-stats[a].monthly.avg);
+
+  const confQ1=getConf(q1Count), confQ2=getConf(q2Count);
+  const totalQ1=catsConDatos.reduce((s,c)=>s+stats[c].q1.avg,0);
+  const totalQ2=catsConDatos.reduce((s,c)=>s+stats[c].q2.avg,0);
+  const totalMes=totalQ1+totalQ2;
+  const totalMin=catsConDatos.reduce((s,c)=>s+stats[c].monthly.min,0);
+  const totalMax=catsConDatos.reduce((s,c)=>s+stats[c].monthly.max,0);
+
+  body.innerHTML=`
+    <!-- KPIs de cobertura -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px">
+      <div class="card c-purple">
+        <div class="clbl">Quincenas Q1 (del 15)</div>
+        <div class="cval" style="color:var(--purple)">${q1Count}</div>
+        <div class="csub"><span class="conf-badge ${confQ1.cls}">${confQ1.dots} ${confQ1.label}</span></div>
+      </div>
+      <div class="card c-purple">
+        <div class="clbl">Quincenas Q2 (fin mes)</div>
+        <div class="cval" style="color:var(--purple)">${q2Count}</div>
+        <div class="csub"><span class="conf-badge ${confQ2.cls}">${confQ2.dots} ${confQ2.label}</span></div>
+      </div>
+      <div class="card c-orange">
+        <div class="clbl">Estimado mensual total</div>
+        <div class="cval">${fmtCOP(Math.round(totalMes),'amt-orange')}</div>
+        <div class="csub">Rango: ${fmtPlain(Math.round(totalMin))} – ${fmtPlain(Math.round(totalMax))}</div>
+      </div>
+    </div>
+
+    ${Math.min(q1Count,q2Count)<3?`<div class="banner ban-w">⚠️ Menos de 3 quincenas registradas — las estimaciones son orientativas. A más historial, mayor precisión.</div>`:''}
+
+    <!-- Gráfico de barras apiladas Q1+Q2 por categoría -->
+    <div class="sec" style="margin-bottom:12px">
+      <div class="sec-hdr"><span class="sec-title">📊 Gasto promedio por categoría — Q1 vs Q2</span></div>
+      <div class="sec-body">
+        <div class="chart-wrap" style="height:${Math.max(220,catsConDatos.length*30+70)}px">
+          <canvas id="est-bar-cat"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla detallada -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">📋 Detalle por categoría</span>
+        <span style="font-size:10px;color:var(--text3)">${catsConDatos.length} categorías · ${q1Count+q2Count} quincenas analizadas</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th style="text-align:right" class="hide-mobile">Prom. Q1 (del 15)</th>
+              <th style="text-align:right" class="hide-mobile">Prom. Q2 (fin mes)</th>
+              <th style="text-align:right">Estimado mensual</th>
+              <th style="text-align:right" class="hide-mobile">Rango</th>
+              <th>Confianza</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${catsConDatos.map(c=>{
+              const s=stats[c];
+              const nPeriods=Math.min(q1Count,q2Count)||Math.max(s.q1.freq,s.q2.freq);
+              const conf=getConf(nPeriods);
+              const clr=getCatColor(c);
+              const rangeStr=s.monthly.min!==s.monthly.max
+                ?`${fmtPlain(Math.round(s.monthly.min))} – ${fmtPlain(Math.round(s.monthly.max))}`
+                :fmtPlain(Math.round(s.monthly.min));
+              return `<tr>
+                <td style="font-weight:600"><span class="cc" style="background:${clr}"></span>${c}</td>
+                <td class="amt-cell hide-mobile">
+                  <div style="font-weight:700">${fmtPlain(Math.round(s.q1.avg))}</div>
+                  ${s.q1.sd>500?`<div class="est-range">±${fmtPlain(Math.round(s.q1.sd))}</div>`:''}
+                </td>
+                <td class="amt-cell hide-mobile">
+                  <div style="font-weight:700">${fmtPlain(Math.round(s.q2.avg))}</div>
+                  ${s.q2.sd>500?`<div class="est-range">±${fmtPlain(Math.round(s.q2.sd))}</div>`:''}
+                </td>
+                <td class="amt-cell">
+                  <div style="font-weight:800;color:var(--warning)">${fmtPlain(Math.round(s.monthly.avg))}</div>
+                  <div class="est-range">${rangeStr}</div>
+                </td>
+                <td class="amt-cell hide-mobile"><span class="est-range">${rangeStr}</span></td>
+                <td><span class="conf-badge ${conf.cls}">${conf.dots} ${conf.label}</span></td>
+              </tr>`;
+            }).join('')}
+            <tr style="border-top:2px solid var(--border)">
+              <td style="font-weight:800">TOTAL</td>
+              <td class="amt-cell hide-mobile"><strong>${fmtPlain(Math.round(totalQ1))}</strong></td>
+              <td class="amt-cell hide-mobile"><strong>${fmtPlain(Math.round(totalQ2))}</strong></td>
+              <td class="amt-cell"><strong style="color:var(--warning)">${fmtPlain(Math.round(totalMes))}</strong></td>
+              <td class="amt-cell hide-mobile"><span class="est-range">${fmtPlain(Math.round(totalMin))} – ${fmtPlain(Math.round(totalMax))}</span></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Nota metodológica -->
+    <div style="font-size:11px;color:var(--text3);padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);line-height:1.6">
+      <strong style="color:var(--text2)">Metodología:</strong>
+      Se analizan todas las quincenas con ingreso registrado desde ${MIN_YEAR}.
+      El <em>promedio</em> usa todos los períodos (incluyendo meses sin gasto en esa categoría).
+      El <em>rango</em> muestra el mínimo y máximo histórico entre quincenas con gasto > 0.
+      La <em>desviación ±</em> aparece solo si supera $500 (variabilidad significativa).
+      Nivel de confianza: Muy baja &lt;3 períodos · Baja 3–5 · Media 6–11 · Alta ≥12.
+    </div>`;
+
+  // Gráfico barras apiladas horizontales Q1 + Q2
+  const ctx=document.getElementById('est-bar-cat');
+  if(ctx&&catsConDatos.length){
+    new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:catsConDatos,
+        datasets:[
+          {label:'Q1 (del 15)',data:catsConDatos.map(c=>Math.round(stats[c].q1.avg)),backgroundColor:'rgba(83,157,245,.75)',borderRadius:3,borderSkipped:false},
+          {label:'Q2 (fin mes)',data:catsConDatos.map(c=>Math.round(stats[c].q2.avg)),backgroundColor:'rgba(162,155,254,.75)',borderRadius:3,borderSkipped:false}
+        ]
+      },
+      options:{
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,position:'top',labels:{font:{size:10},padding:10,boxWidth:8,usePointStyle:true}},
+          tooltip:{callbacks:{
+            label:c=>` ${c.dataset.label}: ${fmtPlain(c.raw)}`,
+            afterBody:items=>{
+              const c=catsConDatos[items[0].dataIndex];
+              const s=stats[c];
+              return[`Mensual estimado: ${fmtPlain(Math.round(s.monthly.avg))}`,`Rango: ${fmtPlain(Math.round(s.monthly.min))} – ${fmtPlain(Math.round(s.monthly.max))}`];
+            }
+          }}
+        },
+        scales:{
+          x:{stacked:false,ticks:{callback:v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v),font:{size:9}},grid:{color:'rgba(128,128,128,.1)'}},
+          y:{ticks:{font:{size:10}},grid:{display:false}}
+        }
+      }
+    });
+  }
+};
+
 // ── SIDEBAR & BOTTOM NAV HELPERS ─────────────────────────────────
 // ── PRÉSTAMOS ─────────────────────────────────────────────────────────────
 function calcEndDate(inicio,cuotas){
@@ -2786,9 +3056,11 @@ window.sbNav=function(tab){
   // Show/hide main panels
   const recPanel=document.getElementById('rec-panel');
   const prestPanel=document.getElementById('prestamos-panel');
+  const estPanel=document.getElementById('estimacion-panel');
   const hideSidePanels=()=>{
     if(recPanel)recPanel.style.display='none';
     if(prestPanel)prestPanel.style.display='none';
+    if(estPanel)estPanel.style.display='none';
   };
   if(tab==='rec'){
     hideSidePanels();
@@ -2809,6 +3081,15 @@ window.sbNav=function(tab){
     document.getElementById('budget-warn-bar').style.display='none';
     (function(){const _e=document.getElementById('pf-inicio');if(_e&&!_e.value){const _d=new Date();_e.value=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}`;}})();
     window.renderPrestPanel();
+  } else if(tab==='est'){
+    hideSidePanels();
+    if(estPanel)estPanel.style.display='block';
+    document.getElementById('content').style.display='none';
+    document.getElementById('tabs').style.display='none';
+    document.getElementById('dash-panel').style.display='none';
+    document.getElementById('ynav-inline').style.display='none';
+    document.getElementById('budget-warn-bar').style.display='none';
+    window.renderEstimacionPanel();
   } else {
     hideSidePanels();
     if(tab==='dash'){setViewTab('d');}
