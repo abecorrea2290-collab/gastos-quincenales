@@ -425,6 +425,8 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .act-btn.teal{color:var(--teal);border-color:var(--teal)}
 .act-btn.teal:hover{background:var(--teal);color:#fff}
 .act-btns{display:flex;gap:4px;align-items:center}
+.cat-picker{position:fixed;z-index:1200;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;box-shadow:var(--shadow-heavy);display:flex;flex-direction:column;gap:7px;min-width:170px}
+.cat-picker select{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;font-size:13px;font-family:inherit;width:100%}
 
 /* ── ESTIMACIÓN ESTADÍSTICA ──────────────────────────────────────── */
 #estimacion-panel{min-height:60vh}
@@ -1760,6 +1762,41 @@ window._delItem=async(id,q_override)=>{
   viewMode==='m'?renderMonthly():renderMain();
 };
 
+window._editItemCat=async(id,q_override,btn)=>{
+  document.querySelectorAll('.cat-picker').forEach(el=>el.remove());
+  const{m}=CP;const y=CY;
+  const q=q_override||(viewMode==='m'?mQSel:CP.q);
+  const d=await getPeriodo(y,m,q);
+  const item=(d.items||[]).find(i=>i.id===id);
+  if(!item)return;
+  const picker=document.createElement('div');
+  picker.className='cat-picker';
+  picker.innerHTML=`
+    <div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Cambiar categoría</div>
+    <select id="cps">${CATS.map(c=>`<option value="${c}"${c===item.cat?' selected':''}>${c}</option>`).join('')}</select>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-p bsm" id="cp-ok" style="flex:1">Guardar</button>
+      <button class="btn btn-g bsm" id="cp-x" style="padding:5px 9px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>`;
+  const rect=btn.getBoundingClientRect();
+  const left=Math.min(Math.max(8,rect.left-60),window.innerWidth-186);
+  const top=rect.bottom+6+window.scrollY;
+  picker.style.cssText+=`;top:${rect.bottom+6}px;left:${left}px`;
+  document.body.appendChild(picker);
+  const close=()=>picker.remove();
+  document.getElementById('cp-x').onclick=close;
+  document.getElementById('cp-ok').onclick=async()=>{
+    item.cat=document.getElementById('cps').value;
+    await savePeriodo(y,m,q,d);
+    close();
+    viewMode==='m'?renderMonthly():renderMain();
+    toast('✓ Categoría actualizada');
+  };
+  setTimeout(()=>document.addEventListener('click',function outside(e){
+    if(!picker.contains(e.target)&&e.target!==btn){close();document.removeEventListener('click',outside);}
+  },true),10);
+};
+
 function renderItems(items,readonly=false){
   const el=document.getElementById('items-list');if(!el)return;
   if(!items.length){el.innerHTML='<div class="empty">Sin movimientos</div>';return;}
@@ -1771,7 +1808,7 @@ function renderItems(items,readonly=false){
     <td class="td-desc"><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}<span class="td-meta">${[i.ref&&i.ref!=='—'?i.ref:'',i.date||'',i.cat||''].filter(Boolean).join(' · ')}</span></td>
     <td class="hide-mobile"><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
-    ${readonly?'':`<td class="hide-mobile" style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td class="td-del"><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`}
+    ${readonly?'':`<td class="hide-mobile" style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td class="td-del"><div class="act-btns"><button class="act-btn teal" onclick="window._editItemCat(${i.id}${i._q?','+i._q:''},this)" title="Cambiar categoría"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg></button><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td>`}
   </tr>`).join('')}</tbody></table>`;
 }
 
