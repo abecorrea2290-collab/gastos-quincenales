@@ -662,7 +662,7 @@ input:checked+.sldr:before{transform:translateX(16px)}
 <div class="overlay" id="rec-modal" style="display:none">
   <div class="modal modal-lg">
     <div class="modal-drag"></div>
-    <h3 style="color:var(--teal)">🔁 Aplicar recurrentes</h3>
+    <h3 style="color:var(--teal);display:flex;align-items:center;gap:7px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Aplicar recurrentes</h3>
     <p class="sub">Selecciona los que aplican a <strong id="rec-period-label"></strong></p>
     <div class="sel-bar">
       <button class="btn btn-g bsm" onclick="selAll(true)">✓ Todos</button>
@@ -1478,7 +1478,7 @@ async function renderMain(){
 
     <!-- Recurrentes -->
     <div class="sec">
-      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> Recurrentes</span><button class="btn btn-t bsm" onclick="event.stopPropagation();window._showRec()" style="margin-left:auto;margin-right:4px">Seleccionar</button><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Recurrentes</span><button class="btn btn-t bsm" onclick="event.stopPropagation();window._showRec()" style="margin-left:auto;margin-right:4px">Seleccionar</button><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       <div class="sec-body" id="rec-list"></div>
     </div>
 
@@ -1587,7 +1587,7 @@ async function renderMonthly(){
 
     <!-- Recurrentes -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">🔁 Recurrentes</span></div>
+      <div class="sec-hdr"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Recurrentes</span></div>
       <div class="sec-body">
         <button class="btn btn-t bsm" onclick="window._showRec()">Seleccionar y aplicar →</button>
         <div style="margin-top:10px" id="rec-list"></div>
@@ -1805,7 +1805,7 @@ function renderItems(items,readonly=false){
   ${s.map(i=>`<tr>
     <td class="hide-mobile" style="color:var(--text3);font-size:10px;white-space:nowrap">${i.ref||'—'}</td>
     <td class="hide-mobile" style="color:var(--text3);white-space:nowrap;font-size:11px">${i.date||'-'}</td>
-    <td class="td-desc"><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec">🔁</span>':''}<span class="td-meta">${[i.ref&&i.ref!=='—'?i.ref:'',i.date||'',i.cat||''].filter(Boolean).join(' · ')}</span></td>
+    <td class="td-desc"><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec" style="display:inline-flex;align-items:center;gap:2px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg></span>':''}<span class="td-meta">${[i.ref&&i.ref!=='—'?i.ref:'',i.date||'',i.cat||''].filter(Boolean).join(' · ')}</span></td>
     <td class="hide-mobile"><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
     ${readonly?'':`<td class="hide-mobile" style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td class="td-del"><div class="act-btns"><button class="act-btn teal" onclick="window._editItemCat(${i.id},${i._q||'null'},this)" title="Cambiar categoría"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg></button><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td>`}
@@ -1819,7 +1819,7 @@ async function renderRecList(){
   const total=lista.reduce((a,r)=>a+r.amount,0);
   el.innerHTML=`<table class="rec-tbl"><thead><tr><th>Descripción</th><th class="hide-mobile">Categoría</th><th style="text-align:right">Valor</th><th>Acciones</th></tr></thead><tbody>
   ${lista.map(r=>`<tr>
-    <td class="td-desc" style="font-weight:600">${r.desc}${r.ref?`<span class="td-meta">${r.ref}</span>`:''}</td>
+    <td class="td-desc"><span style="font-weight:600">${r.desc}</span>${r.ref?`<div style="font-size:10px;color:var(--text3);margin-top:2px;font-weight:400">${r.ref}</div>`:''}</td>
     <td class="hide-mobile"><span class="cc" style="background:${getCatColor(r.cat)}"></span><span class="badge b-cat">${r.cat}</span></td>
     <td class="amt-cell">${fmtCOP(r.amount,'amt-red')}</td>
     <td class="td-acts" style="white-space:nowrap">
@@ -1955,7 +1955,7 @@ window._showRec=async()=>{
   grid.innerHTML=lista.map(r=>`
     <label class="rec-item" id="ri-${r.id}">
       <input type="checkbox" onchange="window._onRecCk(this,${r.id})" value="${r.id}" data-amt="${r.amount}" data-desc="${encodeURIComponent(r.desc)}" data-cat="${r.cat}" data-ref="${r.ref||''}">
-      <div class="rec-item-info"><div class="rec-item-name">${r.desc}</div><div class="rec-item-cat"><span class="cc" style="background:${getCatColor(r.cat)}"></span>${r.cat}</div></div>
+      <div class="rec-item-info"><div class="rec-item-name">${r.desc}</div>${r.ref?`<div style="font-size:10px;color:var(--text3);margin:-1px 0 1px">${r.ref}</div>`:''}<div class="rec-item-cat"><span class="cc" style="background:${getCatColor(r.cat)}"></span>${r.cat}</div></div>
       <div style="flex-shrink:0">${fmtCOP(r.amount,'amt-red')}</div>
     </label>`).join('');
   updateSelTotal();
