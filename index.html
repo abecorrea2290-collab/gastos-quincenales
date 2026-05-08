@@ -1490,7 +1490,7 @@ async function renderMain(){
       ${extra>0?`<div class="card c-orange"><div class="clbl">Ingresos extra</div><div class="cval">${fmtCOP(extra,'amt-orange')}</div></div>`:''}
       <div class="card c-blue"><div class="clbl">Total disponible</div><div class="cval">${fmtCOP(totalIn,'amt-blue')}</div><div class="csub">Ing + sobrante${extra>0?' + extra':''}</div></div>
       <div class="card c-red"><div class="clbl">Gastos</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${items.length} movimientos</div></div>
-      ${(()=>{const balA=bal+AJUSTE.monto;return`<div class="card ${balA>=0?'c-green':'c-red'}"><div class="clbl">Saldo${AJUSTE.monto!==0?`<span style="font-size:8px;font-weight:700;color:var(--warning);margin-left:4px;text-transform:uppercase;letter-spacing:.5px">ajustado</span>`:''}</div><div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div><div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}${AJUSTE.monto!==0?` · Δ${AJUSTE.monto>0?'+':''}${fmtPlain(AJUSTE.monto)}`:''}</div></div>`;})()}
+      ${(()=>{const balA=bal+AJUSTE.monto;return`<div class="card ${balA>=0?'c-green':'c-red'}"><div class="clbl">Saldo</div><div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div><div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}</div></div>`;})()}
       <div class="card ${pct>BUDGET_ALERT?'c-red':pct>BUDGET_WARN?'c-orange':'c-blue'}">
         <div class="clbl">% Gastado</div>
         <div class="cval ${pct>BUDGET_ALERT?'red':pct>BUDGET_WARN?'orange':'blue'}">${pct}%</div>
