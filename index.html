@@ -753,7 +753,30 @@ input:checked+.sldr:before{transform:translateX(16px)}
       <button class="btn btn-t" onclick="fixSobrantes()" style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Corregir sobrantes huérfanos</button>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-bottom:8px">Corregir sobrantes elimina transferencias en quincenas sin ingreso registrado</div>
-    <div class="modal-btns"><button class="btn btn-g" onclick="hideClean()">Cancelar</button></div>
+
+    <!-- Conciliación bancaria -->
+    <div style="border-top:1px solid var(--border);margin:8px -4px 0;padding-top:14px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span style="font-size:13px;font-weight:700">Conciliación bancaria</span>
+      </div>
+      <p class="sub" style="margin-bottom:10px">Si el saldo de la app no coincide con tu banco, ingresa la diferencia (positiva o negativa) para corregir el total mostrado.</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="fg"><label>Diferencia (+/-) en COP</label>
+          <div class="fw"><input type="text" id="ajuste-amt" inputmode="numeric" placeholder="Ej: 150000 o -50000" oninput="window.onAjusteInput(this)" style="padding-left:10px"></div>
+        </div>
+        <div class="fg"><label>Descripción (opcional)</label>
+          <input type="text" id="ajuste-nota" placeholder="Ej: Comisión bancaria no registrada">
+        </div>
+        <button class="btn btn-p bsm" onclick="window.guardarAjuste()" style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Aplicar ajuste
+        </button>
+        <div id="ajuste-info"></div>
+      </div>
+    </div>
+
+    <div class="modal-btns"><button class="btn btn-g" onclick="hideClean()">Cerrar</button></div>
   </div>
 </div>
 
@@ -1025,6 +1048,53 @@ const userRef=()=>`usuarios/${currentUser.uid}`;
 const periodoRef=(y,m,q)=>`${userRef()}/periodos/${y}_${m}_${q}`;
 const recRef=()=>`${userRef()}/config/recurrentes`;
 const catsRef=()=>`${userRef()}/config/categorias`;
+const ajusteRef=()=>`${userRef()}/config/ajuste`;
+
+let AJUSTE={monto:0,nota:''};
+async function getAjuste(){
+  try{
+    const snap=await getDoc(doc(db,ajusteRef()));
+    AJUSTE=snap.exists()?{monto:snap.data().monto||0,nota:snap.data().nota||''}:{monto:0,nota:''};
+  }catch(e){AJUSTE={monto:0,nota:''};}
+}
+async function _saveAjuste(monto,nota){
+  await setDoc(doc(db,ajusteRef()),{monto,nota,updatedAt:serverTimestamp()});
+  AJUSTE={monto,nota};
+}
+window.guardarAjuste=async()=>{
+  const raw=document.getElementById('ajuste-amt').value.replace(/\./g,'').replace(',','.');
+  const monto=Math.round(parseFloat(raw.replace(/[^0-9\-]/g,''))||0);
+  const nota=(document.getElementById('ajuste-nota').value||'').trim();
+  await _saveAjuste(monto,nota);
+  _renderAjusteInfo();
+  viewMode==='m'?renderMonthly():renderMain();
+  toast('✓ Ajuste de conciliación guardado');
+};
+window.quitarAjuste=async()=>{
+  if(!confirm('¿Quitar el ajuste de conciliación?'))return;
+  await _saveAjuste(0,'');
+  document.getElementById('ajuste-amt').value='';
+  document.getElementById('ajuste-nota').value='';
+  _renderAjusteInfo();
+  viewMode==='m'?renderMonthly():renderMain();
+  toast('✓ Ajuste eliminado');
+};
+function _renderAjusteInfo(){
+  const el=document.getElementById('ajuste-info');if(!el)return;
+  if(AJUSTE.monto!==0){
+    const sign=AJUSTE.monto>0?'+':'';
+    el.innerHTML=`<div class="banner ban-i" style="margin-top:8px;display:flex;align-items:center;gap:8px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Activo: <strong>${sign}${fmtPlain(AJUSTE.monto)}</strong>${AJUSTE.nota?` · ${AJUSTE.nota}`:''}</span>
+      <button class="btn btn-d bsm" onclick="window.quitarAjuste()" style="margin-left:auto;padding:3px 8px">Quitar</button>
+    </div>`;
+  }else{el.innerHTML='';}
+}
+window.onAjusteInput=function(el){
+  const neg=el.value.startsWith('-');
+  const digits=el.value.replace(/[^\d]/g,'');
+  el.value=(neg?'-':'')+(digits?parseInt(digits).toLocaleString('es-CO'):'');
+};
 
 async function getCats(){
   try{
@@ -1184,6 +1254,7 @@ onAuthStateChanged(auth,async user=>{
 async function initApp(){
   setSyncStatus('syncing','Cargando…');
   await getCats(); // cargar categorías personalizadas
+  await getAjuste(); // cargar ajuste de conciliación
   CP=await getActivePeriodFromDB();
   CY=CP.y;
   viewMode='q';
@@ -1419,7 +1490,7 @@ async function renderMain(){
       ${extra>0?`<div class="card c-orange"><div class="clbl">Ingresos extra</div><div class="cval">${fmtCOP(extra,'amt-orange')}</div></div>`:''}
       <div class="card c-blue"><div class="clbl">Total disponible</div><div class="cval">${fmtCOP(totalIn,'amt-blue')}</div><div class="csub">Ing + sobrante${extra>0?' + extra':''}</div></div>
       <div class="card c-red"><div class="clbl">Gastos</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${items.length} movimientos</div></div>
-      <div class="card ${bal>=0?'c-green':'c-red'}"><div class="clbl">Saldo</div><div class="cval">${fmtCOP(bal,bal>=0?'amt-green':'amt-red')}</div><div class="csub">${bal>=0?'→ siguiente Q':'Déficit'}</div></div>
+      ${(()=>{const balA=bal+AJUSTE.monto;return`<div class="card ${balA>=0?'c-green':'c-red'}"><div class="clbl">Saldo${AJUSTE.monto!==0?`<span style="font-size:8px;font-weight:700;color:var(--warning);margin-left:4px;text-transform:uppercase;letter-spacing:.5px">ajustado</span>`:''}</div><div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div><div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}${AJUSTE.monto!==0?` · Δ${AJUSTE.monto>0?'+':''}${fmtPlain(AJUSTE.monto)}`:''}</div></div>`;})()}
       <div class="card ${pct>BUDGET_ALERT?'c-red':pct>BUDGET_WARN?'c-orange':'c-blue'}">
         <div class="clbl">% Gastado</div>
         <div class="cval ${pct>BUDGET_ALERT?'red':pct>BUDGET_WARN?'orange':'blue'}">${pct}%</div>
@@ -2346,7 +2417,16 @@ window.showChangelog=()=>{
 window.hideChangelog=()=>document.getElementById('changelog-modal').style.display='none';
 
 // ── LIMPIEZA ──────────────────────────────────────────────────────────
-window.showClean=()=>{document.getElementById('cyl').textContent=CY;document.getElementById('clean-modal').style.display='flex';};
+window.showClean=()=>{
+  document.getElementById('cyl').textContent=CY;
+  document.getElementById('clean-modal').style.display='flex';
+  // Pre-cargar valores de ajuste
+  const amtEl=document.getElementById('ajuste-amt');
+  const notaEl=document.getElementById('ajuste-nota');
+  if(amtEl) amtEl.value=AJUSTE.monto?AJUSTE.monto.toLocaleString('es-CO'):'';
+  if(notaEl) notaEl.value=AJUSTE.nota||'';
+  _renderAjusteInfo();
+};
 window.hideClean=()=>document.getElementById('clean-modal').style.display='none';
 
 window.fixSobrantes=async()=>{
