@@ -1050,46 +1050,81 @@ const recRef=()=>`${userRef()}/config/recurrentes`;
 const catsRef=()=>`${userRef()}/config/categorias`;
 const ajusteRef=()=>`${userRef()}/config/ajuste`;
 
-let AJUSTE={monto:0,nota:''};
+// Lista acumulada de nivelaciones — cada entrada persiste independientemente
+let AJUSTE_LISTA=[];
+const ajusteTotal=()=>AJUSTE_LISTA.reduce((s,e)=>s+e.monto,0);
+
 async function getAjuste(){
   try{
     const snap=await getDoc(doc(db,ajusteRef()));
-    AJUSTE=snap.exists()?{monto:snap.data().monto||0,nota:snap.data().nota||''}:{monto:0,nota:''};
-  }catch(e){AJUSTE={monto:0,nota:''};}
+    if(snap.exists()){
+      const data=snap.data();
+      // Migrar formato anterior (campo monto único) a lista
+      if(Array.isArray(data.lista)){
+        AJUSTE_LISTA=data.lista;
+      } else if(data.monto&&data.monto!==0){
+        AJUSTE_LISTA=[{id:Date.now(),monto:data.monto,nota:data.nota||'Nivelación anterior',fecha:new Date().toISOString().split('T')[0]}];
+      } else {
+        AJUSTE_LISTA=[];
+      }
+    } else { AJUSTE_LISTA=[]; }
+  }catch(e){AJUSTE_LISTA=[];}
 }
-async function _saveAjuste(monto,nota){
-  await setDoc(doc(db,ajusteRef()),{monto,nota,updatedAt:serverTimestamp()});
-  AJUSTE={monto,nota};
+async function _persistAjuste(){
+  await setDoc(doc(db,ajusteRef()),{lista:AJUSTE_LISTA,updatedAt:serverTimestamp()});
 }
+
 window.guardarAjuste=async()=>{
   const raw=document.getElementById('ajuste-amt').value.replace(/\./g,'').replace(',','.');
   const monto=Math.round(parseFloat(raw.replace(/[^0-9\-]/g,''))||0);
+  if(monto===0){toast('Ingresa un monto diferente de cero');return;}
   const nota=(document.getElementById('ajuste-nota').value||'').trim();
-  await _saveAjuste(monto,nota);
-  _renderAjusteInfo();
-  viewMode==='m'?renderMonthly():renderMain();
-  toast('✓ Ajuste de conciliación guardado');
-};
-window.quitarAjuste=async()=>{
-  if(!confirm('¿Quitar el ajuste de conciliación?'))return;
-  await _saveAjuste(0,'');
+  const fecha=new Date().toISOString().split('T')[0];
+  AJUSTE_LISTA.push({id:Date.now(),monto,nota,fecha});
+  await _persistAjuste();
   document.getElementById('ajuste-amt').value='';
   document.getElementById('ajuste-nota').value='';
   _renderAjusteInfo();
   viewMode==='m'?renderMonthly():renderMain();
-  toast('✓ Ajuste eliminado');
+  toast('✓ Nivelación registrada');
 };
+
+window.quitarAjusteItem=async(id)=>{
+  if(!confirm('¿Eliminar esta nivelación del historial?'))return;
+  AJUSTE_LISTA=AJUSTE_LISTA.filter(e=>e.id!==id);
+  await _persistAjuste();
+  _renderAjusteInfo();
+  viewMode==='m'?renderMonthly():renderMain();
+  toast('✓ Nivelación eliminada');
+};
+
 function _renderAjusteInfo(){
   const el=document.getElementById('ajuste-info');if(!el)return;
-  if(AJUSTE.monto!==0){
-    const sign=AJUSTE.monto>0?'+':'';
-    el.innerHTML=`<div class="banner ban-i" style="margin-top:8px;display:flex;align-items:center;gap:8px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span>Activo: <strong>${sign}${fmtPlain(AJUSTE.monto)}</strong>${AJUSTE.nota?` · ${AJUSTE.nota}`:''}</span>
-      <button class="btn btn-d bsm" onclick="window.quitarAjuste()" style="margin-left:auto;padding:3px 8px">Quitar</button>
+  if(!AJUSTE_LISTA.length){el.innerHTML='<p style="font-size:11px;color:var(--text3);margin-top:6px">Sin nivelaciones registradas.</p>';return;}
+  const total=ajusteTotal();
+  const signT=total>=0?'+':'';
+  el.innerHTML=`
+    <div style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Historial de nivelaciones</span>
+        <span style="font-size:12px;font-weight:800;color:${total>=0?'var(--accent)':'var(--danger)'}">Total: ${signT}${fmtPlain(total)}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto">
+        ${AJUSTE_LISTA.slice().reverse().map(e=>{
+          const sign=e.monto>=0?'+':'';
+          return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px">
+            <span style="font-weight:800;color:${e.monto>=0?'var(--accent)':'var(--danger)'}; min-width:80px">${sign}${fmtPlain(e.monto)}</span>
+            <span style="color:var(--text2);flex:1">${e.nota||'Sin descripción'}</span>
+            <span style="color:var(--text3);white-space:nowrap;font-size:10px">${e.fecha}</span>
+            <button class="act-btn danger" onclick="window.quitarAjusteItem(${e.id})" title="Eliminar" style="flex-shrink:0;width:24px;height:24px">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
     </div>`;
-  }else{el.innerHTML='';}
 }
+
 window.onAjusteInput=function(el){
   const neg=el.value.startsWith('-');
   const digits=el.value.replace(/[^\d]/g,'');
@@ -1490,7 +1525,7 @@ async function renderMain(){
       ${extra>0?`<div class="card c-orange"><div class="clbl">Ingresos extra</div><div class="cval">${fmtCOP(extra,'amt-orange')}</div></div>`:''}
       <div class="card c-blue"><div class="clbl">Total disponible</div><div class="cval">${fmtCOP(totalIn,'amt-blue')}</div><div class="csub">Ing + sobrante${extra>0?' + extra':''}</div></div>
       <div class="card c-red"><div class="clbl">Gastos</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${items.length} movimientos</div></div>
-      ${(()=>{const balA=bal+AJUSTE.monto;return`<div class="card ${balA>=0?'c-green':'c-red'}"><div class="clbl">Saldo</div><div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div><div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}</div></div>`;})()}
+      ${(()=>{const balA=bal+ajusteTotal();return`<div class="card ${balA>=0?'c-green':'c-red'}"><div class="clbl">Saldo</div><div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div><div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}</div></div>`;})()}
       <div class="card ${pct>BUDGET_ALERT?'c-red':pct>BUDGET_WARN?'c-orange':'c-blue'}">
         <div class="clbl">% Gastado</div>
         <div class="cval ${pct>BUDGET_ALERT?'red':pct>BUDGET_WARN?'orange':'blue'}">${pct}%</div>
@@ -2420,11 +2455,11 @@ window.hideChangelog=()=>document.getElementById('changelog-modal').style.displa
 window.showClean=()=>{
   document.getElementById('cyl').textContent=CY;
   document.getElementById('clean-modal').style.display='flex';
-  // Pre-cargar valores de ajuste
+  // Limpiar campos de nueva entrada y renderizar historial
   const amtEl=document.getElementById('ajuste-amt');
   const notaEl=document.getElementById('ajuste-nota');
-  if(amtEl) amtEl.value=AJUSTE.monto?AJUSTE.monto.toLocaleString('es-CO'):'';
-  if(notaEl) notaEl.value=AJUSTE.nota||'';
+  if(amtEl) amtEl.value='';
+  if(notaEl) notaEl.value='';
   _renderAjusteInfo();
 };
 window.hideClean=()=>document.getElementById('clean-modal').style.display='none';
