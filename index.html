@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/assets/icon-512.png">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
-<title>Gastos GQ v1.5.1</title>
+<title>Gastos GQ v1.5.2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -1035,6 +1035,10 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  { ver:'1.5.2', date:'2026-08-28', changes:[
+    'Corregido: la app abría automáticamente en la quincena anterior (ej. julio) en vez de la vigente cuando aún no se había registrado el ingreso de la quincena actual',
+    'getActivePeriodFromDB ya no retrocede por falta de ingreso — solo avanza si la quincena vigente ya fue marcada como cerrada',
+  ]},
   { ver:'1.5.1', date:'2026-08-28', changes:[
     'Corregido: los íconos del manifest declaraban 192×192 y 512×512 pero el archivo real medía 1254×1254 en JPEG — Chrome rechazaba la validación y no generaba un WebAPK real en Android, causando que el PWA se desinstalara solo al reiniciar el teléfono',
     'Nuevos íconos PNG generados con el tamaño exacto declarado (192×192, 512×512 y una variante maskable con zona segura)',
@@ -1685,24 +1689,21 @@ window.setCatFilter=function(cat){
   refreshItemsTable();
 };
 
-// Versión async: busca la primera quincena no cerrada con ingreso, o la siguiente a la última cerrada
+// Versión async: la quincena vigente según calendario, salvo que ya esté
+// cerrada — en ese caso avanza a la siguiente. Ya NO retrocede solo porque
+// aún no se haya registrado el ingreso: eso hacía que la app abriera en la
+// quincena anterior en vez de la vigente al iniciar un período nuevo.
 async function getActivePeriodFromDB(){
   const base=getActivePeriod();
   try{
     const d=await getPeriodo(base.y,base.m,base.q);
-    // Si la quincena base está cerrada → pasar a la siguiente
     if(d.closed){
       const next=base.q===1?{y:base.y,m:base.m,q:2}:
         base.m===11?{y:base.y+1,m:0,q:1}:{y:base.y,m:base.m+1,q:1};
       return next;
     }
-    // Si tiene ingreso y no está cerrada → es la activa
-    if(d.income&&d.income>0) return base;
   }catch(e){}
-  // Sin ingreso → la activa es la anterior
-  const prev=prevQ(base.y,base.m,base.q);
-  if(prev.y<MIN_YEAR) return base;
-  return prev;
+  return base;
 }
 
 // ── VISTA ACTIVA ──────────────────────────────────────────────────────
