@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/assets/icon-512.png">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
-<title>Gastos GQ v1.5.2</title>
+<title>Gastos GQ v1.5.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -1035,6 +1035,10 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  { ver:'1.5.3', date:'2026-08-28', changes:[
+    'Corregido el bug de fondo: getActivePeriod() mapeaba mal los días del mes a la quincena — días 16-31 mostraban la Q1 del mes actual (ya pagada, vencida) en vez de la Q2 vigente, y días 1-15 mostraban la Q2 del mes anterior en vez de la Q1 vigente',
+    'Ahora el mapeo es directo: días 1-15 → Q1 del mes actual, días 16-fin → Q2 del mes actual, igual que el resto de la app (agregar gasto, favoritos)',
+  ]},
   { ver:'1.5.2', date:'2026-08-28', changes:[
     'Corregido: la app abría automáticamente en la quincena anterior (ej. julio) en vez de la vigente cuando aún no se había registrado el ingreso de la quincena actual',
     'getActivePeriodFromDB ya no retrocede por falta de ingreso — solo avanza si la quincena vigente ya fue marcada como cerrada',
@@ -1589,13 +1593,16 @@ async function limpiarSobrantesHuerfanos(y){
   if(limpiados>0) toast(`🧹 ${limpiados} sobrante${limpiados!==1?'s':''} huérfano${limpiados!==1?'s':''} eliminado${limpiados!==1?'s':''}`);
 }
 
-// Quincena base según día del mes (sin Firebase)
+// Quincena base según día del mes (sin Firebase).
+// Días 1-15 → Q1 del mes actual (se paga el día 15).
+// Días 16-fin → Q2 del mes actual (se paga a fin de mes).
+// Antes esto estaba invertido/desplazado un mes — hacía que la app abriera
+// en la quincena equivocada (ej. mostraba Q1 del mes actual cuando ya
+// estabas en plena Q2, o Q2 del mes anterior en los primeros días del mes).
 function getActivePeriod(){
   const now=new Date();
   const d=now.getDate(), m=now.getMonth(), y=now.getFullYear();
-  let result;
-  if(d<=15){ if(m===0) result={y:y-1,m:11,q:2}; else result={y,m:m-1,q:2}; }
-  else { result={y,m,q:1}; }
+  let result={y,m,q:d<=15?1:2};
   if(result.y<MIN_YEAR) result={y:MIN_YEAR,m:0,q:1};
   return result;
 }
