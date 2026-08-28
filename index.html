@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/jpeg" href="/assets/logo-icon.jpg">
 <link rel="apple-touch-icon" href="/assets/logo-icon.jpg">
-<title>Gastos GQ v1.3.2</title>
+<title>Gastos GQ v1.4.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -28,7 +28,8 @@
   --info:#539df5;--info-light:rgba(83,157,245,0.1);
   --purple:#a29bfe;--purple-light:rgba(162,155,254,0.1);
   --teal:#00cec9;--teal-light:rgba(0,206,201,0.1);
-  --radius:8px;--radius-sm:4px;--shadow:0 4px 20px rgba(0,0,0,.4);
+  --radius:8px;--radius-sm:4px;--radius-md:10px;
+  --shadow:0 4px 20px rgba(0,0,0,.4);--shadow-heavy:0 8px 32px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
@@ -436,6 +437,44 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .conf-baja{background:var(--warning-light);color:var(--warning)}
 .conf-muyBaja{background:var(--danger-light);color:var(--danger)}
 .est-range{font-size:10px;color:var(--text3);white-space:nowrap}
+
+/* ── QUICK AMOUNT BUTTONS ────────────────────────────────────────── */
+.qty-btns{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.qty-btn{border:1px solid var(--border);background:transparent;color:var(--text3);border-radius:500px;padding:3px 11px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 120ms;white-space:nowrap}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.qty-btn:active{transform:scale(.95)}
+
+/* ── INSIGHT CHIPS ───────────────────────────────────────────────── */
+.insight-row{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.insight-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:500px;font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap}
+.ic-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.insight-chip .ic-pct{font-size:10px;color:var(--text3);font-weight:700}
+
+/* ── TREND INDICATORS ────────────────────────────────────────────── */
+.card-trend{font-size:9px;font-weight:700;display:flex;align-items:center;gap:2px;margin-top:3px;letter-spacing:.3px;line-height:1}
+.trend-up{color:var(--accent)}.trend-dn{color:var(--danger)}.trend-nc{color:var(--text3)}
+
+/* ── CATEGORY FILTER BAR ─────────────────────────────────────────── */
+.cf-bar{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.cf-bar::-webkit-scrollbar{display:none}
+.cf-chip{flex-shrink:0;padding:4px 11px;border-radius:500px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 120ms}
+.cf-chip:hover{border-color:var(--text2);color:var(--text2)}
+.cf-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+/* ── ENHANCED CARDS ──────────────────────────────────────────────── */
+.card{transition:transform 120ms}
+.card:hover{transform:translateY(-1px)}
+.cval-sub{font-size:9px;color:var(--text3);margin-top:1px;display:block}
+
+/* ── FORM IMPROVEMENTS ───────────────────────────────────────────── */
+.form-divider{width:100%;height:1px;background:var(--border);margin:4px 0}
+.form-hint{font-size:10px;color:var(--text3);margin-top:-2px}
+
+/* ── PERIOD BAR (burn rate) ──────────────────────────────────────── */
+.burn-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap}
+.burn-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.burn-value{font-size:13px;font-weight:800;color:var(--text)}
+.burn-sep{color:var(--border2);margin:0 4px}
 
 </style>
 </head>
@@ -919,6 +958,18 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  { ver:'1.4.0', date:'2026-08-27', changes:[
+    'Overhaul completo de UX: mejor ingreso de datos, análisis estadístico y diseño visual',
+    'Indicadores de tendencia en tarjetas: ↑/↓ comparado con quincena anterior',
+    'Chips de categorías destacadas debajo de las tarjetas de resumen',
+    'Botones de monto rápido en el formulario: 50K, 100K, 200K, 500K',
+    'Categoría recordada automáticamente entre sesiones',
+    'Filtro por categoría en la tabla de movimientos',
+    'Tasa de gasto diario (~$/día) en la tarjeta de % Gastado',
+    'Secciones con iconos SVG alineados en vista mensual',
+    'Secciones del mes colapsables (consistente con vista quincenal)',
+    'Variables CSS faltantes añadidas: --radius-md, --shadow-heavy',
+  ]},
   { ver:'1.3.2', date:'2026-05-02', changes:[
     'Nuevo panel Estimación Estadística debajo de Préstamos en barra lateral',
     'Proyección separada Q1 (del 15) y Q2 (fin de mes) con ingreso promedio independiente',
@@ -1041,6 +1092,11 @@ const CHANGELOG=[
 const MIN_YEAR = 2026;
 let CY=Math.max(new Date().getFullYear(), MIN_YEAR), CP=null, charts={}, dashCharts={};
 let currentUser=null, cache={}, viewMode='q';
+function lsGet(k,def=''){try{return localStorage.getItem(k)||def;}catch(e){return def;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+let lastCat=lsGet('gq_lastCat');
+let _catFilter=null;
+let _allItemsCache=[];
 let editRecId=null;
 
 // ── FIREBASE HELPERS ──────────────────────────────────────────────────
@@ -1341,6 +1397,89 @@ function getActivePeriod(){
 
 function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
 
+// ── HELPERS DE ANÁLISIS ───────────────────────────────────────────────
+
+function buildInsightsRow(items, totalOut){
+  if(!items.length||totalOut<=0) return '';
+  const t={};
+  items.forEach(i=>{ if(i.cat&&i.amount) t[i.cat]=(t[i.cat]||0)+i.amount; });
+  const sorted=Object.entries(t).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  if(!sorted.length) return '';
+  const chips=sorted.map(([cat,val])=>{
+    const pct=Math.round(val/totalOut*100);
+    const clr=getCatColor(cat);
+    return `<span class="insight-chip"><span class="ic-dot" style="background:${clr}"></span>${cat}<span class="ic-pct">${pct}%</span></span>`;
+  }).join('');
+  return `<div class="insight-row">${chips}</div>`;
+}
+
+function buildTrendBadge(current, previous, invertColors){
+  if(!previous||previous===0) return '';
+  const delta=current-previous;
+  const pct=Math.round(Math.abs(delta)/previous*100);
+  if(pct<2) return `<div class="card-trend trend-nc">≈ Sin cambio</div>`;
+  const arrow=delta>0?'↑':'↓';
+  let cls;
+  if(invertColors) cls=delta>0?'trend-up':'trend-dn';
+  else cls=delta>0?'trend-dn':'trend-up';
+  const label=delta>0?`+${pct}% vs anterior`:`-${pct}% vs anterior`;
+  return `<div class="card-trend ${cls}">${arrow} ${label}</div>`;
+}
+
+function buildExpenseFormHTML(mode){
+  const catOptions=CATS.map(c=>`<option${c===lastCat?' selected':''}>${c}</option>`).join('');
+  const addFn=mode==='q'?'window._addItem()':'window._addItemMensual()';
+  return `
+    <div class="form" id="gasto-form">
+      <div class="fg" style="min-width:90px;max-width:110px"><label>Referencia</label><input type="text" id="iref" placeholder="**** 1234" maxlength="20"></div>
+      <div class="fg grow"><label>Descripción</label><input type="text" id="idesc" placeholder="Ej: Arriendo, Mercado…" autocomplete="off"></div>
+      <div class="fg wsm">
+        <label>Valor (COP)</label>
+        <div class="fw"><input type="text" id="iamt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div>
+        <div class="qty-btns">
+          <button type="button" class="qty-btn" onclick="setQty(50000)">50K</button>
+          <button type="button" class="qty-btn" onclick="setQty(100000)">100K</button>
+          <button type="button" class="qty-btn" onclick="setQty(200000)">200K</button>
+          <button type="button" class="qty-btn" onclick="setQty(500000)">500K</button>
+        </div>
+      </div>
+      <div class="fg"><label>Categoría</label><select id="icat">${catOptions}</select></div>
+      <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
+        <div class="tog-row"><label class="tog"><input type="checkbox" id="irec"><span class="sldr"></span></label>Recurrente</div>
+      </div>
+      <button class="btn btn-p" onclick="${addFn}" style="align-self:flex-end">Agregar</button>
+    </div>`;
+}
+
+window.setQty=function(n){
+  const el=document.getElementById('iamt');
+  if(!el)return;
+  el.value=n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  el.focus();
+};
+
+function renderCatFilter(items){
+  const el=document.getElementById('cat-filter');if(!el)return;
+  const cats=[...new Set(items.map(i=>i.cat).filter(Boolean))].sort();
+  if(cats.length<2){el.innerHTML='';return;}
+  const allCls=_catFilter===null?'cf-chip active':'cf-chip';
+  const chips=[`<button class="${allCls}" onclick="setCatFilter(null)">Todos</button>`];
+  cats.forEach(c=>{
+    const cls=_catFilter===c?'cf-chip active':'cf-chip';
+    const clr=getCatColor(c);
+    chips.push(`<button class="${cls}" onclick="setCatFilter('${c.replace(/'/g,"&#39;")}')" style="_border-color:${clr}">${c}</button>`);
+  });
+  el.innerHTML=`<div class="cf-bar">${chips.join('')}</div>`;
+}
+
+window.setCatFilter=function(cat){
+  _catFilter=cat;
+  const items=_catFilter?_allItemsCache.filter(i=>i.cat===_catFilter):_allItemsCache;
+  renderCatFilter(_allItemsCache);
+  renderItems(items,viewMode==='m'?false:false);
+};
+
 // Versión async: busca la primera quincena no cerrada con ingreso, o la siguiente a la última cerrada
 async function getActivePeriodFromDB(){
   const base=getActivePeriod();
@@ -1472,7 +1611,8 @@ function renderTabs(){
 async function renderMain(){
   const{m,q}=CP;const y=CY;
   document.getElementById('content').innerHTML=`<div style="padding:28px;text-align:center;color:var(--text3)"><div class="spinner" style="width:22px;height:22px;border-color:rgba(30,107,69,.2);border-top-color:var(--accent);margin:0 auto 8px"></div>Cargando…</div>`;
-  const data=await getPeriodo(y,m,q);
+  const pq=prevQ(y,m,q);
+  const [data, prevData]=await Promise.all([getPeriodo(y,m,q), getPeriodo(pq.y,pq.m,pq.q)]);
   // El sobrante solo se transfiere al registrar el ingreso (_setIncome)
   // No se recalcula automáticamente en cada render
   const items=data.items||[];
@@ -1520,18 +1660,49 @@ async function renderMain(){
     </div>
     ${data.transferIn>0?`<div class="banner ban-i">↩ <strong>${data.transferLabel}:</strong>&nbsp;${fmtCOP(data.transferIn,'amt-blue')} sumado al disponible</div>`:''}
 
+    ${(()=>{
+      const prevOut=(prevData.items||[]).reduce((a,i)=>a+i.amount,0);
+      const prevIn=(prevData.income||0)+(prevData.transferIn||0)+((prevData.extraIncome||[]).reduce((a,i)=>a+i.amount,0));
+      const balA=bal+ajusteTotal();
+      const trendGastos=buildTrendBadge(totalOut,prevOut,false);
+      const trendIngresos=buildTrendBadge(data.income,prevData.income||0,true);
+      const today2=new Date();today2.setHours(0,0,0,0);
+      const daysInQ=q===1?15:new Date(y,m+1,0).getDate()-15;
+      const elapsed=Math.max(0,Math.min(daysInQ,q===1?today2.getDate()-1:today2.getDate()-15));
+      const burnRate=elapsed>0?Math.round(totalOut/elapsed):0;
+      return `
     <div class="cards">
-      <div class="card c-green"><div class="clbl">Ingreso base</div><div class="cval">${fmtCOP(data.income,'amt-green')}</div></div>
+      <div class="card c-green">
+        <div class="clbl">Ingreso base</div>
+        <div class="cval">${fmtCOP(data.income,'amt-green')}</div>
+        ${trendIngresos}
+      </div>
       ${extra>0?`<div class="card c-orange"><div class="clbl">Ingresos extra</div><div class="cval">${fmtCOP(extra,'amt-orange')}</div></div>`:''}
-      <div class="card c-blue"><div class="clbl">Total disponible</div><div class="cval">${fmtCOP(totalIn,'amt-blue')}</div><div class="csub">Ing + sobrante${extra>0?' + extra':''}</div></div>
-      <div class="card c-red"><div class="clbl">Gastos</div><div class="cval">${fmtCOP(totalOut,'amt-red')}</div><div class="csub">${items.length} movimientos</div></div>
-      ${(()=>{const balA=bal+ajusteTotal();return`<div class="card ${balA>=0?'c-green':'c-red'}"><div class="clbl">Saldo</div><div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div><div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}</div></div>`;})()}
+      <div class="card c-blue">
+        <div class="clbl">Total disponible</div>
+        <div class="cval">${fmtCOP(totalIn,'amt-blue')}</div>
+        <div class="csub">Ing + sobrante${extra>0?' + extra':''}</div>
+      </div>
+      <div class="card c-red">
+        <div class="clbl">Gastos</div>
+        <div class="cval">${fmtCOP(totalOut,'amt-red')}</div>
+        <div class="csub">${items.length} movimientos</div>
+        ${trendGastos}
+      </div>
+      <div class="card ${balA>=0?'c-green':'c-red'}">
+        <div class="clbl">Saldo</div>
+        <div class="cval">${fmtCOP(balA,balA>=0?'amt-green':'amt-red')}</div>
+        <div class="csub">${balA>=0?'→ siguiente Q':'Déficit'}</div>
+      </div>
       <div class="card ${pct>BUDGET_ALERT?'c-red':pct>BUDGET_WARN?'c-orange':'c-blue'}">
         <div class="clbl">% Gastado</div>
         <div class="cval ${pct>BUDGET_ALERT?'red':pct>BUDGET_WARN?'orange':'blue'}">${pct}%</div>
         <div class="pbar"><div class="pfill" style="width:${Math.min(100,pct)}%;background:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}"></div></div>
+        ${burnRate>0?`<div class="csub" style="margin-top:4px">~${fmtPlain(burnRate)}/día</div>`:''}
       </div>
     </div>
+    ${buildInsightsRow(items,totalOut)}`;
+    })()}
 
     <!-- Ingreso base -->
     <div class="sec">
@@ -1567,19 +1738,7 @@ async function renderMain(){
     <!-- Gasto -->
     <div class="sec">
       <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Agregar Gasto</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
-      <div class="sec-body">
-        <div class="form">
-          <div class="fg" style="min-width:90px;max-width:110px"><label>Referencia</label><input type="text" id="iref" placeholder="**** 1234" maxlength="20"></div>
-          <div class="fg grow"><label>Descripción</label><input type="text" id="idesc" placeholder="Ej: Arriendo, Mercado…"></div>
-          <div class="fg wsm"><label>Valor (COP)</label><div class="fw"><input type="text" id="iamt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
-          <div class="fg"><label>Categoría</label><select id="icat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-          <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
-          <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
-            <div class="tog-row"><label class="tog"><input type="checkbox" id="irec"><span class="sldr"></span></label>Recurrente</div>
-          </div>
-          <button class="btn btn-p" onclick="window._addItem()" style="align-self:flex-end">Agregar</button>
-        </div>
-      </div>
+      <div class="sec-body">${buildExpenseFormHTML('q')}</div>
     </div>
 
     <!-- Recurrentes -->
@@ -1591,6 +1750,7 @@ async function renderMain(){
     <!-- Movimientos -->
     <div class="sec">
       <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Movimientos — ${MN[m]} Q${q}</span><span style="font-size:10px;color:var(--text3)">${items.length} · ${fmtCOP(totalOut,'amt-red')}</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="sec-body" style="padding-bottom:0"><div id="cat-filter"></div></div>
       <div class="tbl-wrap" id="items-list"></div>
     </div>
 
@@ -1607,12 +1767,15 @@ async function renderMain(){
 
     <!-- Barras año -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">📈 Evolución ${y}</span></div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg> Evolución ${y}</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       <div class="sec-body"><div class="chart-wrap" style="height:200px"><canvas id="cbar"></canvas></div></div>
     </div>`;
 
+  _allItemsCache=items;
+  _catFilter=null;
   renderExtraList(data);
   renderRecList();
+  renderCatFilter(items);
   renderItems(items);
   renderPie(items);
   renderBar(y);
@@ -1645,7 +1808,7 @@ async function renderMonthly(){
   document.getElementById('content').innerHTML=`
 
     <!-- Resumen mensual -->
-    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">📅 ${MN[m]} ${y} — Vista Mensual</div>
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">${MN[m]} ${y} — Vista Mensual</div>
 
     <div class="cards">
       <div class="card c-green"><div class="clbl">Ingresos mes</div><div class="cval">${fmtCOP(totalIn,'amt-green')}</div><div class="csub">Q1 + Q2${extraTotal>0?' + extra':''}</div></div>
@@ -1659,28 +1822,17 @@ async function renderMonthly(){
         <div class="pbar"><div class="pfill" style="width:${Math.min(100,pct)}%;background:${pct>BUDGET_ALERT?'var(--danger)':pct>BUDGET_WARN?'var(--warning)':'var(--info)'}"></div></div>
       </div>
     </div>
+    ${buildInsightsRow(allItems,totalOut)}
 
     <!-- Agregar gasto -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">🛒 Agregar gasto</span></div>
-      <div class="sec-body">
-        <div class="form">
-          <div class="fg" style="min-width:90px;max-width:110px"><label>Referencia</label><input type="text" id="iref" placeholder="**** 1234" maxlength="20"></div>
-          <div class="fg grow"><label>Descripción</label><input type="text" id="idesc" placeholder="Ej: Arriendo, Mercado…"></div>
-          <div class="fg wsm"><label>Valor (COP)</label><div class="fw"><input type="text" id="iamt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div></div>
-          <div class="fg"><label>Categoría</label><select id="icat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-          <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
-          <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
-            <div class="tog-row"><label class="tog"><input type="checkbox" id="irec"><span class="sldr"></span></label>Recurrente</div>
-          </div>
-          <button class="btn btn-p" onclick="window._addItemMensual()" style="align-self:flex-end">Agregar</button>
-        </div>
-      </div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Agregar Gasto</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="sec-body">${buildExpenseFormHTML('m')}</div>
     </div>
 
     <!-- Ingresos adicionales -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">➕ Ingresos adicionales</span></div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Ingresos Adicionales</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       <div class="sec-body">
         <div class="form" style="margin-bottom:8px">
           <div class="fg grow"><label>Descripción</label><input type="text" id="ei-desc" placeholder="Ej: Horas extra, Freelance…"></div>
@@ -1693,25 +1845,24 @@ async function renderMonthly(){
 
     <!-- Recurrentes -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Recurrentes</span></div>
-      <div class="sec-body">
-        <button class="btn btn-t bsm" onclick="window._showRec()">Seleccionar y aplicar →</button>
-        <div style="margin-top:10px" id="rec-list"></div>
-      </div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Recurrentes</span><button class="btn btn-t bsm" onclick="event.stopPropagation();window._showRec()" style="margin-left:auto;margin-right:4px">Seleccionar</button><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="sec-body" id="rec-list"></div>
     </div>
 
     <!-- Movimientos consolidados -->
     <div class="sec">
-      <div class="sec-hdr">
-        <span class="sec-title">📋 Movimientos — ${MN[m]}</span>
-        <span style="font-size:10px;color:var(--text3)">${allItems.length} items · ${fmtCOP(totalOut,'amt-red')}</span>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)">
+        <span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Movimientos — ${MN[m]}</span>
+        <span style="font-size:10px;color:var(--text3)">${allItems.length} · ${fmtCOP(totalOut,'amt-red')}</span>
+        <svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
       </div>
+      <div class="sec-body" style="padding-bottom:0"><div id="cat-filter"></div></div>
       <div class="tbl-wrap" id="items-list"></div>
     </div>
 
     <!-- Dona mensual -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">📊 Distribución del mes</span></div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg> Distribución del mes</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       <div class="sec-body">
         <div class="pie-grid">
           <div class="chart-wrap" style="height:180px"><canvas id="cpie"></canvas></div>
@@ -1722,17 +1873,20 @@ async function renderMonthly(){
 
     <!-- Barras año -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">📈 Evolución ${y}</span></div>
+      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg> Evolución ${y}</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
       <div class="sec-body"><div class="chart-wrap" style="height:200px"><canvas id="cbar"></canvas></div></div>
     </div>`;
 
   window._mAllItems = allItems;
   window._mDQ = {dQ1, dQ2};
+  _allItemsCache=allItems;
+  _catFilter=null;
 
   // En vista mensual los extras e ingresos se muestran consolidados
   const extraCombined={extraIncome:allExtra};
   renderExtraList(extraCombined);
   renderRecList();
+  renderCatFilter(allItems);
   renderItems(allItems, false);
   renderPie(allItems);
   restoreSecState();
@@ -1758,6 +1912,7 @@ window._addItemMensual=async()=>{
   d.items.push({id:Date.now(),ref,desc,amount,cat,date,recurring:rec});
   await savePeriodo(y,m,q,d);
   if(rec){const lista=await getRec();if(!lista.find(r=>r.desc===desc&&r.cat===cat)){lista.push({id:Date.now()+1,desc,amount,cat,ref,history:[]});await saveRec(lista);}}
+  lastCat=cat;lsSet('gq_lastCat',cat);
   document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';document.getElementById('irec').checked=false;
   renderMonthly();
   toast(`✓ Gasto guardado en Q${q}`);
@@ -1854,6 +2009,7 @@ window._addItem=async()=>{
   d.items.push({id:Date.now(),ref,desc,amount,cat,date,recurring:rec});
   await savePeriodo(y,m,q,d);
   if(rec){const lista=await getRec();if(!lista.find(r=>r.desc===desc&&r.cat===cat)){lista.push({id:Date.now()+1,desc,amount,cat,ref,history:[]});await saveRec(lista);}}
+  lastCat=cat;lsSet('gq_lastCat',cat);
   document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';document.getElementById('irec').checked=false;
   viewMode==='m'?renderMonthly():renderMain();
   toast('✓ Gasto guardado en Q'+q);
