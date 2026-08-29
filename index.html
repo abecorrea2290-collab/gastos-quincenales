@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/assets/icon-512.png">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
-<title>Gastos GQ v1.5.3</title>
+<title>Gastos GQ v1.6.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
@@ -155,7 +155,7 @@ td{padding:11px 10px;border-bottom:1px solid var(--border);color:var(--text);ver
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--surface3)}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:500px;font-size:10px;font-weight:700}
-.b-rec{background:var(--info-light);color:var(--info)}.b-cat{background:var(--surface3);color:var(--text2);border:1px solid var(--border)}
+.b-cat{background:var(--surface3);color:var(--text2);border:1px solid var(--border)}
 .cc{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;flex-shrink:0}
 
 /* ── COP AMOUNTS ────────────────────────────────────────────────── */
@@ -218,23 +218,6 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .modal h3{font-size:16px;font-weight:800;margin-bottom:6px;color:#fff}
 .modal .sub{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
-
-/* ── RECURRENTES MODAL ───────────────────────────────────────────── */
-.rec-grid{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.rec-item{display:flex;align-items:center;gap:9px;padding:11px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;background:var(--surface)}
-.rec-item.selected{border-color:var(--accent);background:var(--accent-light)}
-.rec-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-.rec-item-info{flex:1;min-width:0}
-.rec-item-name{font-weight:700;font-size:13px;color:#fff}
-.rec-item-cat{font-size:11px;color:var(--text3);margin-top:1px}
-.rec-sel-total{background:var(--surface);border-radius:var(--radius-sm);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;border:1px solid var(--border)}
-.sel-bar{display:flex;gap:7px;margin-bottom:8px;align-items:center}
-.sel-bar span{font-size:11px;color:var(--text3);flex:1}
-
-/* ── HISTORY ITEMS ───────────────────────────────────────────────── */
-.hist-item{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
-.hist-item:last-child{border-bottom:none}
-.hist-date{font-size:10px;color:var(--text3);margin-bottom:2px}
 
 /* ── TOAST ───────────────────────────────────────────────────────── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#121212;padding:11px 22px;border-radius:500px;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeup .3s ease;white-space:nowrap;max-width:90vw}
@@ -353,26 +336,10 @@ input:checked+.sldr:before{transform:translateX(16px)}
 
 .pie-grid{display:grid;grid-template-columns:minmax(0,160px) 1fr;gap:14px;align-items:flex-start}
 @media(max-width:500px){.pie-grid{grid-template-columns:1fr;gap:10px}.pie-grid .chart-wrap{height:150px!important;max-width:150px;margin:0 auto}}
-/* ── RECURRENTES PANEL ───────────────────────────────────────────── */
-#rec-panel{min-height:60vh}
-.rec-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
-.rec-card-hdr{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer}
-.rec-card-hdr:hover{background:var(--surface3)}
-.rec-card-body{padding:12px 16px;border-top:1px solid var(--border)}
-.rec-card.open .rec-card-body{display:block}
-.rec-card:not(.open) .rec-card-body{display:none}
-.rec-card-chevron{margin-left:auto;color:var(--text3);transition:transform 200ms}
-.rec-card.open .rec-card-chevron{transform:rotate(90deg)}
-.rec-hist-entry{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
-.rec-hist-entry:last-child{border-bottom:none}
-.rec-hist-date{font-size:10px;color:var(--text3);white-space:nowrap;min-width:90px}
-.rec-hist-change{font-size:12px;flex:1}
-
 /* ── MOBILE TABLE CARDS ──────────────────────────────────────────── */
 .td-meta{display:none;font-size:10px;color:var(--text3);margin-top:2px;line-height:1.4}
 @media(max-width:600px){
   .hide-mobile{display:none!important}
-  .rec-card-hdr{flex-wrap:wrap}
   /* items table → card layout */
   .items-tbl{width:100%}
   .items-tbl thead{display:none}
@@ -393,15 +360,6 @@ input:checked+.sldr:before{transform:translateX(16px)}
   .extra-tbl td.td-desc{display:block;flex:1;min-width:0;font-weight:600;font-size:13px}
   .extra-tbl td.amt-cell{display:block;white-space:nowrap;font-weight:800;font-size:13px}
   .extra-tbl td.td-del{display:block}
-  /* recurrentes table */
-  .rec-tbl{width:100%}
-  .rec-tbl thead{display:none}
-  .rec-tbl tbody tr{display:flex;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border);gap:6px}
-  .rec-tbl tr:last-child{border-bottom:none}
-  .rec-tbl td{display:none;border:none;padding:0}
-  .rec-tbl td.td-desc{display:block;flex:1;min-width:0}
-  .rec-tbl td.amt-cell{display:block;white-space:nowrap;font-weight:800;font-size:13px}
-  .rec-tbl td.td-acts{display:block}
   /* annual summary table */
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{min-width:0}
@@ -438,12 +396,6 @@ input:checked+.sldr:before{transform:translateX(16px)}
 .conf-baja{background:var(--warning-light);color:var(--warning)}
 .conf-muyBaja{background:var(--danger-light);color:var(--danger)}
 .est-range{font-size:10px;color:var(--text3);white-space:nowrap}
-
-/* ── QUICK AMOUNT BUTTONS ────────────────────────────────────────── */
-.qty-btns{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-.qty-btn{border:1px solid var(--border);background:transparent;color:var(--text3);border-radius:500px;padding:3px 11px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 120ms;white-space:nowrap}
-.qty-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
-.qty-btn:active{transform:scale(.95)}
 
 /* ── INSIGHT CHIPS ───────────────────────────────────────────────── */
 .insight-row{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
@@ -555,10 +507,6 @@ tr.editing-row td{background:var(--accent-light)}
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg>
           Resumen anual
         </button>
-        <button class="sb-item" id="sbnav-rec" onclick="sbNav('rec')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg>
-          Recurrentes
-        </button>
         <button class="sb-item" id="sbnav-prest" onclick="sbNav('prest')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
           Préstamos
@@ -648,16 +596,6 @@ tr.editing-row td{background:var(--accent-light)}
       </div>
 
       <!-- RECURRENTES PANEL -->
-      <div id="rec-panel" style="display:none">
-        <div class="main" style="max-width:960px;margin:0 auto">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding-top:8px">
-            <span style="font-size:16px;font-weight:800;color:#fff">Gastos Recurrentes</span>
-            <span style="font-size:12px;color:var(--text3)" id="rec-panel-total"></span>
-          </div>
-          <div id="rec-panel-body"></div>
-        </div>
-      </div>
-
       <!-- PRÉSTAMOS PANEL -->
       <div id="prestamos-panel" style="display:none">
         <div class="main" style="max-width:960px;margin:0 auto">
@@ -745,10 +683,6 @@ tr.editing-row td{background:var(--accent-light)}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9m5 7V5m5 11v-4"/></svg>
       <span>Resumen</span>
     </button>
-    <button class="bn-item" id="bn-rec" onclick="sbNav('rec');bnActivate('rec')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg>
-      <span>Recur.</span>
-    </button>
     <button class="bn-item" id="bn-prest" onclick="sbNav('prest');bnActivate('prest')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
       <span>Créd.</span>
@@ -758,59 +692,6 @@ tr.editing-row td{background:var(--accent-light)}
       <span>Config.</span>
     </button>
   </nav>
-</div>
-
-<!-- Modal aplicar recurrentes -->
-<div class="overlay" id="rec-modal" style="display:none">
-  <div class="modal modal-lg">
-    <div class="modal-drag"></div>
-    <h3 style="color:var(--teal);display:flex;align-items:center;gap:7px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Aplicar recurrentes</h3>
-    <p class="sub">Selecciona los que aplican a <strong id="rec-period-label"></strong></p>
-    <div class="sel-bar">
-      <button class="btn btn-g bsm" onclick="selAll(true)">✓ Todos</button>
-      <button class="btn btn-g bsm" onclick="selAll(false)">✗ Ninguno</button>
-      <span id="sel-count"></span>
-    </div>
-    <div class="rec-grid" id="rec-grid"></div>
-    <div class="rec-sel-total">
-      <span style="font-size:12px;color:var(--text2);font-weight:600">Total seleccionado:</span>
-      <strong id="sel-total"></strong>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-g" onclick="hideRec()">Cancelar</button>
-      <button class="btn btn-t" onclick="applySelected()">✓ Aplicar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal editar recurrente -->
-<div class="overlay" id="edit-rec-modal" style="display:none">
-  <div class="modal modal-sm">
-    <div class="modal-drag"></div>
-    <h3 style="color:var(--info)">✏️ Editar recurrente</h3>
-    <div id="edit-rec-body" style="margin-bottom:12px"></div>
-    <div class="modal-btns">
-      <button class="btn btn-g" onclick="hideEditRec()">Cancelar</button>
-      <button class="btn btn-p" onclick="saveEditRec()">Guardar cambio</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal editar referencia de recurrente aplicado -->
-<div class="overlay" id="edit-ref-modal" style="display:none">
-  <div class="modal modal-sm">
-    <div class="modal-drag"></div>
-    <h3 style="color:var(--info)">🏷️ Editar referencia de pago</h3>
-    <p class="sub" id="edit-ref-desc"></p>
-    <div class="fg" style="margin-bottom:12px">
-      <label>Referencia (ej: **** 1234, cuota 3/12…)</label>
-      <input type="text" id="edit-ref-val" placeholder="Referencia del pago" maxlength="40">
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-g" onclick="hideEditRef()">Cancelar</button>
-      <button class="btn btn-p" onclick="saveEditRef()">Guardar</button>
-    </div>
-  </div>
 </div>
 
 <!-- Modal categorías -->
@@ -828,17 +709,6 @@ tr.editing-row td{background:var(--accent-light)}
       <button class="btn btn-g" onclick="hideCats()">Cerrar</button>
       <button class="btn btn-w" onclick="window._resetCats()">↺ Restaurar predeterminadas</button>
     </div>
-  </div>
-</div>
-
-<!-- Modal historial montos -->
-<div class="overlay" id="hist-modal" style="display:none">
-  <div class="modal modal-sm">
-    <div class="modal-drag"></div>
-    <h3 style="color:var(--purple)">📜 Historial de cambios</h3>
-    <p class="sub" id="hist-title"></p>
-    <div id="hist-body" style="max-height:50vh;overflow-y:auto"></div>
-    <div class="modal-btns"><button class="btn btn-g" onclick="hideHist()">Cerrar</button></div>
   </div>
 </div>
 
@@ -1035,6 +905,11 @@ const BUDGET_WARN=80; // % para alerta amarilla
 const BUDGET_ALERT=95; // % para alerta roja
 
 const CHANGELOG=[
+  { ver:'1.6.0', date:'2026-08-28', changes:[
+    'Eliminada la función de Gastos Recurrentes: panel, modales de aplicar/editar, toggle "Recurrente" al agregar gasto y todo el backend asociado',
+    'Eliminados los botones de monto rápido (50K/100K/200K/500K) del formulario de gastos',
+    'Préstamos ya no depende de recurrentes: "Registrar Pago" ahora agrega la cuota (egreso) o el ingreso directamente al período activo',
+  ]},
   { ver:'1.5.3', date:'2026-08-28', changes:[
     'Corregido el bug de fondo: getActivePeriod() mapeaba mal los días del mes a la quincena — días 16-31 mostraban la Q1 del mes actual (ya pagada, vencida) en vez de la Q2 vigente, y días 1-15 mostraban la Q2 del mes anterior en vez de la Q1 vigente',
     'Ahora el mapeo es directo: días 1-15 → Q1 del mes actual, días 16-fin → Q2 del mes actual, igual que el resto de la app (agregar gasto, favoritos)',
@@ -1203,12 +1078,10 @@ let _itemSearch='';
 let _itemSort={field:'date',dir:'desc'};
 let _editingItemId=null;
 let _lastUndo=null;
-let editRecId=null;
 
 // ── FIREBASE HELPERS ──────────────────────────────────────────────────
 const userRef=()=>`usuarios/${currentUser.uid}`;
 const periodoRef=(y,m,q)=>`${userRef()}/periodos/${y}_${m}_${q}`;
-const recRef=()=>`${userRef()}/config/recurrentes`;
 const catsRef=()=>`${userRef()}/config/categorias`;
 const ajusteRef=()=>`${userRef()}/config/ajuste`;
 
@@ -1252,7 +1125,7 @@ window._useFav=async(id)=>{
   const q=viewMode==='m'?(new Date().getDate()<=15?1:2):CP.q;
   const d=await getPeriodo(y,m,q);
   d.items=d.items||[];
-  d.items.push({id:Date.now(),ref:'',desc:fav.desc,amount:fav.amount,cat:fav.cat,date:new Date().toISOString().split('T')[0],recurring:false});
+  d.items.push({id:Date.now(),ref:'',desc:fav.desc,amount:fav.amount,cat:fav.cat,date:new Date().toISOString().split('T')[0]});
   await savePeriodo(y,m,q,d);
   lastCat=fav.cat;lsSet('gq_lastCat',fav.cat);
   viewMode==='m'?renderMonthly():renderMain();
@@ -1442,13 +1315,6 @@ async function savePeriodo(y,m,q,data){
   try{await setDoc(doc(db,periodoRef(y,m,q)),{...data,updatedAt:serverTimestamp()});setSyncStatus('ok','Guardado');}
   catch(e){setSyncStatus('err','Error al guardar');}
 }
-
-async function getRec(){
-  if(cache['_rec'])return cache['_rec'];
-  try{const snap=await getDoc(doc(db,recRef()));const d=snap.exists()?(snap.data().lista||[]):[];cache['_rec']=d;return d;}
-  catch(e){return [];}
-}
-async function saveRec(lista){cache['_rec']=lista;try{await setDoc(doc(db,recRef()),{lista,updatedAt:serverTimestamp()});}catch(e){}}
 
 const prestRef=()=>`${userRef()}/config/prestamos`;
 async function getPrest(){if(cache['_prest'])return cache['_prest'];try{const snap=await getDoc(doc(db,prestRef()));const d=snap.exists()?(snap.data().lista||[]):[];cache['_prest']=d;return d;}catch(e){return [];}}
@@ -1648,18 +1514,9 @@ function buildExpenseFormHTML(mode){
       <div class="fg wsm">
         <label>Valor (COP)</label>
         <div class="fw"><input type="text" id="iamt" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div>
-        <div class="qty-btns">
-          <button type="button" class="qty-btn" onclick="setQty(50000)">50K</button>
-          <button type="button" class="qty-btn" onclick="setQty(100000)">100K</button>
-          <button type="button" class="qty-btn" onclick="setQty(200000)">200K</button>
-          <button type="button" class="qty-btn" onclick="setQty(500000)">500K</button>
-        </div>
       </div>
       <div class="fg"><label>Categoría</label><select id="icat">${catOptions}</select></div>
       <div class="fg wmd"><label>Fecha</label><input type="date" id="idate" value="${new Date().toISOString().split('T')[0]}"></div>
-      <div class="fg" style="justify-content:flex-end"><label>&nbsp;</label>
-        <div class="tog-row"><label class="tog"><input type="checkbox" id="irec"><span class="sldr"></span></label>Recurrente</div>
-      </div>
       <button class="btn btn-p" onclick="${addFn}" style="align-self:flex-end">Agregar</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px">
@@ -1667,13 +1524,6 @@ function buildExpenseFormHTML(mode){
       <button type="button" class="fav-add-btn" onclick="window._addFavFromForm()">☆ Guardar como favorito</button>
     </div>`;
 }
-
-window.setQty=function(n){
-  const el=document.getElementById('iamt');
-  if(!el)return;
-  el.value=n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  el.focus();
-};
 
 function renderCatFilter(items){
   const el=document.getElementById('cat-filter');if(!el)return;
@@ -1955,12 +1805,6 @@ async function renderMain(){
       <div class="sec-body">${buildExpenseFormHTML('q')}</div>
     </div>
 
-    <!-- Recurrentes -->
-    <div class="sec">
-      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Recurrentes</span><button class="btn btn-t bsm" onclick="event.stopPropagation();window._showRec()" style="margin-left:auto;margin-right:4px">Seleccionar</button><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
-      <div class="sec-body" id="rec-list"></div>
-    </div>
-
     <!-- Movimientos -->
     <div class="sec">
       <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Movimientos — ${MN[m]} Q${q}</span><span style="font-size:10px;color:var(--text3)">${items.length} · ${fmtCOP(totalOut,'amt-red')}</span><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
@@ -1990,7 +1834,6 @@ async function renderMain(){
   _itemSearch='';
   _editingItemId=null;
   renderExtraList(data);
-  renderRecList();
   renderFavChips();
   renderCatFilter(items);
   refreshItemsTable();
@@ -2061,12 +1904,6 @@ async function renderMonthly(){
       </div>
     </div>
 
-    <!-- Recurrentes -->
-    <div class="sec">
-      <div class="sec-hdr collapsible" onclick="toggleSec(this)"><span class="sec-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg> Recurrentes</span><button class="btn btn-t bsm" onclick="event.stopPropagation();window._showRec()" style="margin-left:auto;margin-right:4px">Seleccionar</button><svg class="sec-toggle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
-      <div class="sec-body" id="rec-list"></div>
-    </div>
-
     <!-- Movimientos consolidados -->
     <div class="sec">
       <div class="sec-hdr collapsible" onclick="toggleSec(this)">
@@ -2105,7 +1942,6 @@ async function renderMonthly(){
   // En vista mensual los extras e ingresos se muestran consolidados
   const extraCombined={extraIncome:allExtra};
   renderExtraList(extraCombined);
-  renderRecList();
   renderFavChips();
   renderCatFilter(allItems);
   refreshItemsTable();
@@ -2121,7 +1957,6 @@ window._addItemMensual=async()=>{
   const amount=parseMoneyInput('iamt');
   const cat=document.getElementById('icat').value;
   const date=document.getElementById('idate').value;
-  const rec=document.getElementById('irec').checked;
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
   if(amount>100000000){toast('Valor máximo: $ 100.000.000','err');return;}
   // Determinar quincena según fecha seleccionada
@@ -2130,11 +1965,10 @@ window._addItemMensual=async()=>{
   const{m}=CP;const y=CY;
   const d=await getPeriodo(y,m,q);
   d.items=d.items||[];
-  d.items.push({id:Date.now(),ref,desc,amount,cat,date,recurring:rec});
+  d.items.push({id:Date.now(),ref,desc,amount,cat,date});
   await savePeriodo(y,m,q,d);
-  if(rec){const lista=await getRec();if(!lista.find(r=>r.desc===desc&&r.cat===cat)){lista.push({id:Date.now()+1,desc,amount,cat,ref,history:[]});await saveRec(lista);}}
   lastCat=cat;lsSet('gq_lastCat',cat);
-  document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';document.getElementById('irec').checked=false;
+  document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';
   renderMonthly();
   toast(`✓ Gasto guardado en Q${q}`);
 };
@@ -2225,18 +2059,16 @@ window._addItem=async()=>{
   const amount=parseMoneyInput('iamt');
   const cat=document.getElementById('icat').value;
   const date=document.getElementById('idate').value;
-  const rec=document.getElementById('irec').checked;
   if(!desc||!amount){toast('Completa descripción y valor','err');return;}
   if(amount>100000000){toast('Valor máximo: $ 100.000.000','err');return;}
   const{m}=CP;const y=CY;
   const q=viewMode==='m'?mQSel:CP.q;
   const d=await getPeriodo(y,m,q);
   d.items=d.items||[];
-  d.items.push({id:Date.now(),ref,desc,amount,cat,date,recurring:rec});
+  d.items.push({id:Date.now(),ref,desc,amount,cat,date});
   await savePeriodo(y,m,q,d);
-  if(rec){const lista=await getRec();if(!lista.find(r=>r.desc===desc&&r.cat===cat)){lista.push({id:Date.now()+1,desc,amount,cat,ref,history:[]});await saveRec(lista);}}
   lastCat=cat;lsSet('gq_lastCat',cat);
-  document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';document.getElementById('irec').checked=false;
+  document.getElementById('iref').value='';document.getElementById('idesc').value='';document.getElementById('iamt').value='';
   viewMode==='m'?renderMonthly():renderMain();
   toast('✓ Gasto guardado en Q'+q);
 };
@@ -2355,7 +2187,7 @@ function renderItemRow(i,readonly){
   return `<tr>
     <td class="hide-mobile" style="color:var(--text3);font-size:10px;white-space:nowrap">${i.ref||'—'}</td>
     <td class="hide-mobile" style="color:var(--text3);white-space:nowrap;font-size:11px">${i.date||'-'}</td>
-    <td class="td-desc"><span style="font-weight:600">${i.desc}</span>${i.recurring?' <span class="badge b-rec" style="display:inline-flex;align-items:center;gap:2px;vertical-align:middle"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2 22 7l-5 5"/><path d="M2 7h20"/><path d="m7 22-5-5 5-5"/><path d="M22 17H2"/></svg></span>':''}<span class="td-meta">${[i.ref&&i.ref!=='—'?i.ref:'',i.date||'',i.cat||''].filter(Boolean).join(' · ')}</span>${i.note?`<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 ${i.note}</div>`:''}</td>
+    <td class="td-desc"><span style="font-weight:600">${i.desc}</span><span class="td-meta">${[i.ref&&i.ref!=='—'?i.ref:'',i.date||'',i.cat||''].filter(Boolean).join(' · ')}</span>${i.note?`<div style="font-size:10px;color:var(--text3);font-style:italic;margin-top:2px">📝 ${i.note}</div>`:''}</td>
     <td class="hide-mobile"><span class="cc" style="background:${getCatColor(i.cat)}"></span><span class="badge b-cat" style="font-size:10px">${i.cat}</span></td>
     <td class="amt-cell">${fmtCOP(i.amount,'amt-red')}</td>
     ${readonly?'':`<td class="hide-mobile" style="font-size:10px;color:var(--text3);font-weight:700">${i._q?'Q'+i._q:''}</td><td class="td-del"><div class="act-btns"><button class="act-btn teal" onclick="window._startInlineEdit(${i.id})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="act-btn danger" onclick="window._delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td>`}
@@ -2368,189 +2200,6 @@ function renderItems(items,readonly=false){
   el.innerHTML=`<table class="items-tbl"><thead><tr><th class="hide-mobile">Ref</th>${sortTh('Fecha','date')}<th>Descripción</th>${sortTh('Categoría','cat')}${sortTh('Valor','amount','right')}${readonly?'':`<th class="hide-mobile">Q</th><th></th>`}</tr></thead><tbody>
   ${items.map(i=>renderItemRow(i,readonly)).join('')}</tbody></table>`;
 }
-
-// ── RECURRENTES ───────────────────────────────────────────────────────
-async function renderRecList(){
-  const lista=await getRec();const el=document.getElementById('rec-list');if(!el)return;
-  if(!lista.length){el.innerHTML='<div class="empty">Sin recurrentes. Actívalo al agregar un gasto.</div>';return;}
-  const total=lista.reduce((a,r)=>a+r.amount,0);
-  el.innerHTML=`<table class="rec-tbl"><thead><tr><th>Descripción</th><th class="hide-mobile">Categoría</th><th style="text-align:right">Valor</th><th>Acciones</th></tr></thead><tbody>
-  ${lista.map(r=>`<tr>
-    <td class="td-desc"><span style="font-weight:600">${r.desc}</span>${r.ref?`<div style="font-size:10px;color:var(--text3);margin-top:2px;font-weight:400">${r.ref}</div>`:''}</td>
-    <td class="hide-mobile"><span class="cc" style="background:${getCatColor(r.cat)}"></span><span class="badge b-cat">${r.cat}</span></td>
-    <td class="amt-cell">${fmtCOP(r.amount,'amt-red')}</td>
-    <td class="td-acts" style="white-space:nowrap">
-      <div class="act-btns"><button class="act-btn" onclick="window._editRec(${r.id})" title="Editar monto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="act-btn danger" onclick="window._delRec(${r.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div>
-    </td>
-  </tr>`).join('')}</tbody></table>
-  <div style="display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)">
-    <span style="font-size:11px;color:var(--text3)">Total si aplicas todos:</span><strong>${fmtCOP(total,'amt-red')}</strong>
-  </div></div>`;
-}
-
-window._delRec=async(id)=>{const lista=(await getRec()).filter(r=>r.id!==id);await saveRec(lista);renderRecList();};
-// ── RECURRENTES PANEL (full management view) ──────────────────────────
-window.renderRecPanel=async function(){
-  const lista=await getRec();
-  const body=document.getElementById('rec-panel-body');
-  const totalEl=document.getElementById('rec-panel-total');
-  if(!body)return;
-  if(!lista.length){
-    body.innerHTML='<div class="empty" style="padding:40px">No hay gastos recurrentes. Agrega un gasto y activa el interruptor "Recurrente".</div>';
-    if(totalEl)totalEl.textContent='';
-    return;
-  }
-  const total=lista.reduce((a,r)=>a+r.amount,0);
-  if(totalEl)totalEl.textContent=`Total mensual estimado: ${fmtPlain(total)}`;
-  const PENCIL='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-  const TAG='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>';
-  const TRASH='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
-  body.innerHTML=lista.map(r=>{
-    const hist=r.history||[];
-    const histHtml=!hist.length
-      ?'<div class="empty" style="padding:10px 0">Sin cambios de monto registrados</div>'
-      :hist.slice().reverse().map(h=>`
-        <div class="rec-hist-entry">
-          <span class="rec-hist-date">${new Date(h.date).toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'2-digit'})}</span>
-          <span class="rec-hist-change">
-            <span style="color:var(--text3)">${fmtPlain(h.oldAmount)}</span>
-            <span style="color:var(--accent);margin:0 4px">→</span>
-            <strong style="color:var(--accent)">${fmtPlain(h.newAmount)}</strong>
-            ${h.reason?`<span style="color:var(--text3);font-size:10px;margin-left:6px">· ${h.reason}</span>`:''}
-          </span>
-        </div>`).join('');
-    return `
-    <div class="rec-card" id="rcard-${r.id}">
-      <div class="rec-card-hdr" onclick="window._toggleRecCard(${r.id})">
-        <span class="cc" style="background:${getCatColor(r.cat)};width:10px;height:10px"></span>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.desc}${r.ref?`<span style="color:var(--text3);font-size:10px;font-weight:400;margin-left:6px">${r.ref}</span>`:''}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:1px">${r.cat} · ${hist.length} cambio${hist.length!==1?'s':''} de monto</div>
-        </div>
-        <strong style="color:var(--danger);font-size:13px;flex-shrink:0;margin-right:8px">${fmtPlain(r.amount)}</strong>
-        <div class="act-btns" onclick="event.stopPropagation()">
-          <button class="act-btn" onclick="window._editRec(${r.id})" title="Editar monto">${PENCIL}</button>
-          <button class="act-btn teal" onclick="window._editRef(${r.id})" title="Editar referencia">${TAG}</button>
-          <button class="act-btn danger" onclick="window._delRec(${r.id})" title="Eliminar">${TRASH}</button>
-        </div>
-        <svg class="rec-card-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </div>
-      <div class="rec-card-body" style="display:none">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Historial de cambios de monto</div>
-        ${histHtml}
-      </div>
-    </div>`;
-  }).join('');
-};
-
-window._toggleRecCard=function(id){
-  const card=document.getElementById('rcard-'+id);
-  if(!card)return;
-  const body=card.querySelector('.rec-card-body');
-  const isOpen=card.classList.contains('open');
-  card.classList.toggle('open',!isOpen);
-  if(body)body.style.display=isOpen?'none':'block';
-};
-
-// Patch _delRec to also refresh rec-panel if visible
-const _origDelRec=window._delRec;
-window._delRec=async(id)=>{
-  await _origDelRec(id);
-  if(document.getElementById('rec-panel').style.display!=='none')await window.renderRecPanel();
-};
-
-
-window._editRec=async(id)=>{
-  const lista=await getRec();const r=lista.find(x=>x.id===id);if(!r)return;
-  editRecId=id;
-  document.getElementById('edit-rec-body').innerHTML=`
-    <div style="font-weight:700;margin-bottom:8px">${r.desc}</div>
-    <div class="fg"><label>Nuevo monto (COP)</label><div class="fw"><input type="text" id="edit-amt" value="${fmtMoneyVal(r.amount)}" inputmode="numeric" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px 9px 22px;font-size:15px;background:var(--bg);color:var(--text)" oninput="onMoneyInput(this)"></div></div>
-    <div class="fg" style="margin-top:8px"><label>Motivo del cambio (opcional)</label><input type="text" id="edit-reason" placeholder="Ej: Ajuste por inflación" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;background:var(--bg);color:var(--text)"></div>`;
-  document.getElementById('edit-rec-modal').style.display='flex';
-};
-window.hideEditRec=()=>document.getElementById('edit-rec-modal').style.display='none';
-
-window.saveEditRec=async()=>{
-  const newAmt=parseMoneyInput('edit-amt');
-  const reason=document.getElementById('edit-reason').value.trim();
-  if(!newAmt){toast('Ingresa un valor válido','err');return;}
-  const lista=await getRec();
-  const idx=lista.findIndex(r=>r.id===editRecId);if(idx<0)return;
-  const oldAmt=lista[idx].amount;
-  lista[idx].history=lista[idx].history||[];
-  lista[idx].history.push({date:new Date().toISOString(),oldAmount:oldAmt,newAmount:newAmt,reason});
-  lista[idx].amount=newAmt;
-  await saveRec(lista);
-  window.hideEditRec();renderRecList();toast(`✓ Monto actualizado: ${fmtPlain(newAmt)}`);
-};
-
-window._showHist=async(id)=>{
-  const lista=await getRec();const r=lista.find(x=>x.id===id);if(!r)return;
-  document.getElementById('hist-title').textContent=r.desc;
-  const hist=r.history||[];
-  document.getElementById('hist-body').innerHTML=!hist.length?'<div class="empty">Sin cambios de monto registrados</div>':
-    hist.slice().reverse().map(h=>`<div class="hist-item">
-      <div class="hist-date">${new Date(h.date).toLocaleString('es-CO')}</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:11px;color:var(--text3)">${fmtPlain(h.oldAmount)}</span>
-        <span style="color:var(--accent);font-weight:700">→</span>
-        <span style="font-size:13px;font-weight:800;color:var(--accent)">${fmtPlain(h.newAmount)}</span>
-      </div>
-      ${h.reason?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${h.reason}</div>`:''}
-    </div>`).join('');
-  document.getElementById('hist-modal').style.display='flex';
-};
-window.hideHist=()=>document.getElementById('hist-modal').style.display='none';
-
-window._showRec=async()=>{
-  const lista=await getRec();
-  if(!lista.length){alert('No hay recurrentes configurados.');return;}
-  const q=viewMode==='m'?mQSel:CP.q;
-  document.getElementById('rec-period-label').textContent=`${MN[CP.m]} Q${q}`;
-  const grid=document.getElementById('rec-grid');
-  grid.innerHTML=lista.map(r=>`
-    <label class="rec-item" id="ri-${r.id}">
-      <input type="checkbox" onchange="window._onRecCk(this,${r.id})" value="${r.id}" data-amt="${r.amount}" data-desc="${encodeURIComponent(r.desc)}" data-cat="${r.cat}" data-ref="${r.ref||''}">
-      <div class="rec-item-info"><div class="rec-item-name">${r.desc}</div>${r.ref?`<div style="font-size:10px;color:var(--text3);margin:-1px 0 1px">${r.ref}</div>`:''}<div class="rec-item-cat"><span class="cc" style="background:${getCatColor(r.cat)}"></span>${r.cat}</div></div>
-      <div style="flex-shrink:0">${fmtCOP(r.amount,'amt-red')}</div>
-    </label>`).join('');
-  updateSelTotal();
-  document.getElementById('rec-modal').style.display='flex';
-};
-
-window._onRecCk=(cb,id)=>{
-  const item=document.getElementById(`ri-${id}`);
-  if(cb.checked)item.classList.add('selected');else item.classList.remove('selected');
-  updateSelTotal();
-};
-function updateSelTotal(){
-  const cbs=document.querySelectorAll('#rec-grid input:checked');
-  let total=0,count=0;cbs.forEach(cb=>{total+=parseFloat(cb.dataset.amt)||0;count++;});
-  document.getElementById('sel-total').innerHTML=fmtCOP(total,'amt-red');
-  document.getElementById('sel-count').textContent=`${count} seleccionado${count!==1?'s':''}`;
-}
-window.selAll=v=>{
-  document.querySelectorAll('#rec-grid input[type=checkbox]').forEach(cb=>{
-    cb.checked=v;cb.closest('.rec-item').classList.toggle('selected',v);
-  });updateSelTotal();
-};
-window.hideRec=()=>document.getElementById('rec-modal').style.display='none';
-window.applySelected=async()=>{
-  const{m}=CP;const y=CY;
-  const q=viewMode==='m'?mQSel:CP.q;
-  const d=await getPeriodo(y,m,q);d.items=d.items||[];
-  const today=new Date().toISOString().split('T')[0];let added=0;
-  document.querySelectorAll('#rec-grid input:checked').forEach(cb=>{
-    const desc=decodeURIComponent(cb.dataset.desc),cat=cb.dataset.cat,amount=parseFloat(cb.dataset.amt)||0,ref=cb.dataset.ref||'';
-    if(!d.items.find(i=>i.desc===desc&&i.cat===cat&&i.date===today)){
-      d.items.push({id:Date.now()+Math.random(),ref,desc,amount,cat,date:today,recurring:true});added++;
-    }
-  });
-  await savePeriodo(y,m,q,d);window.hideRec();
-  viewMode==='m'?renderMonthly():renderMain();
-  if(added>0)toast(`✓ ${added} gasto${added!==1?'s':''} aplicado${added!==1?'s':''} en Q${q}`);
-};
 
 // ── GRÁFICOS ──────────────────────────────────────────────────────────
 function destroyCharts(){
@@ -2956,7 +2605,7 @@ window.cleanYear=async()=>{
 window.cleanAll=async()=>{
   if(!confirm('¿Eliminar TODOS tus datos? Irreversible.'))return;
   cache={};
-  try{const snap=await getDocs(collection(db,`${userRef()}/periodos`));const batch=writeBatch(db);snap.forEach(d=>batch.delete(d.ref));await batch.commit();await deleteDoc(doc(db,recRef()));}catch(e){}
+  try{const snap=await getDocs(collection(db,`${userRef()}/periodos`));const batch=writeBatch(db);snap.forEach(d=>batch.delete(d.ref));await batch.commit();}catch(e){}
   window.hideClean();renderMain();toast('🗑 Todos los datos eliminados');
 };
 
@@ -3052,28 +2701,6 @@ window._resetCats=async()=>{
   await saveCats();
   renderCatsList();
   toast('✅ Categorías restauradas');
-};
-
-// ── EDITAR REFERENCIA DE RECURRENTE ──────────────────────────────────
-let editRefId=null;
-window._editRef=async(id)=>{
-  const lista=await getRec();
-  const r=lista.find(x=>x.id===id);if(!r)return;
-  editRefId=id;
-  document.getElementById('edit-ref-desc').textContent=r.desc;
-  document.getElementById('edit-ref-val').value=r.ref||'';
-  document.getElementById('edit-ref-modal').style.display='flex';
-};
-window.hideEditRef=()=>document.getElementById('edit-ref-modal').style.display='none';
-window.saveEditRef=async()=>{
-  const ref=sanitize(document.getElementById('edit-ref-val').value.trim());
-  const lista=await getRec();
-  const idx=lista.findIndex(r=>r.id===editRefId);if(idx<0)return;
-  lista[idx].ref=ref;
-  await saveRec(lista);
-  window.hideEditRef();
-  renderRecList();
-  toast('✅ Referencia actualizada');
 };
 
 // ── PWA: Registrar Service Worker ─────────────────────────────────────
@@ -3708,17 +3335,7 @@ window.addPrest=async function(){
   const lista=await getPrest();
   lista.push(loan);
   await savePrest(lista);
-  if(tipo==='egreso'){
-    const recs=await getRec();
-    const recId=id+1;
-    const recDesc=desc?`${desc} - ${persona}`:`Cuota préstamo - ${persona}`;
-    recs.push({id:recId,desc:recDesc,amount:Math.round(cuota),cat:'Préstamos',ref:`prestamo-${id}`,history:[]});
-    await saveRec(recs);
-    cache['_rec']=null;
-    toast(`✓ Préstamo creado y agregado a recurrentes`);
-  } else {
-    toast(`✓ Préstamo creado`);
-  }
+  toast(`✓ Préstamo creado`);
   ['pf-persona','pf-desc','pf-monto','pf-tasa','pf-cuotas','pf-cuota-man','pf-diapago','pf-inicio'].forEach(fid=>document.getElementById(fid).value='');
 
   document.getElementById('pf-preview').style.display='none';
@@ -3731,17 +3348,21 @@ window.registrarPago=async function(id){
   if(idx<0)return;
   const loan=lista[idx];
   if(loan.done){toast('Este préstamo ya está completado');return;}
+  if(!CP){toast('Selecciona una quincena activa primero','err');return;}
+  const d=await getPeriodo(CY,CP.m,CP.q);
   if(loan.tipo==='ingreso'){
-    if(CP){
-      const d=await getPeriodo(CY,CP.m,CP.q);
-      d.extraIncome=d.extraIncome||[];
-      d.extraIncome.push({id:Date.now(),desc:`Pago préstamo - ${loan.persona} (cuota ${loan.cuotasPagadas+1}/${loan.cuotas})`,amount:loan.cuota,date:new Date().toISOString().split('T')[0]});
-      await savePeriodo(CY,CP.m,CP.q,d);
-      delete cache[cacheKey(CY,CP.m,CP.q)];
-      toast(`✓ Cuota ${loan.cuotasPagadas+1} registrada en el período actual`);
-    }
+    d.extraIncome=d.extraIncome||[];
+    d.extraIncome.push({id:Date.now(),desc:`Pago préstamo - ${loan.persona} (cuota ${loan.cuotasPagadas+1}/${loan.cuotas})`,amount:loan.cuota,date:new Date().toISOString().split('T')[0]});
+    await savePeriodo(CY,CP.m,CP.q,d);
+    delete cache[cacheKey(CY,CP.m,CP.q)];
+    toast(`✓ Cuota ${loan.cuotasPagadas+1} registrada en el período actual`);
   } else {
-    toast(`✓ Cuota ${loan.cuotasPagadas+1} registrada`);
+    d.items=d.items||[];
+    const desc=loan.desc?`${loan.desc} - ${loan.persona}`:`Cuota préstamo - ${loan.persona}`;
+    d.items.push({id:Date.now(),ref:`prestamo-${id}`,desc,amount:loan.cuota,cat:'Préstamos',date:new Date().toISOString().split('T')[0]});
+    await savePeriodo(CY,CP.m,CP.q,d);
+    delete cache[cacheKey(CY,CP.m,CP.q)];
+    toast(`✓ Cuota ${loan.cuotasPagadas+1} agregada como gasto en el período actual`);
   }
   const numCuota=loan.cuotasPagadas+1;
   loan.pagos=loan.pagos||[];
@@ -3751,20 +3372,14 @@ window.registrarPago=async function(id){
   lista[idx]=loan;
   await savePrest(lista);
   await window.renderPrestPanel();
+  if(document.getElementById('content').style.display!=='none'){
+    viewMode==='m'?renderMonthly():renderMain();
+  }
 };
 
 window.delPrest=async function(id){
   if(!confirm('¿Eliminar este préstamo?'))return;
   const lista=await getPrest();
-  const loan=lista.find(l=>l.id===id);
-  if(loan&&loan.tipo==='egreso'){
-    const recs=await getRec();
-    const filtered=recs.filter(r=>r.ref!==`prestamo-${id}`);
-    if(filtered.length!==recs.length){
-      await saveRec(filtered);
-      cache['_rec']=null;
-    }
-  }
   await savePrest(lista.filter(l=>l.id!==id));
   toast('Préstamo eliminado');
   await window.renderPrestPanel();
@@ -3928,26 +3543,15 @@ window.closeMobSb=function(){
 window.sbNav=function(tab){
   window.closeMobSb();
   // Show/hide main panels
-  const recPanel=document.getElementById('rec-panel');
   const prestPanel=document.getElementById('prestamos-panel');
   const estPanel=document.getElementById('estimacion-panel');
   const buscarPanel=document.getElementById('buscar-panel');
   const hideSidePanels=()=>{
-    if(recPanel)recPanel.style.display='none';
     if(prestPanel)prestPanel.style.display='none';
     if(estPanel)estPanel.style.display='none';
     if(buscarPanel)buscarPanel.style.display='none';
   };
-  if(tab==='rec'){
-    hideSidePanels();
-    if(recPanel)recPanel.style.display='block';
-    document.getElementById('content').style.display='none';
-    document.getElementById('tabs').style.display='none';
-    document.getElementById('dash-panel').style.display='none';
-    document.getElementById('ynav-inline').style.display='none';
-    document.getElementById('budget-warn-bar').style.display='none';
-    renderRecPanel();
-  } else if(tab==='prest'){
+  if(tab==='prest'){
     hideSidePanels();
     if(prestPanel)prestPanel.style.display='block';
     document.getElementById('content').style.display='none';
