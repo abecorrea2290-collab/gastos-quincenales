@@ -1,12 +1,12 @@
-const CACHE_NAME = 'gastos-gq-v1.6.0';
+const CACHE_NAME = 'gastos-gq-v2.0.0';
 const ASSETS = [
   '/',
   '/index.html',
-  '/app/index.html',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
-  'https://unpkg.com/react@18.3.1/umd/react.development.js',
-  'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js',
-  'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',
+  '/manifest.json',
+  '/assets/icon-192.png',
+  '/assets/icon-512.png',
+  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css',
+  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css',
 ];
 
 self.addEventListener('install', e => {
