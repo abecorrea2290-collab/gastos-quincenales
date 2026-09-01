@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<title>Gastos GQ v2.0.2</title>
+<title>Gastos GQ v2.0.3</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -261,6 +261,16 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
   font:inherit;font-size:12.5px;cursor:pointer;
 }
 .mo-chip.sel{border-color:var(--color-accent);background:color-mix(in srgb, var(--color-accent) 16%, transparent);color:var(--color-accent-200)}
+/* El bloque Q1/Q2 + leyenda debe poder encoger y envolver: con flex:none
+   medía 370px dentro de 328px y la leyenda se salía del cuadro en móvil */
+.period-q{display:flex;align-items:center;gap:12px;flex:0 1 auto;flex-wrap:wrap;min-width:0}
+.period-legend{display:flex;gap:10px;flex-wrap:wrap;min-width:0;font-size:10.5px;color:var(--color-neutral-600)}
+.period-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+@media(max-width:720px){
+  .period-q{flex:1 1 100%}
+  .period-q .seg{flex:1 1 auto}
+  .period-q .seg-opt{flex:1;justify-content:center}
+}
 .dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
 
 /* ── PAY BAR / BANNERS ─────────────────────────────────────────────── */
@@ -787,6 +797,11 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.0.3', date:'2026-08-31', changes:[
+    'Corregida la leyenda de estado de la quincena (Cerrado · Activo · Próximo), que se salía 54 px del cuadro en móvil',
+    'En móvil el selector Q1/Q2 pasa a su propia fila y ocupa el ancho completo, con la leyenda debajo',
+    'Verificado sin desbordes horizontales en Panel, Resumen, Préstamos y Configuración a 360 px',
+  ]},
   { ver:'2.0.2', date:'2026-08-31', changes:[
     'Movimientos en formato de tarjeta en móvil: la tabla medía 572 px dentro de 328 px y obligaba a desplazarse de lado para ver el valor y los botones',
     'Las barras del año ahora se encogen con la pantalla — con ancho fijo desbordaban en teléfonos de 360 px o menos',
@@ -1295,15 +1310,15 @@ function buildPeriodBar(){
       <span class="dot" style="background:${ST_COLOR[st]}"></span>${label}</button>`;
   }).join('');
   const qSeg=viewMode==='q'?`
-    <div style="display:flex;align-items:center;gap:12px;flex:none;flex-wrap:wrap">
+    <div class="period-q">
       <div class="seg">
         <button class="seg-opt${CP.q===1?' on':''}" onclick="setQ(1)"><span class="dot" style="background:${ST_COLOR[periodState(CY,CP.m,1)]}"></span>Q1 · 1–15</button>
         <button class="seg-opt${CP.q===2?' on':''}" onclick="setQ(2)"><span class="dot" style="background:${ST_COLOR[periodState(CY,CP.m,2)]}"></span>Q2 · 16–fin</button>
       </div>
-      <div style="display:flex;gap:10px;font-size:10.5px;color:var(--color-neutral-600);flex-wrap:wrap">
-        <span style="display:inline-flex;align-items:center;gap:5px"><span class="dot" style="width:6px;height:6px;background:${ST_CERRADO}"></span>Cerrado</span>
-        <span style="display:inline-flex;align-items:center;gap:5px"><span class="dot" style="width:6px;height:6px;background:${ST_ACTIVO}"></span>Activo</span>
-        <span style="display:inline-flex;align-items:center;gap:5px"><span class="dot" style="width:6px;height:6px;background:${ST_PROXIMO}"></span>Próximo</span>
+      <div class="period-legend">
+        <span><span class="dot" style="width:6px;height:6px;background:${ST_CERRADO}"></span>Cerrado</span>
+        <span><span class="dot" style="width:6px;height:6px;background:${ST_ACTIVO}"></span>Activo</span>
+        <span><span class="dot" style="width:6px;height:6px;background:${ST_PROXIMO}"></span>Próximo</span>
       </div>
     </div>`:'';
   return `<section class="period-bar">
