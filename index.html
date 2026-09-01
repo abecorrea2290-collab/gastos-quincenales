@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<title>Gastos GQ v2.1.0</title>
+<title>Gastos GQ v2.1.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -797,6 +797,9 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.1.1', date:'2026-09-01', changes:[
+    'El semáforo del selector de período ahora sigue la quincena realmente activa: una quincena cuyo salario aún no se registra se mantiene en gris aunque ya haya llegado su fecha',
+  ]},
   { ver:'2.1.0', date:'2026-09-01', changes:[
     'La app solo pasa a la siguiente quincena cuando se registra el ingreso del salario; mientras tanto se mantiene en la anterior, que es donde sigues trabajando',
     'Si cierras una quincena a mano, se respeta y no se retrocede a ella',
@@ -868,6 +871,9 @@ const CHANGELOG=[
 // ── ESTADO ────────────────────────────────────────────────────────────
 const MIN_YEAR = 2026;
 let CY=Math.max(new Date().getFullYear(), MIN_YEAR), CP=null;
+// Quincena realmente activa (la que gobierna el semáforo). No es CP: CP es
+// la que estás viendo, ACTIVE es la que está "abierta" según el salario.
+let ACTIVE=null;
 let currentUser=null, cache={}, viewMode='q', screen='q';
 function lsGet(k,def=''){try{return localStorage.getItem(k)||def;}catch(e){return def;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
@@ -1045,6 +1051,7 @@ async function initApp(){
   await getFav();
   await getPresupuestos();
   CP=await getActivePeriodFromDB();
+  ACTIVE={...CP};
   CY=CP.y;
   viewMode='q';
   limpiarSobrantesHuerfanos(CY);
@@ -1102,6 +1109,12 @@ async function getActivePeriodFromDB(){
   }catch(e){}
   return base;
 }
+// Recalcula la quincena activa tras un cambio que pueda moverla
+// (registrar el ingreso o cerrar una quincena).
+async function refreshActivePeriod(){
+  try{ ACTIVE=await getActivePeriodFromDB(); }catch(e){}
+}
+
 async function prevBalance(y,m,q){
   const p=prevQ(y,m,q);
   const d=await getPeriodo(p.y,p.m,p.q);
@@ -1303,10 +1316,13 @@ function buildDonut(items,totalOut){
 }
 
 // Selector de período — estados leídos del caché ya poblado
+// El semáforo se mide contra la quincena REALMENTE activa (ACTIVE), no
+// contra el calendario: una quincena cuyo salario aún no se ha registrado
+// sigue siendo "próxima" (gris) aunque la fecha ya haya llegado.
 function periodState(y,m,q){
   const d=cache[cacheKey(y,m,q)];
   if(d&&d.closed)return 'cerrado';
-  const act=getActivePeriod();
+  const act=ACTIVE||getActivePeriod();
   const rank=y*100+m*2+q, actRank=act.y*100+act.m*2+act.q;
   if(rank<actRank)return 'cerrado';
   if(rank===actRank)return 'activo';
@@ -1735,6 +1751,7 @@ window._cerrarQuincena=function(){
       const next=q===1?{m,q:2}:{m:m===11?0:m+1,q:1};
       const nextY=q===2&&m===11?y+1:y;
       CP={m:next.m,q:next.q}; CY=nextY;
+      await refreshActivePeriod();
       toast(`${MN[m]} Q${q} cerrada — ahora en ${MN[next.m]} Q${next.q}`);
       renderPanel();
     });
@@ -1755,6 +1772,8 @@ window._setIncome=async()=>{
     if(pb>0){d.transferIn=pb;d.transferLabel=`Sobrante ${MN[p.m]} Q${p.q}${p.y!==y?' '+p.y:''}`;}
   }
   await savePeriodo(y,m,q,d);
+  // El ingreso es lo que activa una quincena: recalcular el semáforo
+  await refreshActivePeriod();
   renderPanel();
   toast('Ingreso guardado'+(esPrimerIngreso&&d.transferIn>0?` · Sobrante ${fmtPlain(d.transferIn)} transferido`:''));
 };
