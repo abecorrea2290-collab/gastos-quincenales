@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<title>Gastos GQ v2.0.1</title>
+<title>Gastos GQ v2.0.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -231,9 +231,10 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 /* ── CARDS / SECCIONES ─────────────────────────────────────────────── */
 .sec{padding:16px 18px;border-radius:10px;background:var(--color-surface);box-shadow:var(--shadow-sm)}
 /* Secciones plegables (captura de datos) */
-.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;text-align:left}
-.sec-head h4{margin:0}
-.sec-head .sec-hint{font-size:11px;color:var(--color-neutral-600);font-weight:400}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.sec-head h4{margin:0;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+/* nowrap para que el resumen ("$ 3.200.000") no se parta entre líneas */
+.sec-head .sec-hint{font-size:11px;color:var(--color-neutral-600);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .sec-chevron{flex:none;color:var(--color-neutral-500);font-size:16px;transition:transform 200ms}
 .sec.collapsed .sec-chevron{transform:rotate(-90deg)}
 .sec.collapsed .sec-content{display:none}
@@ -293,6 +294,10 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 .catrow{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 130px 62px;gap:14px;align-items:center;font-size:13px}
 .donutgrid{display:grid;grid-template-columns:170px minmax(0,1fr);gap:22px;align-items:center}
 .yearbars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px;align-items:end;height:180px}
+/* Las barras se encogen con el contenedor: con ancho fijo de 9px las 12
+   parejas desbordaban en pantallas de ≤360px y obligaban a scroll lateral */
+.yb-pair{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:3px;width:100%;min-width:0}
+.yb-bar{flex:1;min-width:0;max-width:9px;border-radius:2px}
 .insight-line{padding:11px 14px;border-radius:8px;background:var(--color-bg);box-shadow:inset 3px 0 0 var(--color-accent);font-size:12.5px;color:var(--color-neutral-300)}
 .action-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:9px;background:var(--color-bg);box-shadow:inset 0 0 0 1px var(--color-divider)}
 .accent-opt{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 10px;border-radius:999px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-neutral-400);font:inherit;font-size:12.5px;cursor:pointer}
@@ -352,6 +357,29 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
   .hero-num{font-size:32px!important}
   h1{font-size:30px}
   .topbar{padding-top:10px;padding-bottom:10px}
+  .yearbars{gap:4px}
+}
+/* Título más corto en móvil para que título + resumen quepan en una línea */
+@media(max-width:720px){ .sec-head h4{font-size:15px} }
+
+/* Movimientos como tarjetas en móvil — la tabla medía 572px dentro de un
+   contenedor de ~328px y obligaba a desplazarse lateralmente */
+.td-meta-mob{display:none}
+@media(max-width:720px){
+  .items-tbl thead{display:none}
+  .items-tbl tbody tr{
+    display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+    grid-template-areas:"desc amt act" "meta amt act";
+    gap:2px 10px;padding:11px 14px;align-items:center;
+  }
+  .items-tbl td{display:block;padding:0;border:0}
+  .items-tbl .td-ref,.items-tbl .td-date{display:none}
+  .items-tbl .td-desc{grid-area:desc;min-width:0}
+  .items-tbl .td-cat{grid-area:meta;min-width:0}
+  .items-tbl .td-amt{grid-area:amt;text-align:right;font-weight:600;font-size:13.5px}
+  .items-tbl .td-act{grid-area:act;padding-right:0!important;display:flex;gap:2px}
+  .items-tbl .td-act .btn-icon{width:32px;height:32px}
+  .td-meta-mob{display:block;font-size:10.5px;color:var(--color-neutral-600);margin-top:2px}
 }
 </style>
 </head>
@@ -759,6 +787,12 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.0.2', date:'2026-08-31', changes:[
+    'Movimientos en formato de tarjeta en móvil: la tabla medía 572 px dentro de 328 px y obligaba a desplazarse de lado para ver el valor y los botones',
+    'Las barras del año ahora se encogen con la pantalla — con ancho fijo desbordaban en teléfonos de 360 px o menos',
+    'El bloque "Instalar aplicación" siempre muestra un botón: si el navegador no ofrece la instalación directa, abre una guía paso a paso según el dispositivo',
+    'Encabezados de las secciones plegables ajustados para que título y resumen quepan en una línea en móvil',
+  ]},
   { ver:'2.0.1', date:'2026-08-31', changes:[
     'Secciones de captura plegables (Ingreso de la quincena, Ingresos adicionales y Agregar gasto), con resumen en el encabezado',
     'En móvil arrancan plegadas: la página pasa de 3.734 a 2.942 px y los gráficos suben de 2.931 a 2.139 px',
@@ -1155,7 +1189,7 @@ window.toggleSec=function(key){
 function secCollapsible(key,title,inner,hint){
   return `<div class="sec${isSecCollapsed(key)?' collapsed':''}" id="sec-${key}">
     <button class="sec-head" type="button" onclick="toggleSec('${key}')">
-      <h4>${title}${hint?` <span class="sec-hint">${hint}</span>`:''}</h4>
+      <h4><span>${title}</span>${hint?`<span class="sec-hint">${hint}</span>`:''}</h4>
       <i class="ph ph-caret-down sec-chevron"></i>
     </button>
     <div class="sec-content">${inner}</div>
@@ -1290,9 +1324,9 @@ async function renderYearBars(){
   const max=Math.max(1,...inc,...out);
   el.innerHTML=MN_S.map((label,mi)=>`
     <div style="display:flex;flex-direction:column;align-items:center;gap:5px;height:100%" title="${MN[mi]} · Ingresos ${fmtPlain(inc[mi])} · Gastos ${fmtPlain(out[mi])}">
-      <div style="flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center">
-        <div style="width:9px;border-radius:2px;height:${(inc[mi]/max*100).toFixed(1)}%;background:var(--color-accent)"></div>
-        <div style="width:9px;border-radius:2px;height:${(out[mi]/max*100).toFixed(1)}%;background:var(--color-neutral-500)"></div>
+      <div class="yb-pair">
+        <div class="yb-bar" style="height:${(inc[mi]/max*100).toFixed(1)}%;background:var(--color-accent)"></div>
+        <div class="yb-bar" style="height:${(out[mi]/max*100).toFixed(1)}%;background:var(--color-neutral-500)"></div>
       </div>
       <span style="font-size:10px;color:var(--color-neutral-600)">${label}</span>
     </div>`).join('');
@@ -1589,22 +1623,23 @@ function renderItems(items){
     el.innerHTML=`<div class="empty">${_itemSearch||_catFilter?'Sin resultados para el filtro actual':'Sin movimientos registrados'}</div>`;
     return;
   }
-  el.innerHTML=`<table class="table">
+  el.innerHTML=`<table class="table items-tbl">
     <thead><tr>
       <th style="padding-left:18px">Ref</th><th>Fecha</th><th>Descripción</th><th>Categoría</th>
       <th style="text-align:right">Valor</th><th></th>
     </tr></thead>
     <tbody>${items.map(i=>`<tr>
-      <td class="num" style="padding-left:18px;color:var(--color-neutral-600);font-size:11.5px">${esc(i.ref||'—')}</td>
-      <td class="num" style="color:var(--color-neutral-500);font-size:12px">${esc(i.date||'-')}</td>
-      <td>
+      <td class="num td-ref" style="padding-left:18px;color:var(--color-neutral-600);font-size:11.5px">${esc(i.ref||'—')}</td>
+      <td class="num td-date" style="color:var(--color-neutral-500);font-size:12px">${esc(i.date||'-')}</td>
+      <td class="td-desc">
         <span>${esc(i.desc)}</span>
         ${i._q?`<span class="tag tag-neutral" style="margin-left:6px">Q${i._q}</span>`:''}
         ${i.note?`<div style="font-size:11px;color:var(--color-neutral-600);font-style:italic">${esc(i.note)}</div>`:''}
+        <div class="td-meta-mob">${esc(i.date||'-')}${i.ref?' · '+esc(i.ref):''}</div>
       </td>
-      <td><span class="cat-pill"><span class="dot" style="background:${getCatColor(i.cat)}"></span>${esc(i.cat||'—')}</span></td>
-      <td class="num" style="text-align:right;color:var(--color-accent-300)">−${fmtPlain(i.amount)}</td>
-      <td style="text-align:right;padding-right:14px;white-space:nowrap">
+      <td class="td-cat"><span class="cat-pill"><span class="dot" style="background:${getCatColor(i.cat)}"></span>${esc(i.cat||'—')}</span></td>
+      <td class="num td-amt" style="text-align:right;color:var(--color-accent-300)">−${fmtPlain(i.amount)}</td>
+      <td class="td-act" style="text-align:right;padding-right:14px;white-space:nowrap">
         <button class="btn btn-icon btn-ghost" onclick="openEditModal(${i.id},${i._q||'null'})" title="Editar"><i class="ph ph-pencil-simple"></i></button>
         <button class="btn btn-icon btn-ghost" onclick="_delItem(${i.id}${i._q?','+i._q:''})" title="Eliminar" style="color:var(--color-neutral-400)"><i class="ph ph-trash"></i></button>
       </td>
@@ -2638,18 +2673,58 @@ function renderInstallCard(){
       </div>${extra||''}
     </div>`;
   if(isStandalone()){
-    el.innerHTML=box('ph ph-check-circle','Ya estás usando la app instalada.','<span class="tag tag-accent" style="flex:none">Instalada</span>');
+    // Ya abierta como app: no hay nada que instalar
+    el.innerHTML=box('ph ph-check-circle','Ya estás usando la app instalada en tu dispositivo.',
+      '<span class="tag tag-accent" style="flex:none">Instalada</span>');
   } else if(deferredPrompt){
-    el.innerHTML=box('ph ph-download-simple','Instala Gastos GQ en este dispositivo.',
+    // El navegador ofrece la instalación nativa
+    el.innerHTML=box('ph ph-download-simple','Instala Gastos GQ para abrirla como app, sin barra del navegador.',
       '<button class="btn btn-primary" style="flex:none" onclick="installPWA()"><i class="ph ph-download-simple"></i> Instalar</button>');
-  } else if(isIOS()){
-    el.innerHTML=box('ph ph-share-network','En iPhone o iPad: toca <strong>Compartir</strong> en Safari y luego <strong>Añadir a pantalla de inicio</strong>.','');
   } else {
-    el.innerHTML=box('ph ph-info','Si no ves el botón, tu navegador aún no ofrece la instalación. Búscala en su menú como <strong>Instalar aplicación</strong> o <strong>Añadir a pantalla de inicio</strong>.','');
+    // Sin evento nativo (típico si YA está instalada, en iOS, o si el
+    // navegador la ofrece solo desde su menú): siempre dejamos un botón
+    // que explique cómo hacerlo paso a paso.
+    el.innerHTML=box('ph ph-device-mobile','Instálala desde el menú de tu navegador.',
+      '<button class="btn btn-secondary" style="flex:none" onclick="showInstallHelp()"><i class="ph ph-question"></i> Cómo instalar</button>');
   }
 }
+
+window.showInstallHelp=function(){
+  const ios=isIOS();
+  const android=/android/i.test(navigator.userAgent);
+  let pasos;
+  if(ios){
+    pasos=['Abre esta página en <strong>Safari</strong> (no funciona desde otros navegadores en iPhone).',
+           'Toca el botón <strong>Compartir</strong> (el cuadrado con la flecha hacia arriba).',
+           'Desliza y elige <strong>Añadir a pantalla de inicio</strong>.',
+           'Confirma con <strong>Añadir</strong>.'];
+  } else if(android){
+    pasos=['Toca el menú <strong>⋮</strong> (tres puntos) de Chrome, arriba a la derecha.',
+           'Elige <strong>Instalar aplicación</strong> o <strong>Añadir a pantalla de inicio</strong>.',
+           'Confirma con <strong>Instalar</strong>.',
+           'Si no ves la opción, es porque la app <strong>ya está instalada</strong>: búscala en tu cajón de aplicaciones.'];
+  } else {
+    pasos=['En la barra de direcciones, busca el icono de <strong>instalar</strong> (una pantalla con una flecha).',
+           'O abre el menú <strong>⋮</strong> del navegador y elige <strong>Instalar Gastos GQ</strong>.',
+           'Si no aparece, es porque la app <strong>ya está instalada</strong> en este equipo.'];
+  }
+  const old=document.getElementById('install-help');if(old)old.remove();
+  const d=document.createElement('div');
+  d.className='dialog-backdrop'; d.id='install-help';
+  d.innerHTML=`<div class="dialog">
+    <div class="dialog-title">Cómo instalar la app</div>
+    <ol style="margin:0;padding-left:20px;font-size:13px;color:var(--color-neutral-300);line-height:1.7">
+      ${pasos.map(p=>`<li>${p}</li>`).join('')}
+    </ol>
+    <div class="dialog-actions"><button class="btn btn-secondary" id="ih-close">Entendido</button></div>
+  </div>`;
+  d.onclick=e=>{if(e.target===d)d.remove();};
+  document.body.appendChild(d);
+  document.getElementById('ih-close').onclick=()=>d.remove();
+};
+
 window.installPWA=async()=>{
-  if(!deferredPrompt){toast('La instalación no está disponible en este momento');return;}
+  if(!deferredPrompt){showInstallHelp();return;}
   deferredPrompt.prompt();
   let outcome='dismissed';
   try{ ({outcome}=await deferredPrompt.userChoice); }catch(e){}
