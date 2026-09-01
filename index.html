@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<title>Gastos GQ v2.0.3</title>
+<title>Gastos GQ v2.1.0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -797,6 +797,12 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.1.0', date:'2026-09-01', changes:[
+    'La app solo pasa a la siguiente quincena cuando se registra el ingreso del salario; mientras tanto se mantiene en la anterior, que es donde sigues trabajando',
+    'Si cierras una quincena a mano, se respeta y no se retrocede a ella',
+    'Si la quincena vigente ya está cerrada, se avanza a la siguiente como antes',
+    'Restaura el comportamiento que se había quitado por error en la v1.5.2',
+  ]},
   { ver:'2.0.3', date:'2026-08-31', changes:[
     'Corregida la leyenda de estado de la quincena (Cerrado · Activo · Próximo), que se salía 54 px del cuadro en móvil',
     'En móvil el selector Q1/Q2 pasa a su propia fila y ocupa el ancho completo, con la leyenda debajo',
@@ -1074,14 +1080,24 @@ function getActivePeriod(){
 }
 function prevQ(y,m,q){if(q===2)return{y,m,q:1};if(m===0)return{y:y-1,m:11,q:2};return{y,m:m-1,q:2};}
 
-// La quincena vigente según calendario, salvo que ya esté cerrada.
+const nextQof=p=>p.q===1?{y:p.y,m:p.m,q:2}:p.m===11?{y:p.y+1,m:0,q:1}:{y:p.y,m:p.m+1,q:1};
+
+// Quincena en la que abre la app.
+// La regla la marca el pago: una quincena nueva solo se vuelve la activa
+// cuando se registra su ingreso. Mientras no se haya registrado, la app se
+// queda en la anterior, que es donde el usuario sigue trabajando.
 async function getActivePeriodFromDB(){
-  const base=getActivePeriod();
+  const base=getActivePeriod();          // la vigente según el calendario
   try{
     const d=await getPeriodo(base.y,base.m,base.q);
-    if(d.closed){
-      return base.q===1?{y:base.y,m:base.m,q:2}:
-        base.m===11?{y:base.y+1,m:0,q:1}:{y:base.y,m:base.m+1,q:1};
+    if(d.closed) return nextQof(base);            // ya cerrada → siguiente
+    if(d.income&&d.income>0) return base;         // ingreso registrado → es la activa
+    // Sin ingreso todavía: mantenerse en la anterior mientras siga abierta
+    // y tenga ingreso. Si ya se cerró a mano, se respeta y no se retrocede.
+    const prev=prevQ(base.y,base.m,base.q);
+    if(prev.y>=MIN_YEAR){
+      const dPrev=await getPeriodo(prev.y,prev.m,prev.q);
+      if(!dPrev.closed&&dPrev.income>0) return prev;
     }
   }catch(e){}
   return base;
