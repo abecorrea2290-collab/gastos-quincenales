@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<title>Gastos GQ v2.0.0</title>
+<title>Gastos GQ v2.0.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -230,6 +230,14 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 
 /* ── CARDS / SECCIONES ─────────────────────────────────────────────── */
 .sec{padding:16px 18px;border-radius:10px;background:var(--color-surface);box-shadow:var(--shadow-sm)}
+/* Secciones plegables (captura de datos) */
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.sec-head h4{margin:0}
+.sec-head .sec-hint{font-size:11px;color:var(--color-neutral-600);font-weight:400}
+.sec-chevron{flex:none;color:var(--color-neutral-500);font-size:16px;transition:transform 200ms}
+.sec.collapsed .sec-chevron{transform:rotate(-90deg)}
+.sec.collapsed .sec-content{display:none}
+.sec-content{margin-top:12px}
 .sec-flush{border-radius:10px;background:var(--color-surface);box-shadow:var(--shadow-sm);overflow:hidden}
 .stat{padding:14px 16px;border-radius:10px;background:var(--color-surface);box-shadow:var(--shadow-sm)}
 .stat-lbl{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-neutral-500)}
@@ -269,7 +277,9 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 /* ── FORM DE GASTO ─────────────────────────────────────────────────── */
 .expense-grid{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr) minmax(0,140px) minmax(0,170px) minmax(0,140px);gap:10px;align-items:flex-end}
 .prest-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:flex-end}
-.income-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px}
+/* align-items:start — si no, el grid estira la sección plegada a la altura
+   de la otra y deja una tarjeta vacía */
+.income-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;align-items:start}
 .row-mini{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 11px;border-radius:7px;background:var(--color-bg);font-size:12.5px}
 
 /* ── SWITCH (categorías) ───────────────────────────────────────────── */
@@ -571,6 +581,12 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
         </section>
 
         <section class="sec">
+          <h4 style="margin:0 0 4px">Instalar aplicación</h4>
+          <p style="font-size:12px;color:var(--color-neutral-600);margin:0 0 12px">Instálala en tu dispositivo para abrirla como una app, a pantalla completa y sin barra del navegador.</p>
+          <div id="install-card"></div>
+        </section>
+
+        <section class="sec">
           <h4 style="margin:0 0 4px">Color de acento</h4>
           <p style="font-size:12px;color:var(--color-neutral-600);margin:0 0 12px">Define el color con el que se resaltan cifras, estados y controles en toda la app.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap" id="accent-opts"></div>
@@ -743,6 +759,13 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.0.1', date:'2026-08-31', changes:[
+    'Secciones de captura plegables (Ingreso de la quincena, Ingresos adicionales y Agregar gasto), con resumen en el encabezado',
+    'En móvil arrancan plegadas: la página pasa de 3.734 a 2.942 px y los gráficos suben de 2.931 a 2.139 px',
+    'El estado de cada sección se recuerda por separado en el dispositivo',
+    'Nuevo bloque "Instalar aplicación" en Configuración, con instrucciones para iOS y para navegadores sin instalación directa',
+    'Corregido: al plegar una de las dos tarjetas de ingreso, el grid la estiraba y dejaba una tarjeta vacía',
+  ]},
   { ver:'2.0.0', date:'2026-08-31', changes:[
     'Rediseño completo de la interfaz sobre el sistema Nocturne: tema oscuro con acento blurple, tipografía Inter y nueva jerarquía visual',
     'Selector de período: 12 chips de mes con semáforo de estado (cerrado / activo / próximo) y segmentado Q1 · Q2 — reemplaza las 24 pestañas',
@@ -1112,6 +1135,33 @@ function trendBadge(current,previous,invert){
   return `<span style="font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--color-bg);color:${color}">${label}</span>`;
 }
 
+// ── SECCIONES PLEGABLES ───────────────────────────────────────────────
+// En móvil los bloques de captura arrancan plegados: son los que empujaban
+// los gráficos casi 3 pantallas hacia abajo.
+const isMobile=()=>window.matchMedia('(max-width:1080px)').matches;
+function isSecCollapsed(key){
+  const v=lsGet('gq_sec_'+key,'');
+  if(v==='0')return false;
+  if(v==='1')return true;
+  return isMobile();
+}
+window.toggleSec=function(key){
+  const el=document.getElementById('sec-'+key);
+  if(!el)return;
+  const now=!el.classList.contains('collapsed');
+  el.classList.toggle('collapsed',now);
+  lsSet('gq_sec_'+key,now?'1':'0');
+};
+function secCollapsible(key,title,inner,hint){
+  return `<div class="sec${isSecCollapsed(key)?' collapsed':''}" id="sec-${key}">
+    <button class="sec-head" type="button" onclick="toggleSec('${key}')">
+      <h4>${title}${hint?` <span class="sec-hint">${hint}</span>`:''}</h4>
+      <i class="ph ph-caret-down sec-chevron"></i>
+    </button>
+    <div class="sec-content">${inner}</div>
+  </div>`;
+}
+
 function statCard(icon,label,value,color,sub,trend){
   return `<div class="stat">
     <div class="stat-lbl"><i class="${icon}"></i>${label}</div>
@@ -1258,11 +1308,8 @@ function buildExpenseForm(){
       <i class="ph-fill ph-star" style="font-size:11px;color:var(--color-accent)"></i>${esc(f.desc)} · <span class="num">${fmtPlain(f.amount)}</span>
       <span onclick="event.stopPropagation();_delFav(${f.id})" style="opacity:.5;font-size:11px"><i class="ph ph-x"></i></span>
     </button>`).join('');
-  return `<section class="sec">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap">
-      <h4 style="margin:0">Agregar gasto</h4>
-      <span style="font-size:11px;color:var(--color-neutral-600)">${viewMode==='m'?'La quincena se detecta por la fecha':'Se registra en '+MN[CP.m]+' Q'+CP.q}</span>
-    </div>
+  const hint=viewMode==='m'?'La quincena se detecta por la fecha':'Se registra en '+MN[CP.m]+' Q'+CP.q;
+  return secCollapsible('gasto','Agregar gasto',`
     <div class="expense-grid">
       <div class="field"><label>Referencia</label><input class="input" id="iref" placeholder="**** 1234" maxlength="20"></div>
       <div class="field"><label>Descripción</label><input class="input" id="idesc" placeholder="Arriendo, mercado…" autocomplete="off"></div>
@@ -1277,8 +1324,7 @@ function buildExpenseForm(){
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px" id="fav-chips">
       ${favs}
       <button type="button" class="chip-fav-add" onclick="_addFavFromForm()"><i class="ph ph-star"></i> Guardar como favorito</button>
-    </div>
-  </section>`;
+    </div>`,hint);
 }
 
 function buildIncomeSection(data,extra,totalIn){
@@ -1288,9 +1334,9 @@ function buildIncomeSection(data,extra,totalIn){
       <span class="num" style="color:var(--color-accent-300)">${fmtPlain(e.amount)}</span>
       <button class="btn btn-icon btn-ghost" onclick="_delExtra(${e.id}${e._q?','+e._q:''})" title="Eliminar"><i class="ph ph-x"></i></button>
     </div>`).join('') || `<div style="font-size:12px;color:var(--color-neutral-600);padding:4px 0">Sin ingresos adicionales</div>`;
+  const nExtra=(data.extraIncome||[]).length;
   return `<section class="income-grid">
-    <div class="sec">
-      <h4 style="margin:0 0 12px">Ingreso de la quincena</h4>
+    ${secCollapsible('ingreso','Ingreso de la quincena',`
       <div style="display:flex;gap:8px;align-items:flex-end">
         <div class="field" style="flex:1"><label>Ingreso base (COP)</label><input class="input num" id="ii" type="text" inputmode="numeric" value="${fmtMoneyVal(data.income)}" placeholder="0" oninput="onMoneyInput(this)"></div>
         <button class="btn btn-primary" onclick="_setIncome()">Guardar</button>
@@ -1300,17 +1346,15 @@ function buildIncomeSection(data,extra,totalIn){
         ${extra>0?`<span>+ Extra <span class="num" style="color:var(--color-accent-300)">${fmtPlain(extra)}</span></span>`:''}
         ${data.transferIn>0?`<span>+ Sobrante <span class="num" style="color:var(--color-accent-300)">${fmtPlain(data.transferIn)}</span></span>`:''}
         <span style="margin-left:auto">= Total <span class="num" style="color:var(--color-text)">${fmtPlain(totalIn)}</span></span>
-      </div>
-    </div>
-    <div class="sec">
-      <h4 style="margin:0 0 12px">Ingresos adicionales</h4>
+      </div>`,fmtPlain(data.income))}
+    ${secCollapsible('extra','Ingresos adicionales',`
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:8px;align-items:flex-end">
         <div class="field"><label>Descripción</label><input class="input" id="ei-desc" placeholder="Horas extra, freelance…"></div>
         <div class="field"><label>Valor (COP)</label><input class="input num" id="ei-amt" type="text" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div>
         <button class="btn btn-primary" onclick="_addExtra()"><i class="ph ph-plus"></i> Agregar</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:5px;margin-top:12px">${list}</div>
-    </div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:12px">${list}</div>`,
+      nExtra?`${nExtra} · ${fmtPlain(extra)}`:'ninguno')}
   </section>`;
 }
 
@@ -2301,6 +2345,9 @@ window.renderConfigPanel=async function(){
   // Nivelaciones
   renderAjusteInfo();
 
+  // Instalación de la app
+  renderInstallCard();
+
   // Color de acento
   const cur=lsGet('gq_accent','#9184d9');
   const ao=document.getElementById('accent-opts');
@@ -2564,7 +2611,55 @@ document.addEventListener('keydown',e=>{
 });
 
 // ══════════════════════════════════════════════════════════════════════
-//  PWA
+//  PWA — instalación
+// ══════════════════════════════════════════════════════════════════════
+let deferredPrompt=null;
+const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  renderInstallCard();
+});
+window.addEventListener('appinstalled',()=>{
+  deferredPrompt=null;
+  renderInstallCard();
+  toast('Aplicación instalada');
+});
+
+function renderInstallCard(){
+  const el=document.getElementById('install-card');
+  if(!el)return;
+  const box=(icon,text,extra)=>`<div class="action-row">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <i class="${icon}" style="font-size:22px;color:var(--color-accent);flex:none"></i>
+        <div style="font-size:13px;color:var(--color-neutral-300);min-width:0">${text}</div>
+      </div>${extra||''}
+    </div>`;
+  if(isStandalone()){
+    el.innerHTML=box('ph ph-check-circle','Ya estás usando la app instalada.','<span class="tag tag-accent" style="flex:none">Instalada</span>');
+  } else if(deferredPrompt){
+    el.innerHTML=box('ph ph-download-simple','Instala Gastos GQ en este dispositivo.',
+      '<button class="btn btn-primary" style="flex:none" onclick="installPWA()"><i class="ph ph-download-simple"></i> Instalar</button>');
+  } else if(isIOS()){
+    el.innerHTML=box('ph ph-share-network','En iPhone o iPad: toca <strong>Compartir</strong> en Safari y luego <strong>Añadir a pantalla de inicio</strong>.','');
+  } else {
+    el.innerHTML=box('ph ph-info','Si no ves el botón, tu navegador aún no ofrece la instalación. Búscala en su menú como <strong>Instalar aplicación</strong> o <strong>Añadir a pantalla de inicio</strong>.','');
+  }
+}
+window.installPWA=async()=>{
+  if(!deferredPrompt){toast('La instalación no está disponible en este momento');return;}
+  deferredPrompt.prompt();
+  let outcome='dismissed';
+  try{ ({outcome}=await deferredPrompt.userChoice); }catch(e){}
+  deferredPrompt=null;
+  renderInstallCard();
+  if(outcome!=='accepted') toast('Instalación cancelada');
+};
+
+// ══════════════════════════════════════════════════════════════════════
+//  PWA — service worker
 // ══════════════════════════════════════════════════════════════════════
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
