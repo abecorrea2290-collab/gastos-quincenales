@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastos-gq-v2.1.1';
+const CACHE_NAME = 'gastos-gq-v2.2.0';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,7 +6,6 @@ const ASSETS = [
   '/assets/icon-192.png',
   '/assets/icon-512.png',
   'https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css',
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css',
 ];
 
 self.addEventListener('install', e => {

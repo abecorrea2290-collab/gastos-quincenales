@@ -14,9 +14,14 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/assets/icon-512.png">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<!-- Solo la familia "regular": la variante "fill" cargaba otra fuente completa
+     para un único icono (la estrella de favoritos). -->
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<title>Gastos GQ v2.1.1</title>
+<title>Gastos GQ v2.2.0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -220,7 +225,8 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 .topbar{
   position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   padding:12px 28px;background:color-mix(in srgb, #161826 82%, transparent);
-  backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--color-divider);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 1px 0 var(--color-divider);
 }
 .pad{display:flex;flex-direction:column;gap:16px;padding:20px 28px 48px}
 .panel{display:none}
@@ -324,8 +330,18 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 .bnav{
   display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;justify-content:space-around;
   padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
-  background:color-mix(in srgb, #161826 94%, transparent);backdrop-filter:blur(14px);
+  background:color-mix(in srgb, #161826 94%, transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   box-shadow:0 -1px 0 var(--color-divider);
+}
+
+/* iOS/móvil: el desenfoque en barras fijas obliga a Safari a recomponer en
+   GPU en cada scroll y provoca tirones. Fondo opaco en su lugar. */
+@media(max-width:1080px){
+  .topbar,.bnav{
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    background:#161826!important;
+  }
 }
 .bnav button{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;
@@ -797,6 +813,14 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.2.0', date:'2026-09-01', changes:[
+    'Arranque mucho más rápido: las lecturas a Firestore que se hacían una tras otra ahora van en paralelo — de una cadena de ~30 idas y vueltas a solo 3 antes de mostrar el panel',
+    'Resumen anual, Estimación, Buscador global y exportación cargan el año completo de una sola vez en vez de quincena por quincena',
+    'La reparación de sobrantes históricos ya no corre en cada apertura: se difiere y se ejecuta una sola vez por año',
+    'Scroll fluido en iOS: se retira el desenfoque de las barras fija y superior en móvil, que obligaba a Safari a recomponer en GPU en cada desplazamiento',
+    'Se elimina la segunda fuente de iconos, que se descargaba entera para un único icono',
+    'Preconexión a los servidores de fuentes, iconos y Firestore para acortar la carga inicial',
+  ]},
   { ver:'2.1.1', date:'2026-09-01', changes:[
     'El semáforo del selector de período ahora sigue la quincena realmente activa: una quincena cuyo salario aún no se registra se mantiene en gris aunque ya haya llegado su fecha',
   ]},
@@ -968,6 +992,15 @@ async function savePeriodo(y,m,q,data){
   try{await setDoc(doc(db,periodoRef(y,m,q)),{...data,updatedAt:serverTimestamp()});setSyncStatus('ok','Sincronizado · Firestore');}
   catch(e){setSyncStatus('err','Error al guardar');}
 }
+// Carga las 24 quincenas de un año EN PARALELO. Los bucles secuenciales de
+// `await getPeriodo` encadenaban 24 idas y vueltas, que en móvil dominaban
+// por completo el tiempo de carga.
+async function loadYear(y){
+  const jobs=[];
+  for(let mi=0;mi<12;mi++)for(const q of[1,2]) jobs.push(getPeriodo(y,mi,q).then(d=>({mi,q,d})));
+  return Promise.all(jobs);
+}
+
 async function getPrest(){if(cache['_prest'])return cache['_prest'];try{const snap=await getDoc(doc(db,prestRef()));const d=snap.exists()?(snap.data().lista||[]):[];cache['_prest']=d;return d;}catch(e){return [];}}
 async function savePrest(lista){cache['_prest']=lista;try{await setDoc(doc(db,prestRef()),{lista,updatedAt:serverTimestamp()});}catch(e){}}
 
@@ -1046,34 +1079,35 @@ onAuthStateChanged(auth,async user=>{
 async function initApp(){
   setSyncStatus('syncing','Cargando…');
   applyAccent(lsGet('gq_accent','#9184d9'));
-  await getCats();
-  await getAjuste();
-  await getFav();
-  await getPresupuestos();
+  // Las 4 lecturas de configuración son independientes: en paralelo son
+  // 1 ida y vuelta en vez de 4 (importa mucho en móvil).
+  await Promise.all([getCats(),getAjuste(),getFav(),getPresupuestos()]);
   CP=await getActivePeriodFromDB();
   ACTIVE={...CP};
   CY=CP.y;
   viewMode='q';
-  limpiarSobrantesHuerfanos(CY);
   sbNav('q');
   setSyncStatus('ok','Sincronizado · Firestore');
+  // Reparación de datos históricos: no debe competir con el primer pintado,
+  // así que se difiere y solo se ejecuta una vez por año y dispositivo.
+  if(lsGet('gq_fix_'+CY)!=='1'){
+    setTimeout(()=>limpiarSobrantesHuerfanos(CY).then(()=>lsSet('gq_fix_'+CY,'1')),3000);
+  }
 }
 
 // Limpia el transferIn de quincenas sin ingreso registrado (datos históricos)
 async function limpiarSobrantesHuerfanos(y){
   let limpiados=0;
-  for(const[mi] of MN.entries()){
-    for(const q of [1,2]){
-      try{
-        const d=await getPeriodo(y,mi,q);
-        if((!d.income||d.income===0) && d.transferIn>0){
-          d.transferIn=0; d.transferLabel='';
-          await savePeriodo(y,mi,q,d);
-          limpiados++;
-        }
-      }catch(e){}
+  try{
+    const periodos=await loadYear(y);
+    for(const{mi,q,d} of periodos){
+      if((!d.income||d.income===0) && d.transferIn>0){
+        d.transferIn=0; d.transferLabel='';
+        await savePeriodo(y,mi,q,d);
+        limpiados++;
+      }
     }
-  }
+  }catch(e){}
   if(limpiados>0) toast(`${limpiados} sobrante${limpiados!==1?'s':''} huérfano${limpiados!==1?'s':''} eliminado${limpiados!==1?'s':''}`);
 }
 
@@ -1363,8 +1397,7 @@ function buildPeriodBar(){
 async function renderYearBars(){
   const el=document.getElementById('year-bars');if(!el)return;
   const inc=new Array(12).fill(0), out=new Array(12).fill(0);
-  for(let mi=0;mi<12;mi++)for(const q of[1,2]){
-    const d=await getPeriodo(CY,mi,q);
+  for(const{mi,d} of await loadYear(CY)){
     inc[mi]+=(d.income||0)+(d.transferIn||0)+((d.extraIncome||[]).reduce((a,i)=>a+i.amount,0));
     out[mi]+=(d.items||[]).reduce((a,i)=>a+i.amount,0);
   }
@@ -1386,7 +1419,7 @@ function buildExpenseForm(){
   const opts=CATS.map(c=>`<option${c===lastCat?' selected':''}>${esc(c)}</option>`).join('');
   const favs=FAV_LISTA.map(f=>`
     <button type="button" class="chip-fav" onclick="_useFav(${f.id})" title="Agregar ${esc(f.desc)}">
-      <i class="ph-fill ph-star" style="font-size:11px;color:var(--color-accent)"></i>${esc(f.desc)} · <span class="num">${fmtPlain(f.amount)}</span>
+      <i class="ph ph-star" style="font-size:11px;color:var(--color-accent)"></i>${esc(f.desc)} · <span class="num">${fmtPlain(f.amount)}</span>
       <span onclick="event.stopPropagation();_delFav(${f.id})" style="opacity:.5;font-size:11px"><i class="ph ph-x"></i></span>
     </button>`).join('');
   const hint=viewMode==='m'?'La quincena se detecta por la fecha':'Se registra en '+MN[CP.m]+' Q'+CP.q;
@@ -1895,8 +1928,7 @@ window.renderDash=async function(){
   const body=document.getElementById('dash-body');
   body.innerHTML=spinner(`Cargando ${y}…`);
 
-  const results=[];
-  for(let mi=0;mi<12;mi++)for(const q of[1,2]) results.push({mi,q,d:await getPeriodo(y,mi,q)});
+  const results=await loadYear(y);
 
   let totalIn=0,totalOut=0,totalItems=0;
   const catTotals={};
@@ -2154,11 +2186,11 @@ window.calcEstimacion=async function(){
   const q1Periods=[],q2Periods=[],mesPeriods={},allQTimeline=[],yoyByMonth={};
 
   for(let y=MIN_YEAR;y<=yearActual;y++){
-    for(let mi=0;mi<12;mi++){
+    const delAnio=await loadYear(y);   // las 24 quincenas del año, en paralelo
+    for(const{mi,q,d} of delAnio){
       const key=`${y}_${mi}`;
-      for(const q of[1,2]){
+      {
         try{
-          const d=await getPeriodo(y,mi,q);
           if(!d.income||d.income===0)continue;
           const extra=(d.extraIncome||[]).reduce((a,i)=>a+i.amount,0);
           const totalIncome=d.income+extra;
@@ -2321,13 +2353,14 @@ window.runGlobalSearch=async function(){
   const yearActual=Math.max(new Date().getFullYear(),MIN_YEAR);
   const years=yearSel==='all'?Array.from({length:yearActual-MIN_YEAR+1},(_,i)=>MIN_YEAR+i):[parseInt(yearSel)];
   const found=[];
-  for(const y of years)for(let mi=0;mi<12;mi++)for(const q of[1,2]){
+  for(const y of years){
     try{
-      const d=await getPeriodo(y,mi,q);
-      (d.items||[]).forEach(i=>{
-        const hay=(i.desc||'').toLowerCase().includes(qStr)||(i.ref||'').toLowerCase().includes(qStr)||(i.cat||'').toLowerCase().includes(qStr)||(i.note||'').toLowerCase().includes(qStr);
-        if(hay)found.push({...i,_y:y,_mi:mi,_q:q});
-      });
+      for(const{mi,q,d} of await loadYear(y)){
+        (d.items||[]).forEach(i=>{
+          const hay=(i.desc||'').toLowerCase().includes(qStr)||(i.ref||'').toLowerCase().includes(qStr)||(i.cat||'').toLowerCase().includes(qStr)||(i.note||'').toLowerCase().includes(qStr);
+          if(hay)found.push({...i,_y:y,_mi:mi,_q:q});
+        });
+      }
     }catch(e){}
   }
   found.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
@@ -2555,14 +2588,15 @@ window.fixSobrantes=function(){
   askConfirm('Corregir sobrantes huérfanos','Elimina transferencias en quincenas sin ingreso registrado, en todos los años.','Corregir',async()=>{
     let limpiados=0;
     const yearActual=Math.max(new Date().getFullYear(),MIN_YEAR);
-    for(let y=MIN_YEAR;y<=yearActual;y++)for(let mi=0;mi<12;mi++)for(const q of[1,2]){
+    for(let y=MIN_YEAR;y<=yearActual;y++){
       try{
-        delete cache[cacheKey(y,mi,q)];
-        const d=await getPeriodo(y,mi,q);
-        if((!d.income||d.income===0)&&d.transferIn>0){
-          d.transferIn=0;d.transferLabel='';
-          await savePeriodo(y,mi,q,d);
-          limpiados++;
+        for(let mi=0;mi<12;mi++)for(const q of[1,2]) delete cache[cacheKey(y,mi,q)];
+        for(const{mi,q,d} of await loadYear(y)){
+          if((!d.income||d.income===0)&&d.transferIn>0){
+            d.transferIn=0;d.transferLabel='';
+            await savePeriodo(y,mi,q,d);
+            limpiados++;
+          }
         }
       }catch(e){}
     }
@@ -2576,8 +2610,7 @@ window.fixSobrantes=function(){
 window.exportCSV=async function(){
   toast('Preparando exportación…');
   const rows=[['Año','Mes','Quincena','Fecha','Referencia','Descripción','Categoría','Nota','Valor']];
-  for(let mi=0;mi<12;mi++)for(const q of[1,2]){
-    const d=await getPeriodo(CY,mi,q);
+  for(const{mi,q,d} of await loadYear(CY)){
     (d.items||[]).forEach(i=>rows.push([CY,MN[mi],'Q'+q,i.date||'',i.ref||'',i.desc||'',i.cat||'',i.note||'',i.amount||0]));
   }
   if(rows.length===1){toast('No hay movimientos para exportar en '+CY);return;}
