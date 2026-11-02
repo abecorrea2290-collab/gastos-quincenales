@@ -21,7 +21,7 @@
 <!-- Solo la familia "regular": la variante "fill" cargaba otra fuente completa
      para un único icono (la estrella de favoritos). -->
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-<title>Gastos GQ v2.2.0</title>
+<title>Gastos GQ v2.3.0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -132,6 +132,8 @@ select.input{
 .input:focus-visible{border-color:var(--color-accent);outline-offset:0}
 .input::placeholder{color:var(--color-neutral-600)}
 input[type=date].input,input[type=month].input{color-scheme:dark}
+/* Total de una suma escrita en el campo (p. ej. 15.000+8.500) */
+.sum-preview{display:none;margin-top:4px;font-size:11px;font-weight:500;color:var(--color-accent);font-variant-numeric:tabular-nums}
 
 /* ── SEGMENTADO ────────────────────────────────────────────────────── */
 .seg{display:inline-flex;overflow:hidden;border:1px solid var(--color-divider);border-radius:var(--radius-md)}
@@ -193,9 +195,33 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
   width:216px;flex:none;position:sticky;top:0;height:100vh;
   display:flex;flex-direction:column;gap:18px;padding:18px 12px;
   background:linear-gradient(180deg,#1b1d2c,#161826 220px);
+  transition:width 220ms cubic-bezier(.4,0,.2,1);
 }
+/* ── Barra lateral plegada (solo escritorio): rail de iconos ───────── */
+.sb.collapsed{width:64px;padding-left:8px;padding-right:8px}
+.sb.collapsed .sb-brand{justify-content:center;padding:0}
+.sb.collapsed .sb-brand-txt,
+.sb.collapsed .sb-item span.lbl,
+.sb.collapsed .sb-bal,
+.sb.collapsed .sb-user span,
+.sb.collapsed .sb-sync span:not(.sync-dot){display:none}
+.sb.collapsed .sb-item{justify-content:center;padding:9px 0}
+.sb.collapsed .sb-user{justify-content:center;padding:6px 0}
+.sb.collapsed .sb-sync{justify-content:center;padding:0 0 4px}
+.sb-toggle{
+  position:absolute;top:22px;right:-11px;z-index:30;
+  width:22px;height:22px;padding:0;border-radius:50%;
+  display:grid;place-items:center;cursor:pointer;
+  background:var(--color-surface);color:var(--color-neutral-400);
+  border:1px solid var(--color-divider);font:inherit;
+  transition:color 140ms,border-color 140ms;
+}
+.sb-toggle:hover{color:var(--color-accent);border-color:var(--color-accent)}
+.sb-toggle i{font-size:12px;transition:transform 220ms cubic-bezier(.4,0,.2,1)}
+.sb.collapsed .sb-toggle i{transform:rotate(180deg)}
 .sb-brand{display:flex;align-items:center;gap:10px;padding:0 8px}
 .sb-brand img{width:36px;height:36px;border-radius:10px}
+.sb-brand-txt{display:flex;flex-direction:column;line-height:1.15;min-width:0}
 .sb-brand-name{font-family:var(--font-heading);font-weight:500;font-size:15px}
 .sb-brand-sub{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-neutral-500)}
 .sb-nav{display:flex;flex-direction:column;gap:1px}
@@ -319,6 +345,50 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 .accent-opt{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 10px;border-radius:999px;border:1px solid var(--color-divider);background:var(--color-bg);color:var(--color-neutral-400);font:inherit;font-size:12.5px;cursor:pointer}
 .accent-opt.on{border-color:var(--color-accent);background:color-mix(in srgb, var(--color-accent) 14%, transparent);color:var(--color-accent-200)}
 
+/* ══════════════════════════════════════════════════════════════════════
+   ANIMACIONES
+   Solo transform y opacity (compuestas en GPU); nada de width/height/top,
+   que forzarían layout en cada fotograma — justo lo que ralentizaba iOS.
+   Todo queda anulado si el sistema pide menos movimiento.
+   ══════════════════════════════════════════════════════════════════════ */
+@keyframes gq-rise{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+@keyframes gq-fade{from{opacity:0}to{opacity:1}}
+@keyframes gq-pop{from{opacity:0;transform:scale(.96) translate3d(0,6px,0)}to{opacity:1;transform:none}}
+@keyframes gq-toast{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes gq-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes gq-draw{from{stroke-dasharray:0 var(--circ)}to{stroke-dasharray:var(--len) var(--rest)}}
+
+@media (prefers-reduced-motion: no-preference){
+  /* Entrada escalonada de las secciones — solo al navegar, no al guardar */
+  .anim-in > *{animation:gq-rise 340ms cubic-bezier(.22,.61,.36,1) both}
+  .anim-in > *:nth-child(1){animation-delay:0ms}
+  .anim-in > *:nth-child(2){animation-delay:40ms}
+  .anim-in > *:nth-child(3){animation-delay:80ms}
+  .anim-in > *:nth-child(4){animation-delay:120ms}
+  .anim-in > *:nth-child(5){animation-delay:160ms}
+  .anim-in > *:nth-child(6){animation-delay:200ms}
+  .anim-in > *:nth-child(n+7){animation-delay:240ms}
+
+  /* Barras del año: crecen desde la base (scaleY, no height) */
+  .anim-in .yb-bar{transform-origin:bottom;animation:gq-grow 520ms cubic-bezier(.22,.61,.36,1) both}
+  .anim-in .yb-pair .yb-bar:nth-child(2){animation-delay:70ms}
+
+  /* Dona: se dibuja trazando el arco */
+  .anim-in .donut-arc{animation:gq-draw 760ms cubic-bezier(.22,.61,.36,1) both}
+
+  /* Diálogos y toast: siempre, porque aparecen bajo demanda */
+  .dialog-backdrop{animation:gq-fade 160ms ease-out both}
+  .dialog-backdrop .dialog{animation:gq-pop 220ms cubic-bezier(.22,.61,.36,1) both}
+  .toast{animation:gq-toast 240ms cubic-bezier(.22,.61,.36,1) both}
+
+  /* Realimentación al pulsar */
+  .btn:active:not(:disabled),.chip-fav:active,.chip-cat:active,
+  .mo-chip:active,.accent-opt:active{transform:scale(.97)}
+  .stat{transition:transform 160ms ease,box-shadow 160ms ease}
+  .stat:hover{transform:translate3d(0,-2px,0)}
+  .sb-item,.bnav button{transition:background 140ms ease,color 140ms ease}
+}
+
 /* ── TOAST ─────────────────────────────────────────────────────────── */
 .toast{
   position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:80;
@@ -430,24 +500,26 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
 <div class="shell">
 
   <!-- SIDEBAR -->
-  <aside class="sb">
+  <aside class="sb" id="sb">
+    <button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Plegar barra lateral" aria-label="Plegar barra lateral">
+      <i class="ph ph-caret-left"></i>
+    </button>
     <div class="sb-brand">
       <img src="/assets/icon-192.png" alt="Gastos GQ">
-      <div style="display:flex;flex-direction:column;line-height:1.15;min-width:0">
+      <div class="sb-brand-txt">
         <span class="sb-brand-name">Gastos GQ</span>
         <span class="sb-brand-sub">Control quincenal</span>
       </div>
     </div>
 
     <nav class="sb-nav" id="sb-nav">
-      <button class="sb-item active" data-nav="q"      onclick="sbNav('q')"><i class="ph ph-squares-four"></i>Panel</button>
-      <button class="sb-item"        data-nav="dash"   onclick="sbNav('dash')"><i class="ph ph-chart-bar"></i>Resumen anual</button>
-      <button class="sb-item"        data-nav="prest"  onclick="sbNav('prest')"><i class="ph ph-credit-card"></i>Préstamos</button>
-      <button class="sb-item"        data-nav="est"    onclick="sbNav('est')"><i class="ph ph-chart-line-up"></i>Estimación</button>
-      <button class="sb-item"        data-nav="buscar" onclick="sbNav('buscar')"><i class="ph ph-magnifying-glass"></i>Buscar</button>
-      <button class="sb-item"        data-nav="cats"   onclick="sbNav('cats')"><i class="ph ph-tag"></i>Categorías</button>
-      <button class="sb-item"        data-nav="config" onclick="sbNav('config')"><i class="ph ph-gear"></i>Configuración</button>
-      <button class="sb-item"        data-nav="log"    onclick="showChangelog()"><i class="ph ph-note"></i>Notas de versión</button>
+      <button class="sb-item active" data-nav="q"      onclick="sbNav('q')" title="Panel"><i class="ph ph-squares-four"></i><span class="lbl">Panel</span></button>
+      <button class="sb-item"        data-nav="dash"   onclick="sbNav('dash')" title="Resumen anual"><i class="ph ph-chart-bar"></i><span class="lbl">Resumen anual</span></button>
+      <button class="sb-item"        data-nav="prest"  onclick="sbNav('prest')" title="Préstamos"><i class="ph ph-credit-card"></i><span class="lbl">Préstamos</span></button>
+      <button class="sb-item"        data-nav="est"    onclick="sbNav('est')" title="Estimación"><i class="ph ph-chart-line-up"></i><span class="lbl">Estimación</span></button>
+      <button class="sb-item"        data-nav="buscar" onclick="sbNav('buscar')" title="Buscar"><i class="ph ph-magnifying-glass"></i><span class="lbl">Buscar</span></button>
+      <button class="sb-item"        data-nav="cats"   onclick="sbNav('cats')" title="Categorías"><i class="ph ph-tag"></i><span class="lbl">Categorías</span></button>
+      <button class="sb-item"        data-nav="config" onclick="sbNav('config')" title="Configuración"><i class="ph ph-gear"></i><span class="lbl">Configuración</span></button>
     </nav>
 
     <div class="sb-foot">
@@ -635,6 +707,21 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
         </section>
 
         <section class="sec">
+          <h4 style="margin:0 0 4px">Acerca de</h4>
+          <p style="font-size:12px;color:var(--color-neutral-600);margin:0 0 12px">Historial de cambios y versión instalada.</p>
+          <div class="action-row">
+            <div style="display:flex;align-items:center;gap:12px;min-width:0">
+              <i class="ph ph-note" style="font-size:22px;color:var(--color-accent);flex:none"></i>
+              <div style="min-width:0">
+                <div style="font-size:13.5px">Notas de versión</div>
+                <div style="font-size:12px;color:var(--color-neutral-500);margin-top:3px">Versión <span class="num" id="app-version"></span></div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="flex:none" onclick="showChangelog()">Ver cambios</button>
+          </div>
+        </section>
+
+        <section class="sec">
           <h4 style="margin:0 0 4px">Instalar aplicación</h4>
           <p style="font-size:12px;color:var(--color-neutral-600);margin:0 0 12px">Instálala en tu dispositivo para abrirla como una app, a pantalla completa y sin barra del navegador.</p>
           <div id="install-card"></div>
@@ -677,7 +764,7 @@ input[type=date].input,input[type=month].input{color-scheme:dark}
     </div>
     <div class="field"><label>Descripción</label><input class="input" id="ed-desc"></div>
     <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
-      <div class="field"><label>Valor (COP)</label><input class="input num" id="ed-amt" type="text" inputmode="numeric" oninput="onMoneyInput(this)"></div>
+      <div class="field"><label>Valor (COP)</label><input class="input num" id="ed-amt" type="text" inputmode="text" oninput="onMoneyInput(this)"><span class="sum-preview"></span></div>
       <div class="field"><label>Categoría</label><select class="input" id="ed-cat"></select></div>
     </div>
     <div class="field"><label>Nota</label><input class="input" id="ed-note" placeholder="Etiqueta o detalle"></div>
@@ -813,6 +900,13 @@ const BUDGET_WARN=80, BUDGET_ALERT=95;
 const ST_CERRADO='#c07b86', ST_ACTIVO='#7fae9c', ST_PROXIMO='var(--color-neutral-600)';
 
 const CHANGELOG=[
+  { ver:'2.3.0', date:'2026-11-02', changes:[
+    'Los campos de monto aceptan sumas y restas: escribir 15000+8500-2000 registra 21.500, con el resultado a la vista mientras se escribe',
+    'La barra lateral del escritorio se puede plegar a una franja de iconos, y recuerda cómo se dejó',
+    'Notas de versión pasa a Configuración → Acerca de, que además muestra la versión instalada',
+    'Animaciones en la interfaz: las tarjetas entran escalonadas al cambiar de vista, el saldo cuenta hasta su valor, el anillo de categorías se dibuja y las barras del año crecen',
+    'Todo el movimiento respeta la preferencia del sistema de reducir animaciones',
+  ]},
   { ver:'2.2.0', date:'2026-09-01', changes:[
     'Arranque mucho más rápido: las lecturas a Firestore que se hacían una tras otra ahora van en paralelo — de una cadena de ~30 idas y vueltas a solo 3 antes de mostrar el panel',
     'Resumen anual, Estimación, Buscador global y exportación cargan el año completo de una sola vez en vez de quincena por quincena',
@@ -1010,8 +1104,35 @@ function calcCuota(monto,tasa,cuotas){if(!tasa||tasa<=0)return monto/cuotas;cons
 function fmtPlain(n){return '$ '+Math.abs(Math.round(n)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function fmtSigned(n){return (n<0?'−':'')+fmtPlain(n);}
 const fmtMoneyVal=n=>(!n||n<=0)?'':Number(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-function parseMoneyInput(id){const el=document.getElementById(id);return el?(parseFloat(String(el.value).replace(/\./g,''))||0):0;}
-window.onMoneyInput=function(el){const raw=String(el.value).replace(/[^\d]/g,'');el.value=raw?parseInt(raw).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';};
+// Los campos de monto aceptan sumas y restas: "15.000+8.500-2.000" suma 21.500.
+// Útil para registrar una compra con varios ítems sin sacar la calculadora.
+const sepMiles=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+function evalMoney(str){
+  const s=String(str||'').replace(/[^\d+-]/g,'');   // fuera separadores y espacios
+  if(!s)return 0;
+  let total=0, signo=1, num='';
+  for(const ch of s){
+    if(ch==='+'||ch==='-'){
+      total+=signo*(parseInt(num||'0',10)||0);
+      signo=ch==='-'?-1:1; num='';
+    } else num+=ch;
+  }
+  total+=signo*(parseInt(num||'0',10)||0);
+  return total;
+}
+function parseMoneyInput(id){const el=document.getElementById(id);return el?evalMoney(el.value):0;}
+// Da formato a cada término por separado y conserva los operadores
+window.onMoneyInput=function(el){
+  const s=String(el.value).replace(/[^\d+-]/g,'');
+  el.value=s.replace(/\d+/g,d=>sepMiles(parseInt(d,10)));
+  const prev=el.parentElement&&el.parentElement.querySelector('.sum-preview')
+          || (el.closest('.field')&&el.closest('.field').querySelector('.sum-preview'));
+  if(prev){
+    const tieneOperador=/\d[+-]/.test(s);
+    prev.textContent=tieneOperador?'= '+fmtPlain(evalMoney(s)):'';
+    prev.style.display=tieneOperador?'block':'none';
+  }
+};
 const money=n=>`<span class="num">${fmtPlain(n)}</span>`;
 
 // ── FECHAS ────────────────────────────────────────────────────────────
@@ -1079,6 +1200,7 @@ onAuthStateChanged(auth,async user=>{
 async function initApp(){
   setSyncStatus('syncing','Cargando…');
   applyAccent(lsGet('gq_accent','#9184d9'));
+  restoreSidebar();
   // Las 4 lecturas de configuración son independientes: en paralelo son
   // 1 ida y vuelta en vez de 4 (importa mucho en móvil).
   await Promise.all([getCats(),getAjuste(),getFav(),getPresupuestos()]);
@@ -1186,6 +1308,7 @@ const PANELS={q:'panel-q',dash:'panel-dash',prest:'panel-prest',est:'panel-est',
 
 window.sbNav=function(tab){
   if(!PANELS[tab])return;
+  marcarAnimacion();
   screen=tab;
   Object.entries(PANELS).forEach(([k,id])=>{
     const el=document.getElementById(id);
@@ -1209,6 +1332,7 @@ window.sbNav=function(tab){
 };
 
 window.setViewTab=function(tab){
+  marcarAnimacion();
   viewMode=tab;
   document.getElementById('seg-q').classList.toggle('on',tab==='q');
   document.getElementById('seg-m').classList.toggle('on',tab==='m');
@@ -1219,19 +1343,79 @@ window.changeYear=function(delta){
   const next=CY+delta;
   if(next<MIN_YEAR)return;
   CY=next;
+  marcarAnimacion();
   const yd=document.getElementById('yd'); if(yd)yd.textContent=CY;
   if(screen==='dash')renderDash();
   else if(screen==='est')calcEstimacion();
   else renderPanel();
 };
 
-window.setMonth=function(mi){ CP={m:mi,q:CP.q}; renderPanel(); };
-window.setQ=function(q){ CP={m:CP.m,q}; renderPanel(); };
+// ── Barra lateral plegable (escritorio) ───────────────────────────────
+window.toggleSidebar=function(){
+  const sb=document.getElementById('sb');
+  if(!sb)return;
+  const plegada=!sb.classList.contains('collapsed');
+  sb.classList.toggle('collapsed',plegada);
+  lsSet('gq_sb',plegada?'1':'0');
+  const btn=document.getElementById('sb-toggle');
+  if(btn){
+    const t=plegada?'Desplegar barra lateral':'Plegar barra lateral';
+    btn.title=t; btn.setAttribute('aria-label',t);
+  }
+};
+function restoreSidebar(){
+  if(lsGet('gq_sb')!=='1')return;
+  const sb=document.getElementById('sb');
+  if(!sb)return;
+  // sin transición en la restauración inicial, para que no "salte" al abrir
+  sb.style.transition='none';
+  sb.classList.add('collapsed');
+  requestAnimationFrame(()=>{sb.style.transition='';});
+  const btn=document.getElementById('sb-toggle');
+  if(btn){btn.title='Desplegar barra lateral';btn.setAttribute('aria-label','Desplegar barra lateral');}
+}
+
+window.setMonth=function(mi){ CP={m:mi,q:CP.q}; marcarAnimacion(); renderPanel(); };
+window.setQ=function(q){ CP={m:CP.m,q}; marcarAnimacion(); renderPanel(); };
 
 // ══════════════════════════════════════════════════════════════════════
 //  PANEL (quincenal / mensual)
 // ══════════════════════════════════════════════════════════════════════
 function renderPanel(){ return viewMode==='m'?renderMonthly():renderMain(); }
+
+// ── Control de animaciones ────────────────────────────────────────────
+// Solo se anima al navegar (cambiar de panel, mes, quincena, año o vista).
+// Tras guardar un gasto el panel se reconstruye igual, pero sin animar: si no,
+// la interfaz parpadearía entera en cada acción y se sentiría más lenta.
+let _animateNext=false;
+const quiereMovimiento=()=>!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function marcarAnimacion(){ _animateNext=true; }
+let _animTimer=null;
+function aplicarAnimacion(el){
+  if(!el)return;
+  const animar=_animateNext&&quiereMovimiento();
+  el.classList.toggle('anim-in',animar);
+  _animateNext=false;
+  // Red de seguridad: las animaciones usan fill-mode both, así que si por
+  // lo que sea no llegaran a ejecutarse el contenido quedaría invisible.
+  // Retirar la clase devuelve los elementos a su estado natural.
+  clearTimeout(_animTimer);
+  if(animar) _animTimer=setTimeout(()=>el.classList.remove('anim-in'),1600);
+}
+
+// Cuenta la cifra del saldo desde 0 hasta su valor
+function contarCifra(el,valor){
+  if(!el||!quiereMovimiento()){return;}
+  const dur=620, t0=performance.now(), signo=valor<0?'−':'';
+  const paso=now=>{
+    const p=Math.min(1,(now-t0)/dur);
+    const eased=1-Math.pow(1-p,3);            // easeOutCubic
+    el.textContent=signo+fmtPlain(Math.abs(valor)*eased);
+    if(p<1)requestAnimationFrame(paso);
+    else el.textContent=fmtSigned(valor);
+  };
+  requestAnimationFrame(paso);
+}
 
 const spinner=(msg)=>`<div class="empty">${msg}</div>`;
 const CIRC=2*Math.PI*71;
@@ -1316,9 +1500,12 @@ function buildDonut(items,totalOut){
   const rows=Object.entries(t).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   if(!rows.length)return `<div class="sec"><h4 style="margin:0 0 14px">Por categoría</h4><div class="empty">Sin datos de gastos</div></div>`;
   let acc=0;
-  const arcs=rows.map(([cat,val])=>{
-    const len=CIRC*(val/totalOut);
-    const seg=`<circle cx="85" cy="85" r="71" fill="none" stroke="${getCatColor(cat)}" stroke-width="26" stroke-dasharray="${len.toFixed(2)} ${(CIRC-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}"></circle>`;
+  const arcs=rows.map(([cat,val],idx)=>{
+    const len=CIRC*(val/totalOut), rest=CIRC-len;
+    // Las variables alimentan la animación de trazado (gq-draw)
+    const seg=`<circle class="donut-arc" cx="85" cy="85" r="71" fill="none" stroke="${getCatColor(cat)}" stroke-width="26"`
+      +` stroke-dasharray="${len.toFixed(2)} ${rest.toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}"`
+      +` style="--circ:${CIRC.toFixed(2)};--len:${len.toFixed(2)};--rest:${rest.toFixed(2)};animation-delay:${idx*90}ms"></circle>`;
     acc+=len; return seg;
   }).join('');
   const max=rows[0][1];
@@ -1427,7 +1614,7 @@ function buildExpenseForm(){
     <div class="expense-grid">
       <div class="field"><label>Referencia</label><input class="input" id="iref" placeholder="**** 1234" maxlength="20"></div>
       <div class="field"><label>Descripción</label><input class="input" id="idesc" placeholder="Arriendo, mercado…" autocomplete="off"></div>
-      <div class="field"><label>Valor (COP)</label><input class="input num" id="iamt" type="text" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)"></div>
+      <div class="field"><label>Valor (COP)</label><input class="input num" id="iamt" type="text" inputmode="text" placeholder="0  ·  o 15000+8500" oninput="onMoneyInput(this)"><span class="sum-preview"></span></div>
       <div class="field"><label>Categoría</label><select class="input" id="icat">${opts}</select></div>
       <div class="field"><label>Fecha</label><input class="input num" id="idate" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
     </div>
@@ -1607,6 +1794,9 @@ async function renderMain(){
   renderCatFilter(items);
   refreshItemsTable();
   updateSidebarBalance(bal+ajusteTotal(),totalOut,pct);
+  const animando=_animateNext;
+  aplicarAnimacion(body);
+  if(animando) contarCifra(body.querySelector(".hero-num"), bal+ajusteTotal());
   renderYearBars();
 }
 
@@ -1649,6 +1839,9 @@ async function renderMonthly(){
   renderCatFilter(items);
   refreshItemsTable();
   updateSidebarBalance(bal+ajusteTotal(),totalOut,pct);
+  const animando=_animateNext;
+  aplicarAnimacion(body);
+  if(animando) contarCifra(body.querySelector(".hero-num"), bal+ajusteTotal());
   renderYearBars();
 }
 
@@ -2462,6 +2655,10 @@ window.renderConfigPanel=async function(){
 
   // Nivelaciones
   renderAjusteInfo();
+
+  // Versión instalada (se lee del CHANGELOG, única fuente de verdad)
+  const ver=document.getElementById('app-version');
+  if(ver)ver.textContent=CHANGELOG.length?CHANGELOG[0].ver:'—';
 
   // Instalación de la app
   renderInstallCard();
